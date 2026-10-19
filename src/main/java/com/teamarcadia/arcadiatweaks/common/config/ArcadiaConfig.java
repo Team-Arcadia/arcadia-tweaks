@@ -15,6 +15,9 @@ public final class ArcadiaConfig {
     public static final ModConfigSpec.BooleanValue MODULE_MEKANISM_ENABLED;
     public static final ModConfigSpec.BooleanValue MODULE_WAYSTONES_ENABLED;
 
+    public static final ModConfigSpec.BooleanValue ENTITY_MOVE_GUARD_ENABLED;
+    public static final ModConfigSpec.DoubleValue ENTITY_MOVE_GUARD_LIMIT;
+
     public static final BotanyConfig BOTANY;
     public static final RefinedStorageConfig REFINED_STORAGE;
     public static final MekanismConfig MEKANISM;
@@ -36,6 +39,19 @@ public final class ArcadiaConfig {
         MODULE_WAYSTONES_ENABLED = BUILDER
                 .comment("Enable the Waystones fix module.")
                 .define("waystones", true);
+        BUILDER.pop();
+
+        BUILDER.comment("Server safety guards").push("safety");
+        ENTITY_MOVE_GUARD_ENABLED = BUILDER
+                .comment("Stop an entity whose movement for one tick is NaN, infinite or above the limit.",
+                        "Such a movement makes the collision search walk the whole path block by block and",
+                        "freezes the server until the watchdog kills it (Server1, 2026-10-17, an Aether Sheepuff",
+                        "moving -10276 blocks per tick).")
+                .define("entityMoveGuard", true);
+        ENTITY_MOVE_GUARD_LIMIT = BUILDER
+                .comment("Largest movement per tick on one axis, in blocks. Nothing legitimate comes close:",
+                        "an elytra with rockets moves about 3 blocks per tick.")
+                .defineInRange("entityMoveGuardLimit", 100.0, 10.0, 100000.0);
         BUILDER.pop();
 
         BOTANY = new BotanyConfig(BUILDER);
