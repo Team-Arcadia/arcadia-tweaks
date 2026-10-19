@@ -4,6 +4,7 @@ import com.teamarcadia.arcadiatweaks.neoforge.botany.BotanyMixinCompatibility;
 import com.teamarcadia.arcadiatweaks.neoforge.mixin.botany.BotanyMixinPlugin;
 import com.teamarcadia.arcadiatweaks.neoforge.mixin.mekanism.MekanismMixinPlugin;
 import com.teamarcadia.arcadiatweaks.neoforge.mixin.refinedstorage.RefinedStorageMixinPlugin;
+import com.teamarcadia.arcadiatweaks.neoforge.mixin.waystones.WaystonesMixinPlugin;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -97,10 +98,21 @@ final class MixinPluginCompatibilityTest {
     }
 
     @Test
+    void waystonesPluginAcceptsBundledRuntimeTargets() {
+        final WaystonesMixinPlugin plugin = new WaystonesMixinPlugin();
+
+        assertTrue(plugin.shouldApplyMixin(
+                "net.blay09.mods.waystones.core.WaystoneIndexManager",
+                "com.teamarcadia.arcadiatweaks.neoforge.mixin.waystones.WaystoneIndexManagerMixin"
+        ));
+    }
+
+    @Test
     void pluginsSkipMissingTargetsInsteadOfCrashing() {
         final BotanyMixinPlugin botany = new BotanyMixinPlugin();
         final RefinedStorageMixinPlugin refinedStorage = new RefinedStorageMixinPlugin();
         final MekanismMixinPlugin mekanism = new MekanismMixinPlugin();
+        final WaystonesMixinPlugin waystones = new WaystonesMixinPlugin();
 
         assertFalse(botany.shouldApplyMixin(
                 "missing.botany.BotanyPotBlockEntity",
@@ -113,6 +125,10 @@ final class MixinPluginCompatibilityTest {
         assertFalse(mekanism.shouldApplyMixin(
                 "missing.mekanism.UniversalCable",
                 "com.teamarcadia.arcadiatweaks.neoforge.mixin.mekanism.UniversalCableMixin"
+        ));
+        assertFalse(waystones.shouldApplyMixin(
+                "missing.waystones.WaystoneIndexManager",
+                "com.teamarcadia.arcadiatweaks.neoforge.mixin.waystones.WaystoneIndexManagerMixin"
         ));
     }
 }

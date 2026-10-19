@@ -1,0 +1,16 @@
+{
+  "required": false,
+  "minVersion": "0.8.5",
+  "plugin": "com.teamarcadia.arcadiatweaks.neoforge.mixin.waystones.WaystonesMixinPlugin",
+  "package": "com.teamarcadia.arcadiatweaks.neoforge.mixin.waystones",
+  "compatibilityLevel": "JAVA_21",
+  "refmap": "arcadiatweaks.refmap.json",
+  "mixins": [
+    "WaystoneIndexManagerMixin"
+  ],
+  "server": [],
+  "client": [],
+  "injectors": {
+    "defaultRequire": 0
+  }
+}

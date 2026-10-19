@@ -25,14 +25,14 @@ import java.util.List;
 
 public final class ArcadiaAdminMenu extends ChestMenu {
 
-    private static final int ROWS = 3;
+    private static final int ROWS = 4;
     private static final int SIZE = ROWS * 9;
 
     private final AdminContainer adminContainer;
     private final List<Entry> entries;
 
     private ArcadiaAdminMenu(int containerId, Inventory inventory, AdminContainer container) {
-        super(MenuType.GENERIC_9x3, containerId, inventory, container, ROWS);
+        super(MenuType.GENERIC_9x4, containerId, inventory, container, ROWS);
         this.adminContainer = container;
         this.entries = createEntries();
         refresh();
@@ -116,7 +116,10 @@ public final class ArcadiaAdminMenu extends ChestMenu {
         if (ArcadiaPatchVariant.hasMekanism()) {
             addMekanismEntries(result, row++ * 9);
         }
-        result.add(Entry.close(26));
+        if (ArcadiaPatchVariant.hasWaystones()) {
+            addWaystonesEntries(result, row++ * 9);
+        }
+        result.add(Entry.close(SIZE - 1));
 
         return result;
     }
@@ -147,6 +150,11 @@ public final class ArcadiaAdminMenu extends ChestMenu {
         result.add(Entry.integer(baseSlot + 4, "M2 max ticks", ArcadiaConfig.MEKANISM.networkEmitBackoffMaxTicks, 1, 200, 1, 20));
         result.add(Entry.bool(baseSlot + 5, "M3 transporter idle", ArcadiaConfig.MEKANISM.logisticalTransporterIdleBackoff));
         result.add(Entry.integer(baseSlot + 6, "M3 max ticks", ArcadiaConfig.MEKANISM.logisticalTransporterIdleBackoffMaxTicks, 1, 200, 1, 20));
+    }
+
+    private static void addWaystonesEntries(List<Entry> result, int baseSlot) {
+        result.add(Entry.header(baseSlot, "Waystones", "Visibilite team via FTB Teams"));
+        result.add(Entry.bool(baseSlot + 1, "W1 team via FTB Teams", ArcadiaConfig.WAYSTONES.ftbTeamsTeamVisibility));
     }
 
     private static final class Entry {

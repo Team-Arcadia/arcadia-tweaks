@@ -10,6 +10,8 @@ import net.neoforged.neoforge.event.RegisterGameTestsEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
+import java.lang.reflect.Method;
+
 @GameTestHolder(ArcadiaTweaks.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class ArcadiaTweaksGameTests {
@@ -19,6 +21,7 @@ public final class ArcadiaTweaksGameTests {
     private static final String BOTANY_PLUGIN = "com.teamarcadia.arcadiatweaks.neoforge.mixin.botany.BotanyMixinPlugin";
     private static final String REFINED_STORAGE_PLUGIN = "com.teamarcadia.arcadiatweaks.neoforge.mixin.refinedstorage.RefinedStorageMixinPlugin";
     private static final String MEKANISM_PLUGIN = "com.teamarcadia.arcadiatweaks.neoforge.mixin.mekanism.MekanismMixinPlugin";
+    private static final String WAYSTONES_PLUGIN = "com.teamarcadia.arcadiatweaks.neoforge.mixin.waystones.WaystonesMixinPlugin";
 
     private ArcadiaTweaksGameTests() {}
 
@@ -31,7 +34,8 @@ public final class ArcadiaTweaksGameTests {
         helper.assertTrue(
                 ArcadiaPatchVariant.hasBotany()
                         || ArcadiaPatchVariant.hasRefinedStorage()
-                        || ArcadiaPatchVariant.hasMekanism(),
+                        || ArcadiaPatchVariant.hasMekanism()
+                        || ArcadiaPatchVariant.hasWaystones(),
                 "At least one patch resource should be present"
         );
         if (ArcadiaPatchVariant.hasBotany() && ArcadiaPatchVariant.hasRefinedStorage() && ArcadiaPatchVariant.hasMekanism()) {
@@ -107,6 +111,21 @@ public final class ArcadiaTweaksGameTests {
     }
 
     @GameTest(template = TEMPLATE, batch = BATCH, timeoutTicks = 20)
+    public static void waystonesTeamTargetsMixinIsApplied(GameTestHelper helper) {
+        if (ArcadiaPatchVariant.hasWaystones()) {
+            helper.assertTrue(shouldApplyMixin(WAYSTONES_PLUGIN,
+                    "net.blay09.mods.waystones.core.WaystoneIndexManager",
+                    "com.teamarcadia.arcadiatweaks.neoforge.mixin.waystones.WaystoneIndexManagerMixin"
+            ), "Waystones team targets mixin should match bundled Waystones and FTB Teams bytecode");
+            helper.assertTrue(hasMergedHandler(
+                    "net.blay09.mods.waystones.core.WaystoneIndexManager",
+                    "arcadia$resolveTeamTargetsWithFtbTeams"
+            ), "WaystoneIndexManager should carry the FTB Teams team targets handler after mixin application");
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = TEMPLATE, batch = BATCH, timeoutTicks = 20)
     public static void coalescingAlgorithmsKeepExpectedCadence(GameTestHelper helper) {
         int cooldown = 0;
         final boolean[] rsPattern = new boolean[8];
@@ -161,6 +180,19 @@ public final class ArcadiaTweaksGameTests {
             final Class<?> targetClass = Class.forName(targetClassName);
             final Class<?> interfaceClass = Class.forName(interfaceClassName);
             return interfaceClass.isAssignableFrom(targetClass);
+        } catch (ClassNotFoundException e) {
+            throw new IllegalStateException("Unable to inspect runtime class " + targetClassName, e);
+        }
+    }
+
+    private static boolean hasMergedHandler(String targetClassName, String handlerName) {
+        try {
+            for (Method method : Class.forName(targetClassName).getDeclaredMethods()) {
+                if (method.getName().contains(handlerName)) {
+                    return true;
+                }
+            }
+            return false;
         } catch (ClassNotFoundException e) {
             throw new IllegalStateException("Unable to inspect runtime class " + targetClassName, e);
         }

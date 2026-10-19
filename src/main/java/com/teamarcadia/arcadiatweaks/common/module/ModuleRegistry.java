@@ -4,6 +4,7 @@ import com.teamarcadia.arcadiatweaks.ArcadiaTweaks;
 import com.teamarcadia.arcadiatweaks.common.modules.botany.BotanyModule;
 import com.teamarcadia.arcadiatweaks.common.modules.mekanism.MekanismModule;
 import com.teamarcadia.arcadiatweaks.common.modules.refinedstorage.RefinedStorageModule;
+import com.teamarcadia.arcadiatweaks.common.modules.waystones.WaystonesModule;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,6 +25,7 @@ public final class ModuleRegistry {
         ALL.add(new BotanyModule());
         ALL.add(new RefinedStorageModule());
         ALL.add(new MekanismModule());
+        ALL.add(new WaystonesModule());
 
         for (ArcadiaModule m : ALL) {
             if (m.enabledByConfig()) {

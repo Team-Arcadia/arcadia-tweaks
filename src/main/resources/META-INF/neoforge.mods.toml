@@ -24,6 +24,9 @@ config = "${mod_id}.refinedstorage.mixins.json"
 [[mixins]]
 config = "${mod_id}.mekanism.mixins.json"
 
+[[mixins]]
+config = "${mod_id}.waystones.mixins.json"
+
 [[dependencies.${mod_id}]]
 modId = "neoforge"
 type = "required"
@@ -58,6 +61,22 @@ side = "BOTH"
 # Mekanism is optional at load time. The module only applies when Mekanism is present.
 [[dependencies.${mod_id}]]
 modId = "mekanism"
+type = "optional"
+versionRange = "[0.0.0,)"
+ordering = "AFTER"
+side = "BOTH"
+
+# Waystones is optional at load time. The module only applies when Waystones is present.
+[[dependencies.${mod_id}]]
+modId = "waystones"
+type = "optional"
+versionRange = "[0.0.0,)"
+ordering = "AFTER"
+side = "BOTH"
+
+# FTB Teams is optional at load time. The Waystones team visibility fix is skipped without it.
+[[dependencies.${mod_id}]]
+modId = "ftbteams"
 type = "optional"
 versionRange = "[0.0.0,)"
 ordering = "AFTER"

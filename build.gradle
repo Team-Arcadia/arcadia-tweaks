@@ -50,12 +50,22 @@ dependencies {
     compileOnly  files("libs/bookshelf-neoforge-1.21.1-${bookshelf_version}.jar")
     compileOnly  files("libs/refinedstorage-neoforge-${refinedstorage_version}.jar")
     compileOnly  files("libs/Mekanism-1.21.1-${mekanism_version}.jar")
+    // Waystones module: W1 targets Waystones internals and calls the FTB Teams API.
+    compileOnly  files("libs/waystones-neoforge-1.21.1-${waystones_version}.jar")
+    compileOnly  files("libs/balm-neoforge-1.21.1-${balm_version}.jar")
+    compileOnly  files("libs/ftb-teams-neoforge-${ftbteams_version}.jar")
+    compileOnly  files("libs/ftb-library-neoforge-${ftblibrary_version}.jar")
 
     runtimeOnly  files("libs/botanypots-neoforge-1.21.1-${botanypots_version}.jar")
     runtimeOnly  files("libs/bookshelf-neoforge-1.21.1-${bookshelf_version}.jar")
     runtimeOnly  files("libs/prickle-neoforge-1.21.1-${prickle_version}.jar")
     runtimeOnly  files("libs/refinedstorage-neoforge-${refinedstorage_version}.jar")
     runtimeOnly  files("libs/Mekanism-1.21.1-${mekanism_version}.jar")
+    runtimeOnly  files("libs/waystones-neoforge-1.21.1-${waystones_version}.jar")
+    runtimeOnly  files("libs/balm-neoforge-1.21.1-${balm_version}.jar")
+    runtimeOnly  files("libs/ftb-teams-neoforge-${ftbteams_version}.jar")
+    runtimeOnly  files("libs/ftb-library-neoforge-${ftblibrary_version}.jar")
+    runtimeOnly  files("libs/architectury-${architectury_version}-neoforge.jar")
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.3'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -125,7 +135,8 @@ def baseMixinConfig = "${mod_id}.mixins.json"
 def patchMixinConfigs = [
     botany        : "${mod_id}.botany.mixins.json",
     refinedstorage: "${mod_id}.refinedstorage.mixins.json",
-    mekanism      : "${mod_id}.mekanism.mixins.json"
+    mekanism      : "${mod_id}.mekanism.mixins.json",
+    waystones     : "${mod_id}.waystones.mixins.json"
 ]
 
 def patchJarVariants = [
@@ -133,8 +144,8 @@ def patchJarVariants = [
         taskName      : 'jarAllPatches',
         classifier    : 'all',
         displayName   : 'all patches',
-        mixinConfigs  : [baseMixinConfig, patchMixinConfigs.botany, patchMixinConfigs.refinedstorage, patchMixinConfigs.mekanism],
-        optionalDeps  : ['botanypots', 'refinedstorage', 'mekanism'],
+        mixinConfigs  : [baseMixinConfig, patchMixinConfigs.botany, patchMixinConfigs.refinedstorage, patchMixinConfigs.mekanism, patchMixinConfigs.waystones],
+        optionalDeps  : ['botanypots', 'refinedstorage', 'mekanism', 'waystones', 'ftbteams'],
         excludedClasses: []
     ],
     botany        : [
@@ -147,7 +158,9 @@ def patchJarVariants = [
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/refinedstorage/**',
             'com/teamarcadia/arcadiatweaks/neoforge/refinedstorage/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/mekanism/**',
-            'com/teamarcadia/arcadiatweaks/neoforge/mekanism/**'
+            'com/teamarcadia/arcadiatweaks/neoforge/mekanism/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/waystones/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/waystones/**'
         ]
     ],
     refinedstorage: [
@@ -160,7 +173,9 @@ def patchJarVariants = [
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/botany/**',
             'com/teamarcadia/arcadiatweaks/neoforge/botany/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/mekanism/**',
-            'com/teamarcadia/arcadiatweaks/neoforge/mekanism/**'
+            'com/teamarcadia/arcadiatweaks/neoforge/mekanism/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/waystones/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/waystones/**'
         ]
     ],
     mekanism      : [
@@ -173,7 +188,24 @@ def patchJarVariants = [
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/botany/**',
             'com/teamarcadia/arcadiatweaks/neoforge/botany/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/refinedstorage/**',
-            'com/teamarcadia/arcadiatweaks/neoforge/refinedstorage/**'
+            'com/teamarcadia/arcadiatweaks/neoforge/refinedstorage/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/waystones/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/waystones/**'
+        ]
+    ],
+    waystones     : [
+        taskName      : 'jarWaystonesPatch',
+        classifier    : 'waystones',
+        displayName   : 'Waystones patch only',
+        mixinConfigs  : [baseMixinConfig, patchMixinConfigs.waystones],
+        optionalDeps  : ['waystones', 'ftbteams'],
+        excludedClasses: [
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/botany/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/botany/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/refinedstorage/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/refinedstorage/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/mekanism/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mekanism/**'
         ]
     ]
 ]
@@ -218,6 +250,30 @@ side = "BOTH"
 # Mekanism is optional at load time. The module only applies when Mekanism is present.
 [[dependencies.${mod_id}]]
 modId = "mekanism"
+type = "optional"
+versionRange = "[0.0.0,)"
+ordering = "AFTER"
+side = "BOTH"
+"""
+    }
+    if (variant.optionalDeps.contains('waystones')) {
+        optionalDependencyBlocks += """
+
+# Waystones is optional at load time. The module only applies when Waystones is present.
+[[dependencies.${mod_id}]]
+modId = "waystones"
+type = "optional"
+versionRange = "[0.0.0,)"
+ordering = "AFTER"
+side = "BOTH"
+"""
+    }
+    if (variant.optionalDeps.contains('ftbteams')) {
+        optionalDependencyBlocks += """
+
+# FTB Teams is optional at load time. The Waystones team visibility fix is skipped without it.
+[[dependencies.${mod_id}]]
+modId = "ftbteams"
 type = "optional"
 versionRange = "[0.0.0,)"
 ordering = "AFTER"
@@ -310,7 +366,7 @@ patchJarVariants.each { variantName, variant ->
 
 tasks.register('jarSelectedPatch') {
     group = 'build'
-    description = 'Builds one patch jar selected with -ParcadiaPatch=all|botany|refinedstorage|mekanism.'
+    description = 'Builds one patch jar selected with -ParcadiaPatch=all|botany|refinedstorage|mekanism|waystones.'
     def selectedPatch = (findProperty('arcadiaPatch') ?: 'all').toString().toLowerCase()
     if (!patchJarVariants.containsKey(selectedPatch)) {
         throw new GradleException("Unknown arcadiaPatch '${selectedPatch}'. Expected one of: ${patchJarVariants.keySet().join(', ')}")
@@ -358,7 +414,7 @@ jar {
             'Implementation-Title'    : mod_name,
             'Implementation-Version'  : mod_version,
             'Implementation-Vendor'   : mod_authors,
-            'MixinConfigs'            : "${mod_id}.mixins.json,${mod_id}.botany.mixins.json,${mod_id}.refinedstorage.mixins.json,${mod_id}.mekanism.mixins.json"
+            'MixinConfigs'            : "${mod_id}.mixins.json,${mod_id}.botany.mixins.json,${mod_id}.refinedstorage.mixins.json,${mod_id}.mekanism.mixins.json,${mod_id}.waystones.mixins.json"
         ])
     }
 }

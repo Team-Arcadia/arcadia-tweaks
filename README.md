@@ -76,10 +76,14 @@ and optional dependencies declared in `META-INF/neoforge.mods.toml`.
 # one jar with only the Mekanism patch loaded
 ./gradlew jarMekanismPatch
 
+# one jar with only the Waystones patch loaded
+./gradlew jarWaystonesPatch
+
 # property-based selection
 ./gradlew jarSelectedPatch -ParcadiaPatch=botany
 ./gradlew jarSelectedPatch -ParcadiaPatch=refinedstorage
 ./gradlew jarSelectedPatch -ParcadiaPatch=mekanism
+./gradlew jarSelectedPatch -ParcadiaPatch=waystones
 ./gradlew jarSelectedPatch -ParcadiaPatch=all
 
 # build all variants at once
@@ -94,6 +98,7 @@ The in-game admin command follows the jar variant:
 | BotanyPots only | `/botanypatch gui` |
 | Refined Storage only | `/refinedstoragepatch gui` |
 | Mekanism only | `/mekanismpatch gui` |
+| Waystones only | `/waystonespatch gui` |
 
 `admin` remains available as an alias for `gui`.
 
@@ -123,6 +128,11 @@ Required jars (and the version each must match in `gradle.properties`):
 | `prickle-neoforge-1.21.1-<ver>.jar`            | `prickle_version`      |
 | `refinedstorage-neoforge-<ver>.jar`            | `refinedstorage_version` |
 | `Mekanism-1.21.1-<ver>.jar`                    | `mekanism_version`     |
+| `waystones-neoforge-1.21.1-<ver>.jar`          | `waystones_version`    |
+| `balm-neoforge-1.21.1-<ver>.jar`               | `balm_version`         |
+| `ftb-teams-neoforge-<ver>.jar`                 | `ftbteams_version`     |
+| `ftb-library-neoforge-<ver>.jar`               | `ftblibrary_version`   |
+| `architectury-<ver>-neoforge.jar`              | `architectury_version` |
 
 `libs/*.jar` is gitignored - each developer copies their own from the production pack. When the pack updates a targeted mod, refresh `libs/` and bump the corresponding `gradle.properties` values to match the new filenames.
 
@@ -165,6 +175,7 @@ must be configured on each client.
 | `modules.botany` | `true` | Enable BotanyPots patch when BotanyPots is present. |
 | `modules.refinedstorage` | `true` | Enable Refined Storage patch when RS2 is present. |
 | `modules.mekanism` | `true` | Enable Mekanism cable/network patch when Mekanism is present. |
+| `modules.waystones` | `true` | Enable the Waystones team visibility fix when Waystones and FTB Teams are present. |
 
 ### BotanyPots
 
@@ -261,6 +272,28 @@ logistical_transporter_idle_backoff_max_ticks = 40
 Use this only if Spark still shows Mekanism cable/network scans high after the
 balanced profile. It can add up to ~2 seconds before an idle, repeatedly failing
 connection retries or idle transporter path recalculations.
+
+### Waystones
+
+This module is a behaviour fix, not an optimization.
+
+```toml
+[waystones]
+team_visibility_uses_ftb_teams = true
+```
+
+| Setting | Best value | What it does |
+|---------|------------|--------------|
+| `team_visibility_uses_ftb_teams` | `true` | Offers a "Visible to Team" waystone only to its owner and to players in the owner's FTB Teams party. |
+
+Waystones resolves TEAM visibility from the owner's vanilla scoreboard team. Any
+mod that puts players into scoreboard teams for another reason (tab list
+sorting, name colours) then offers TEAM waystones to everyone in that scoreboard
+team, including in their teleport list. With this setting on, the scoreboard
+lookup is replaced by the owner's FTB Teams party: party members see the
+waystone, allies do not, and a player without a party only sees their own. The
+Mixin is skipped when FTB Teams is not installed, and Waystones keeps its own
+behaviour.
 
 ## Validate the Mixin pipeline
 
