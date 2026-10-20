@@ -17,6 +17,7 @@ public final class ArcadiaConfig {
 
     public static final ModConfigSpec.BooleanValue ENTITY_MOVE_GUARD_ENABLED;
     public static final ModConfigSpec.DoubleValue ENTITY_MOVE_GUARD_LIMIT;
+    public static final ModConfigSpec.BooleanValue RUNIC_FORGE_LOCK_ENABLED;
 
     public static final BotanyConfig BOTANY;
     public static final RefinedStorageConfig REFINED_STORAGE;
@@ -52,6 +53,12 @@ public final class ArcadiaConfig {
                 .comment("Largest movement per tick on one axis, in blocks. Nothing legitimate comes close:",
                         "an elytra with rockets moves about 3 blocks per tick.")
                 .defineInRange("entityMoveGuardLimit", 100.0, 10.0, 100000.0);
+        RUNIC_FORGE_LOCK_ENABLED = BUILDER
+                .comment("Simply Swords Runic Forge: a unique weapon that never got an awakening level counts as",
+                        "fully awakened (8 tablets), and the forge turned those 8 implicit tablets into real",
+                        "items (bug #321). The implicit level is locked on the weapon instead: the forge gives",
+                        "no tablet for it, the weapon keeps its power, and only the free tablet slots accept one.")
+                .define("runicForgeImplicitLevelLock", true);
         BUILDER.pop();
 
         BOTANY = new BotanyConfig(BUILDER);
