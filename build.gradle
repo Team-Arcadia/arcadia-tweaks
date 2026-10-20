@@ -55,6 +55,9 @@ dependencies {
     compileOnly  files("libs/balm-neoforge-1.21.1-${balm_version}.jar")
     compileOnly  files("libs/ftb-teams-neoforge-${ftbteams_version}.jar")
     compileOnly  files("libs/ftb-library-neoforge-${ftblibrary_version}.jar")
+    // Simply Swords module: the Runic Forge fix targets RunicForgeScreenHandler. Compile only:
+    // Simply Swords needs fzzy_config and Kotlin for Forge at runtime, which dev runs do not ship.
+    compileOnly  files("libs/simplyswords-neoforge-${simplyswords_version}.jar")
 
     runtimeOnly  files("libs/botanypots-neoforge-1.21.1-${botanypots_version}.jar")
     runtimeOnly  files("libs/bookshelf-neoforge-1.21.1-${bookshelf_version}.jar")
@@ -136,7 +139,8 @@ def patchMixinConfigs = [
     botany        : "${mod_id}.botany.mixins.json",
     refinedstorage: "${mod_id}.refinedstorage.mixins.json",
     mekanism      : "${mod_id}.mekanism.mixins.json",
-    waystones     : "${mod_id}.waystones.mixins.json"
+    waystones     : "${mod_id}.waystones.mixins.json",
+    simplyswords  : "${mod_id}.simplyswords.mixins.json"
 ]
 
 def patchJarVariants = [
@@ -144,8 +148,8 @@ def patchJarVariants = [
         taskName      : 'jarAllPatches',
         classifier    : 'all',
         displayName   : 'all patches',
-        mixinConfigs  : [baseMixinConfig, patchMixinConfigs.botany, patchMixinConfigs.refinedstorage, patchMixinConfigs.mekanism, patchMixinConfigs.waystones],
-        optionalDeps  : ['botanypots', 'refinedstorage', 'mekanism', 'waystones', 'ftbteams'],
+        mixinConfigs  : [baseMixinConfig, patchMixinConfigs.botany, patchMixinConfigs.refinedstorage, patchMixinConfigs.mekanism, patchMixinConfigs.waystones, patchMixinConfigs.simplyswords],
+        optionalDeps  : ['botanypots', 'refinedstorage', 'mekanism', 'waystones', 'ftbteams', 'simplyswords'],
         excludedClasses: []
     ],
     botany        : [
@@ -160,7 +164,9 @@ def patchJarVariants = [
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/mekanism/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mekanism/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/waystones/**',
-            'com/teamarcadia/arcadiatweaks/neoforge/waystones/**'
+            'com/teamarcadia/arcadiatweaks/neoforge/waystones/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/simplyswords/**',
+            'com/teamarcadia/arcadiatweaks/common/modules/simplyswords/**'
         ]
     ],
     refinedstorage: [
@@ -175,7 +181,9 @@ def patchJarVariants = [
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/mekanism/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mekanism/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/waystones/**',
-            'com/teamarcadia/arcadiatweaks/neoforge/waystones/**'
+            'com/teamarcadia/arcadiatweaks/neoforge/waystones/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/simplyswords/**',
+            'com/teamarcadia/arcadiatweaks/common/modules/simplyswords/**'
         ]
     ],
     mekanism      : [
@@ -190,7 +198,9 @@ def patchJarVariants = [
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/refinedstorage/**',
             'com/teamarcadia/arcadiatweaks/neoforge/refinedstorage/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/waystones/**',
-            'com/teamarcadia/arcadiatweaks/neoforge/waystones/**'
+            'com/teamarcadia/arcadiatweaks/neoforge/waystones/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/simplyswords/**',
+            'com/teamarcadia/arcadiatweaks/common/modules/simplyswords/**'
         ]
     ],
     waystones     : [
@@ -205,7 +215,9 @@ def patchJarVariants = [
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/refinedstorage/**',
             'com/teamarcadia/arcadiatweaks/neoforge/refinedstorage/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/mekanism/**',
-            'com/teamarcadia/arcadiatweaks/neoforge/mekanism/**'
+            'com/teamarcadia/arcadiatweaks/neoforge/mekanism/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/simplyswords/**',
+            'com/teamarcadia/arcadiatweaks/common/modules/simplyswords/**'
         ]
     ]
 ]
@@ -262,6 +274,18 @@ side = "BOTH"
 # Waystones is optional at load time. The module only applies when Waystones is present.
 [[dependencies.${mod_id}]]
 modId = "waystones"
+type = "optional"
+versionRange = "[0.0.0,)"
+ordering = "AFTER"
+side = "BOTH"
+"""
+    }
+    if (variant.optionalDeps.contains('simplyswords')) {
+        optionalDependencyBlocks += """
+
+# Simply Swords is optional at load time. The Runic Forge fix only applies when it is present.
+[[dependencies.${mod_id}]]
+modId = "simplyswords"
 type = "optional"
 versionRange = "[0.0.0,)"
 ordering = "AFTER"
@@ -414,7 +438,7 @@ jar {
             'Implementation-Title'    : mod_name,
             'Implementation-Version'  : mod_version,
             'Implementation-Vendor'   : mod_authors,
-            'MixinConfigs'            : "${mod_id}.mixins.json,${mod_id}.botany.mixins.json,${mod_id}.refinedstorage.mixins.json,${mod_id}.mekanism.mixins.json,${mod_id}.waystones.mixins.json"
+            'MixinConfigs'            : "${mod_id}.mixins.json,${mod_id}.botany.mixins.json,${mod_id}.refinedstorage.mixins.json,${mod_id}.mekanism.mixins.json,${mod_id}.waystones.mixins.json,${mod_id}.simplyswords.mixins.json"
         ])
     }
 }
