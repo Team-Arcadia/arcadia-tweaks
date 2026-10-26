@@ -356,7 +356,8 @@ public final class AccessoriesGameTests {
         final double[] off = new double[2];
         final double[] on = new double[2];
         bench(op, ArcadiaConfig.ACCESSORIES.containsFastPath, 20_000, 200_000, off, on);
-        logBench("c1_contains_player_12_slots_3_filled", off, on, sink[0]);
+        logBench("c1_contains_player_12_slots_3_filled", off, on, sink[0],
+                "Inventory.contains(new diamond) on a FakePlayer with the dev runtime's default Accessories slots, 3 filled, empty vanilla inventory (vanilla miss, Accessories handler runs).");
         helper.succeed();
     }
 
@@ -383,14 +384,17 @@ public final class AccessoriesGameTests {
             final double[] on = new double[2];
             bench(() -> AccessoriesEventHandler.onLivingEntityTick(player),
                     ArcadiaConfig.ACCESSORIES.tickAllocationTrimmed, 20_000, 200_000, off, on);
-            logBench("ta_tick_player_12_slots_3_filled", off, on, 0);
+            logBench("ta_tick_player_12_slots_3_filled", off, on, 0,
+                    "AccessoriesEventHandler.onLivingEntityTick on the same FakePlayer, no change between ticks.");
             final int[] index = new int[1];
             bench(() -> AccessoriesEventHandler.onLivingEntityTick(stands.get(index[0]++ % 500)),
                     ArcadiaConfig.ACCESSORIES.tickAllocationTrimmed, 20_000, 200_000, off, on);
-            logBench("ta_tick_armor_stand_12_empty_slots", off, on, 0);
+            logBench("ta_tick_armor_stand_12_empty_slots", off, on, 0,
+                    "Per entity tick, round-robin over 500 armor stands with the default empty slots (stand-in for the pack's slotted mobs).");
             bench(() -> AccessoriesEventHandler.onLivingEntityTick(zombies.get(index[0]++ % 500)),
                     ArcadiaConfig.ACCESSORIES.tickAllocationTrimmed, 20_000, 200_000, off, on);
-            logBench("ta_tick_zombie_no_slots", off, on, 0);
+            logBench("ta_tick_zombie_no_slots", off, on, 0,
+                    "Per entity tick over 500 zombies without Accessories slots in dev: T-A changes nothing there.");
         } finally {
             stands.forEach(Entity::discard);
             zombies.forEach(Entity::discard);
@@ -425,7 +429,10 @@ public final class AccessoriesGameTests {
         }
     }
 
-    private static void logBench(String name, double[] off, double[] on, long sink) {
+    private static void logBench(String name, double[] off, double[] on, long sink, String what) {
+        MicroBenchResults.record("accessories", name, "ns/op", off[0], on[0], what
+                + " GameTest-hosted, same JVM, warm-up 20k then 200k timed, off/on alternated 3 rounds, best per mode."
+                + String.format(java.util.Locale.ROOT, " Allocation %.0f -> %.0f B/op.", off[1], on[1]));
         ArcadiaTweaks.LOGGER.info("[accessories-bench] name={} unit=ns/op before={} after={} allocBefore={} allocAfter={} sink={}",
                 name, String.format("%.1f", off[0]), String.format("%.1f", on[0]),
                 String.format("%.1f", off[1]), String.format("%.1f", on[1]), sink);

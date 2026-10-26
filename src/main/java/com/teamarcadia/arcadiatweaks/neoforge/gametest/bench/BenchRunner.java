@@ -48,6 +48,10 @@ import java.util.Map;
  *   <li>{@code postEvents}: wall time of the {@code ServerTickEvent.Post} listeners, where Mekanism
  *   ticks its transmitter networks.</li>
  *   <li>{@code scenario}: {@code level + postEvents}, the scenario's own work.</li>
+ *   <li>{@code driven}: wall time of {@link BenchScenario#tick}, the work a scenario drives itself
+ *   (for example the player tick events of test players that are not placed in the world). It runs
+ *   inside the {@code postEvents} window, so it is part of {@code scenario} too. Zero for scenarios
+ *   that drive nothing.</li>
  * </ul>
  * Per phase: GC collections and GC time from the JMX beans, and bytes allocated by the server thread.
  *
@@ -61,11 +65,11 @@ import java.util.Map;
  *   "scenarios": [ {
  *     "id", "description", "size": { ... }, "switches": [ names ],
  *     "phases": [ { "round", "index", "mode": "OFF"|"ON", "ticks",
- *                   "tick"|"scenario"|"level"|"postEvents": { "n", "meanMs", "stdevMs", "medianMs", "p95Ms", "p99Ms", "minMs", "maxMs" },
+ *                   "tick"|"scenario"|"level"|"postEvents"|"driven": { "n", "meanMs", "stdevMs", "medianMs", "p95Ms", "p99Ms", "minMs", "maxMs" },
  *                   "gc": { "count", "timeMs" }, "allocatedMb", "switches": { name: value }, "extra": { key: value } } ],
  *     "summary": {
- *       "off"|"on": { "tick": stats, "scenario": stats, "level": stats, "postEvents": stats, "gcCount", "gcTimeMs", "allocatedMbPerTick", "extra": { key: mean } },
- *       "tick"|"scenario"|"level"|"postEvents": { "offMeanMs", "onMeanMs", "deltaMeanPct", "deltaP95Pct", "roundDeltasPct": [], "roundsOnFaster", "rounds",
+ *       "off"|"on": { "tick": stats, "scenario": stats, "level": stats, "postEvents": stats, "driven": stats, "gcCount", "gcTimeMs", "allocatedMbPerTick", "extra": { key: mean } },
+ *       "tick"|"scenario"|"level"|"postEvents"|"driven": { "offMeanMs", "onMeanMs", "deltaMeanPct", "deltaP95Pct", "roundDeltasPct": [], "roundsOnFaster", "rounds",
  *                            "pairedTTest": { "n", "meanDiff", "t", "df", "pTwoSided" }, "blockBootstrapMeanDiffMs95": [lo, hi] }
  *     } } ],
  *   "skipped": [ { "id", "reason" } ]
@@ -114,12 +118,15 @@ final class BenchRunner {
     private long levelStart;
     private long levelNs;
     private long postStart;
+    private long drivenNs;
     private boolean inTick;
+    private Throwable tickFailure;
 
     // per-phase sample buffers: tick, level, post
     private long[] bufTick;
     private long[] bufLevel;
     private long[] bufPost;
+    private long[] bufDriven;
     private int bufCount;
     private long gcCountStart;
     private long gcTimeStart;
@@ -151,6 +158,7 @@ final class BenchRunner {
                 selected.size(), WARMUP, ROUNDS, SETTLE, MEASURE);
         NeoForge.EVENT_BUS.addListener(EventPriority.HIGHEST, ServerTickEvent.Pre.class, e -> runner.onTickPre());
         NeoForge.EVENT_BUS.addListener(EventPriority.HIGHEST, ServerTickEvent.Post.class, e -> runner.onPostFirst());
+        NeoForge.EVENT_BUS.addListener(EventPriority.NORMAL, ServerTickEvent.Post.class, e -> runner.onPostDrive());
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, ServerTickEvent.Post.class, e -> runner.onPostLast());
         NeoForge.EVENT_BUS.addListener(EventPriority.HIGHEST, LevelTickEvent.Pre.class, runner::onLevelPre);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, LevelTickEvent.Post.class, runner::onLevelPost);
@@ -163,6 +171,7 @@ final class BenchRunner {
         if (stage == Stage.DONE) return;
         inTick = true;
         levelNs = 0;
+        drivenNs = 0;
         tickStart = System.nanoTime();
     }
 
@@ -184,6 +193,19 @@ final class BenchRunner {
         }
     }
 
+    /** Runs the scenario's own driven work inside the post-events window, and times it. */
+    private void onPostDrive() {
+        if (!inTick || current == null || tickFailure != null) return;
+        if (stage != Stage.WAIT_READY && stage != Stage.WARMUP && stage != Stage.SETTLE && stage != Stage.MEASURE) return;
+        final long t0 = System.nanoTime();
+        try {
+            current.tick(level);
+        } catch (Throwable t) {
+            tickFailure = t;
+        }
+        drivenNs = System.nanoTime() - t0;
+    }
+
     private void onPostLast() {
         if (!inTick) return;
         final long now = System.nanoTime();
@@ -192,6 +214,7 @@ final class BenchRunner {
             bufTick[bufCount] = now - tickStart;
             bufLevel[bufCount] = levelNs;
             bufPost[bufCount] = now - postStart;
+            bufDriven[bufCount] = drivenNs;
             bufCount++;
         }
         try {
@@ -212,6 +235,11 @@ final class BenchRunner {
     }
 
     private void advance() {
+        if (tickFailure != null) {
+            final Throwable t = tickFailure;
+            tickFailure = null;
+            throw new IllegalStateException("scenario tick failed: " + t, t);
+        }
         stageTicks++;
         switch (stage) {
             case WAIT_READY -> {
@@ -289,6 +317,7 @@ final class BenchRunner {
         bufTick = new long[MEASURE];
         bufLevel = new long[MEASURE];
         bufPost = new long[MEASURE];
+        bufDriven = new long[MEASURE];
         bufCount = 0;
         gcCountStart = gcCount();
         gcTimeStart = gcTime();
@@ -313,6 +342,7 @@ final class BenchRunner {
         p.add("scenario", BenchStats.describeMs(scenario));
         p.add("level", BenchStats.describeMs(bufLevel));
         p.add("postEvents", BenchStats.describeMs(bufPost));
+        p.add("driven", BenchStats.describeMs(bufDriven));
         final JsonObject gc = new JsonObject();
         gc.addProperty("count", gcCount);
         gc.addProperty("timeMs", gcTime);
@@ -325,11 +355,11 @@ final class BenchRunner {
         }
         p.add("extra", extra);
         phases.add(p);
-        phaseSamples.add(new long[][] {bufTick.clone(), scenario, bufLevel.clone(), bufPost.clone()});
-        ArcadiaTweaks.LOGGER.info("[bench] {} round {} {}: tick mean {} ms p95 {} ms, scenario mean {} ms, gc {}",
+        phaseSamples.add(new long[][] {bufTick.clone(), scenario, bufLevel.clone(), bufPost.clone(), bufDriven.clone()});
+        ArcadiaTweaks.LOGGER.info("[bench] {} round {} {}: tick mean {} ms p95 {} ms, scenario mean {} ms, driven mean {} ms, gc {}, extra {}",
                 current.id(), phaseIndex / 2, on ? "ON " : "OFF",
                 p.getAsJsonObject("tick").get("meanMs"), p.getAsJsonObject("tick").get("p95Ms"),
-                p.getAsJsonObject("scenario").get("meanMs"), gcCount);
+                p.getAsJsonObject("scenario").get("meanMs"), p.getAsJsonObject("driven").get("meanMs"), gcCount, extra);
     }
 
     private void finishScenario() {
@@ -373,13 +403,9 @@ final class BenchRunner {
         current = scenarios.get(scenarioIndex);
         origin = baseOrigin.offset(scenarioIndex * REGION_SPACING, 0, 0);
         switches.snapshot(current.switches());
-        final int r = current.footprint() + 16;
-        final List<ChunkPos> chunks = new ArrayList<>();
-        for (int cx = (origin.getX() - r) >> 4; cx <= (origin.getX() + r) >> 4; cx++) {
-            for (int cz = (origin.getZ() - r) >> 4; cz <= (origin.getZ() + r) >> 4; cz++) {
-                level.setChunkForced(cx, cz, true);
-                chunks.add(new ChunkPos(cx, cz));
-            }
+        final List<ChunkPos> chunks = current.chunks(origin);
+        for (ChunkPos c : chunks) {
+            level.setChunkForced(c.x, c.z, true);
         }
         forced = chunks;
         ArcadiaTweaks.LOGGER.info("[bench] building {} at {} ({} forced chunks)", current.id(), origin.toShortString(), chunks.size());

@@ -24,8 +24,6 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtIo;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
@@ -40,12 +38,9 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.saveddata.SavedData;
 import net.neoforged.neoforge.common.util.FakePlayer;
 import net.neoforged.neoforge.common.util.FakePlayerFactory;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -58,9 +53,11 @@ import java.util.UUID;
  * 64k disks holding thousands of distinct resources, importer/exporter pairs that move cobblestone
  * in a loop (network to chest to network) every tick, and external storages on full chests.
  *
- * <p>After each phase the Refined Storage saved data ({@code refinedstorage_storages}) is serialized
- * and compressed the way an autosave does, and timed ({@code extra.rsSaveMs}). That save is the
- * target of a later optimization; today OFF and ON should be equal there.
+ * <p>Every Refined Storage switch of ArcadiaTweaks is switched (S1 to S4). After each phase the
+ * Refined Storage saved data ({@code refinedstorage_storages}) is saved {@value #SAVE_REPEATS} times
+ * the way an autosave does and timed ({@code extra.rsSave*}, see {@link RsSaveTimer}); the network
+ * moves items every tick, so the loop disks changed between saves. The storage-heavy save is the
+ * {@code refinedstorage_save} scenario.
  *
  * @author vyrriox
  */
@@ -103,7 +100,11 @@ public final class RefinedStorageScenario implements BenchScenario {
         return List.of(
                 BenchSwitches.Switch.of("modules.refinedstorage", ArcadiaConfig.MODULE_REFINED_STORAGE_ENABLED),
                 BenchSwitches.Switch.of("refinedstorage.activeness_check_coalescing_enabled", ArcadiaConfig.REFINED_STORAGE.activenessCheckCoalescing),
-                BenchSwitches.Switch.of("refinedstorage.activeness_check_interval_ticks", ArcadiaConfig.REFINED_STORAGE.activenessCheckInterval)
+                BenchSwitches.Switch.of("refinedstorage.activeness_check_interval_ticks", ArcadiaConfig.REFINED_STORAGE.activenessCheckInterval),
+                BenchSwitches.Switch.of("refinedstorage.single_component_lookup_enabled", ArcadiaConfig.REFINED_STORAGE.singleComponentLookup),
+                BenchSwitches.Switch.of("refinedstorage.storage_save_cache_enabled", ArcadiaConfig.REFINED_STORAGE.storageSaveCache),
+                BenchSwitches.Switch.of("refinedstorage.storage_save_cache_verify_interval", ArcadiaConfig.REFINED_STORAGE.storageSaveCacheVerifyInterval),
+                BenchSwitches.Switch.of("refinedstorage.quiet_hot_debug_logs_enabled", ArcadiaConfig.REFINED_STORAGE.quietHotDebugLogs)
         );
     }
 
@@ -277,30 +278,7 @@ public final class RefinedStorageScenario implements BenchScenario {
     public Map<String, Double> afterPhase(ServerLevel level, boolean patchesOn) {
         final Map<String, Double> out = new LinkedHashMap<>();
         final StorageRepository repo = RefinedStorageApi.INSTANCE.getStorageRepository(level);
-        if (!(repo instanceof SavedData data)) {
-            return out;
-        }
-        double best = Double.MAX_VALUE;
-        double sum = 0;
-        long bytes = 0;
-        for (int r = 0; r < SAVE_REPEATS; r++) {
-            final long t0 = System.nanoTime();
-            final CompoundTag tag = new CompoundTag();
-            tag.put("data", data.save(new CompoundTag(), level.registryAccess()));
-            final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            try {
-                NbtIo.writeCompressed(tag, bos);
-            } catch (IOException e) {
-                throw new IllegalStateException(e);
-            }
-            final double ms = (System.nanoTime() - t0) / 1_000_000.0;
-            best = Math.min(best, ms);
-            sum += ms;
-            bytes = bos.size();
-        }
-        out.put("rsSaveMs", sum / SAVE_REPEATS);
-        out.put("rsSaveBestMs", best);
-        out.put("rsSaveKb", bytes / 1024.0);
+        out.putAll(RsSaveTimer.time(level, "rsSave", SAVE_REPEATS, s -> repo.markAsChanged()));
         int loopItems = 0;
         for (BlockPos p : loopChests) {
             if (level.getBlockEntity(p) instanceof Container c) {
@@ -428,7 +406,7 @@ public final class RefinedStorageScenario implements BenchScenario {
         }
     }
 
-    private static List<ItemStack> varietyStacks(ServerLevel level) {
+    static List<ItemStack> varietyStacks(ServerLevel level) {
         final List<ItemStack> out = new ArrayList<>();
         for (Item item : BuiltInRegistries.ITEM) {
             if (item == Items.AIR || item == Items.COBBLESTONE) continue;

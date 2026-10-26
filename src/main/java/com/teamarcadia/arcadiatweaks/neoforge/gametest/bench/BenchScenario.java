@@ -2,7 +2,9 @@ package com.teamarcadia.arcadiatweaks.neoforge.gametest.bench;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.ChunkPos;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -38,6 +40,32 @@ public interface BenchScenario {
 
     /** Half-size of the square region (in blocks, from {@code origin}) the scenario occupies. */
     int footprint();
+
+    /**
+     * The chunks the runner force-loads before {@link #build}: by default the square of
+     * {@link #footprint()} plus a 16-block margin around {@code origin}.
+     */
+    default List<ChunkPos> chunks(BlockPos origin) {
+        return square(origin, footprint() + 16);
+    }
+
+    /** Chunks of the square of half-size {@code radius} blocks around {@code center}. */
+    static List<ChunkPos> square(BlockPos center, int radius) {
+        final List<ChunkPos> out = new ArrayList<>();
+        for (int cx = (center.getX() - radius) >> 4; cx <= (center.getX() + radius) >> 4; cx++) {
+            for (int cz = (center.getZ() - radius) >> 4; cz <= (center.getZ() + radius) >> 4; cz++) {
+                out.add(new ChunkPos(cx, cz));
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Work the scenario drives itself every server tick, from the moment it is built until it is torn
+     * down (for example firing the player tick event for test players that are not placed in the
+     * world). Runs inside the {@code postEvents} window; its own time is the {@code driven} series.
+     */
+    default void tick(ServerLevel level) {}
 
     /** Called on the first tick after {@link #build}, and again every few ticks until it returns true. */
     default boolean ready(ServerLevel level, int ticksSinceBuild) {

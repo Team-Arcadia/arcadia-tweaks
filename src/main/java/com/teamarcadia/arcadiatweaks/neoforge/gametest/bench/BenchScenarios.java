@@ -2,9 +2,13 @@ package com.teamarcadia.arcadiatweaks.neoforge.gametest.bench;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.teamarcadia.arcadiatweaks.neoforge.gametest.bench.scenario.AccessoriesScenario;
+import com.teamarcadia.arcadiatweaks.neoforge.gametest.bench.scenario.AllScenario;
 import com.teamarcadia.arcadiatweaks.neoforge.gametest.bench.scenario.BotanyPotsScenario;
+import com.teamarcadia.arcadiatweaks.neoforge.gametest.bench.scenario.CosmeticScenario;
 import com.teamarcadia.arcadiatweaks.neoforge.gametest.bench.scenario.EntityMoveGuardScenario;
 import com.teamarcadia.arcadiatweaks.neoforge.gametest.bench.scenario.MekanismScenario;
+import com.teamarcadia.arcadiatweaks.neoforge.gametest.bench.scenario.RefinedStorageSaveScenario;
 import com.teamarcadia.arcadiatweaks.neoforge.gametest.bench.scenario.RefinedStorageScenario;
 import net.neoforged.fml.ModList;
 
@@ -20,13 +24,8 @@ import java.util.stream.Collectors;
  * factory is only called when the mods are loaded, so a scenario class may reference its mod's
  * classes directly.
  *
- * <p>Extension points not implemented yet (their mods are not part of the dev runtime):
- * <ul>
- *   <li>{@code cosmetic}: fake players whose player tick event is fired manually while they hold
- *   CosmeticWeapons / CosmeticArmours items, OFF/ON on the cosmetic gate switch.</li>
- *   <li>{@code accessories}: players and mobs with Accessories slots.</li>
- * </ul>
- * To add one: write the class in {@code scenario/}, then add an {@link Entry} below with its mod ids.
+ * <p>To add one: write the class in {@code scenario/}, then add an {@link Entry} below with its mod
+ * ids. The last scenario, {@code all}, runs every other loaded scenario at once in one world.
  *
  * <p>{@code -Darcadia.bench.scenarios=id1,id2} runs only the listed scenarios.
  *
@@ -36,12 +35,28 @@ public final class BenchScenarios {
 
     record Entry(String id, List<String> requiredMods, Supplier<BenchScenario> factory) {}
 
-    private static final List<Entry> ENTRIES = List.of(
+    private static final List<Entry> PARTS = List.of(
             new Entry("botanypots", List.of("botanypots"), () -> new BotanyPotsScenario()),
             new Entry("refinedstorage", List.of("refinedstorage"), () -> new RefinedStorageScenario()),
+            new Entry("refinedstorage_save", List.of("refinedstorage"), () -> new RefinedStorageSaveScenario()),
             new Entry("mekanism", List.of("mekanism"), () -> new MekanismScenario()),
-            new Entry("entity_move_guard", List.of(), () -> new EntityMoveGuardScenario())
+            new Entry("entity_move_guard", List.of(), () -> new EntityMoveGuardScenario()),
+            new Entry("cosmetic", List.of("cosmeticweaponsmod", "cosmeticarmoursmod", "curios", "accessories"), () -> new CosmeticScenario()),
+            new Entry("accessories", List.of("accessories"), () -> new AccessoriesScenario())
     );
+
+    private static final List<Entry> ENTRIES;
+
+    static {
+        final List<Entry> all = new ArrayList<>(PARTS);
+        all.add(new Entry("all", List.of(), () -> new AllScenario(
+                PARTS.stream().filter(BenchScenarios::loaded).map(e -> e.factory().get()).toList())));
+        ENTRIES = List.copyOf(all);
+    }
+
+    private static boolean loaded(Entry e) {
+        return e.requiredMods().stream().allMatch(m -> ModList.get().isLoaded(m));
+    }
 
     private BenchScenarios() {}
 

@@ -16,11 +16,11 @@ import java.util.Map;
  */
 final class BenchSummary {
 
-    private static final String[] SERIES = {"tick", "scenario", "level", "postEvents"};
+    private static final String[] SERIES = {"tick", "scenario", "level", "postEvents", "driven"};
 
     private BenchSummary() {}
 
-    /** @param samples per phase, in phase order: {tick, scenario, level, postEvents} arrays in ns. */
+    /** @param samples per phase, in phase order: {tick, scenario, level, postEvents, driven} arrays in ns. */
     static JsonObject summarize(JsonArray phases, List<long[][]> samples) {
         final JsonObject summary = new JsonObject();
         summary.add("off", pooled(phases, samples, false));
@@ -29,6 +29,7 @@ final class BenchSummary {
         summary.add("scenario", compare(phases, samples, 1));
         summary.add("level", compare(phases, samples, 2));
         summary.add("postEvents", compare(phases, samples, 3));
+        summary.add("driven", compare(phases, samples, 4));
         return summary;
     }
 
@@ -105,7 +106,7 @@ final class BenchSummary {
     }
 
     static void log(String id, JsonObject summary) {
-        for (String series : new String[] {"tick", "scenario", "level", "postEvents"}) {
+        for (String series : SERIES) {
             final JsonObject c = summary.getAsJsonObject(series);
             final JsonObject off = summary.getAsJsonObject("off").getAsJsonObject(series);
             final JsonObject on = summary.getAsJsonObject("on").getAsJsonObject(series);

@@ -129,7 +129,7 @@ public final class CosmeticPresenceGateGameTests {
 
     private CosmeticPresenceGateGameTests() {}
 
-    private record Procedure(String className, MethodHandle execute, ResourceLocation advancement, List<Item> items, boolean gated) {}
+    public record Procedure(String className, MethodHandle execute, ResourceLocation advancement, List<Item> items, boolean gated) {}
 
     // ------------------------------------------------------------------------------------------------ tests
 
@@ -539,6 +539,16 @@ public final class CosmeticPresenceGateGameTests {
                     Math.round(offAll), Math.round(onAll), String.format("%.3f", onAll / offAll));
             ArcadiaTweaks.LOGGER.info("[cosmetic-bench] 15 gated procedures: off={} ns/tick on={} ns/tick ratio={}",
                     Math.round(offGated), Math.round(onGated), String.format("%.3f", onGated / offGated));
+            final String method = " GameTest-hosted bench (-ParcadiaCosmeticBench=true), same JVM, 2 rounds x (20k warm-up + " + timed
+                    + " timed iterations) per mode, alternating off/on. Unplaced ServerPlayer: 36 filler main stacks, 4 iron armour,"
+                    + " offhand torches, up to 5 Curios and 5 Accessories items (as many as the slots take), no advancement done. 'before' = gate off through the kill-switch path"
+                    + " (Mixin present, every call passed to the original).";
+            MicroBenchResults.record("cosmetic", "cosmetic: all 26 contains procedures (CosmeticWeapons + CosmeticArmours) per player tick",
+                    "ns/player tick", offAll, onAll, "All 26 procedures' execute per iteration." + method
+                            + String.format(java.util.Locale.ROOT, " Ratio %.3f.", onAll / offAll));
+            MicroBenchResults.record("cosmetic", "cosmetic: 15 gated procedures (N >= 2) per player tick",
+                    "ns/player tick", offGated, onGated, "Only the 15 gated procedures; the 11 single-item ones are not targeted." + method
+                            + String.format(java.util.Locale.ROOT, " Ratio %.3f.", onGated / offGated));
             helper.assertTrue(countDone(player) == 0, "bench inventory must not grant anything");
         } finally {
             CosmeticGate.setAuditPassedForTesting(audit);
@@ -898,7 +908,7 @@ public final class CosmeticPresenceGateGameTests {
     }
 
     /** Procedures, their item chain and advancement id, read from the shipped bytecode. */
-    private static synchronized List<Procedure> procedures() {
+    public static synchronized List<Procedure> procedures() {
         if (procedures != null) {
             return procedures;
         }
