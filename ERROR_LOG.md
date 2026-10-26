@@ -55,3 +55,17 @@
 **Root cause:** javac compiles a `switch` on an enum from another class into a synthetic `$1` switch-map class next to the switching class. That class sits in the Mixin package, and Mixin refuses to load any class there that is not the plugin itself.
 **Fix:** replaced the enum `switch` with `if` comparisons.
 **Prevention:** no enum `switch`, anonymous class or inner class in a Mixin plugin; keep plugin logic in a class outside the Mixin package (as `AccessoriesContainsSurgery` does) or use `if` chains and string switches.
+
+## [2026-10-26 14:58] - Bench Refined Storage network moved no items
+**Context:** in-server bench, Refined Storage scenario built with `level.setBlock` and disks filled programmatically.
+**Error:** exporters exported nothing; the network storage held only the external storage chests; the disk drives stayed inactive.
+**Root cause:** two things. A disk drive placed with its default facing had its front (which does not connect) against the cable bus, so each drive formed its own network with no controller and no energy. And a disk put into a drive before the drive has a network is ignored by Refined Storage (`onDiskChanged` skips it) until the next disk change.
+**Fix:** drives placed under the bus; disks inserted once every node is on the controller's network; the scenario waits until every node is active and the disks are visible in the network storage; two probes (exporter alone, importer alone) prove items move.
+**Prevention:** after building any Refined Storage network in code, check that every node is on the controller's network (`getNetworkForItem() == controller network`) and active, not only that it has a network.
+
+## [2026-10-26 14:55] - Bench saved data grew between runs
+**Context:** repeated `runBenchServer` runs.
+**Error:** the timed Refined Storage save grew from 31 KB to 217 KB over four runs.
+**Root cause:** the GameTest server reuses `run/world`, and the disks created by each run stayed in the `refinedstorage_storages` saved data.
+**Fix:** the bench runs in its own `run-bench/` directory whose world is deleted before every run, and the scenario removes its disk storages from the repository on teardown.
+**Prevention:** a benchmark that measures saved data must start from a fresh world and clean up what it adds.

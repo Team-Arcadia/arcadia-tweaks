@@ -20,6 +20,7 @@ Thumbs.db
 
 # Run
 run/
+run-bench/
 runs/
 logs/
 crash-reports/
