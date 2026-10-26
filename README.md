@@ -7,10 +7,12 @@ Current version: **0.2.0** (see [CHANGELOG.md](CHANGELOG.md)).
 | Module | Target | Kind |
 |--------|--------|------|
 | `botany` | [BotanyPots](https://github.com/Darkhax-Minecraft/BotanyPots) | Server tick optimizations (match memoization, tick coalescing, hopper export backoff, growth tick cache) |
-| `refinedstorage` | Refined Storage 2 | Coalesced network node and transmitter activeness checks |
+| `refinedstorage` | Refined Storage 2 | Coalesced network node and transmitter activeness checks (debounce-correct), single component lookup, cached disk saves, quieter debug logs |
 | `mekanism` | Mekanism | Idle cable, network and Logistical Transporter backoff, plus an optional client rendering safety patch |
 | `waystones` | Waystones + FTB Teams | "Visible to Team" waystones follow the owner's FTB Teams party |
 | `simplyswords` | Simply Swords | Runic Forge no longer creates free Runic Tablets |
+| `cosmetic` | CosmeticWeapons + CosmeticArmours | Item presence gate for the advancement tick procedures (fewer inventory scans per player tick) |
+| `accessories` | Accessories | `contains` fast path and a lighter per-entity tick |
 | `[safety]` | Vanilla | Entity movement guard against runaway velocities that freeze the server |
 
 Every target mod is optional: a module whose mod is absent stays dormant.
@@ -38,7 +40,8 @@ ArcadiaTweaks/
 │   │   │   ├── module/                          # ArcadiaModule SPI + ModuleRegistry
 │   │   │   └── modules/                         # one folder per module: Module + Config (kill switches)
 │   │   │       ├── botany/  mekanism/  refinedstorage/
-│   │   │       └── waystones/  simplyswords/
+│   │   │       ├── waystones/  simplyswords/
+│   │   │       └── cosmetic/  accessories/
 │   │   └── neoforge/
 │   │       ├── ArcadiaTweaksNeoForge.java       # @Mod entry point
 │   │       ├── admin/                           # /arcadia_tweaks gui (server-side inventory menu)
@@ -120,6 +123,15 @@ The in-game admin command follows the jar variant:
 
 `admin` remains available as an alias for `gui`.
 
+### Admin menu
+
+`/arcadia_tweaks gui` opens a paged 9x6 chest menu. It shows one row per module
+whose mod is present, with the module switch first, plus a row for the safety
+guards. Left and right click change a number, shift-click resets one value to its
+default (shown in every tooltip), and the "Recommended defaults" button resets
+everything after a second click to confirm. Changes are saved at once and read by
+the patches on their next run, with no restart.
+
 Patch compatibility is guarded by structure, not by version string. If a newer
 target mod still exposes the same classes, fields and method descriptors, the
 patch applies. If a target moved or changed signature, only the affected Mixin is
@@ -149,6 +161,17 @@ Required jars (and the version each must match in `gradle.properties`):
 | `SimplyTooltips-neoforge-<ver>.jar` (dev runtime) | `simplytooltips_version` |
 | `fzzy_config-<ver>+1.21+neoforge.jar` (dev runtime) | `fzzyconfig_version` |
 | `kotlinforforge-<ver>-all.jar` (dev runtime)   | `kotlinforforge_version` |
+| `CosmeticWeapons - <ver> - 1.21.1 - NeoForge.jar` | `cosmeticweapons_version` |
+| `CosmeticArmours - <ver> - 1.21.1 - NeoForge.jar` | `cosmeticarmours_version` |
+| `curios-neoforge-<ver>.jar`                    | `curios_version`       |
+| `accessories-neoforge-<ver>.jar`               | `accessories_version`  |
+| `owo-lib-neoforge-<ver>.jar`                   | `owolib_version`       |
+| `fabric-api-base-<ver>.jar` (compile only)     | `fabricapibase_version` |
+| `endec-<ver>.jar` (compile only)               | `endec_version`        |
+| `Patchouli-1.21.1-<ver>-NEOFORGE.jar` (dev runtime) | `patchouli_version` |
+| `geckolib-neoforge-1.21.1-<ver>.jar` (dev runtime) | `geckolib_version`  |
+| `recipeessentials-1.21.1-<ver>.jar` (dev runtime) | `recipeessentials_version` |
+| `cupboard-1.21.1-<ver>.jar` (dev runtime)      | `cupboard_version`     |
 
 `libs/*.jar` is gitignored - each developer copies their own from the production pack. When the pack updates a targeted mod, refresh `libs/` and bump the corresponding `gradle.properties` values to match the new filenames.
 
@@ -168,6 +191,8 @@ Required jars (and the version each must match in `gradle.properties`):
 # NeoForge GameTests in a headless dev server
 ./gradlew runGameTestServer
 ```
+
+The suite is 83 JUnit tests and 39 GameTests. `./gradlew runGameTestServer -ParcadiaBench` also runs the microbenchmarks.
 
 The GameTests cover the entity movement guard, the Waystones team visibility (with real FTB Teams parties) and the Runic Forge (a FakePlayer driving the real Simply Swords menu). Simply Swords needs SimplyTooltips, fzzy_config and Kotlin for Forge at runtime, hence the three dev runtime jars above.
 
@@ -194,6 +219,10 @@ regression risk while still cutting repeated tick work. Every setting is also
 available in the in-game admin GUI, except client-only rendering settings that
 must be configured on each client.
 
+Defaults: every optimization proven identical by the tests is on by default.
+BotanyPots A2 (`light_flag_downgrade_enabled`) stays off because it changes
+neighbour updates.
+
 ### Module toggles
 
 | Setting | Recommended | Notes |
@@ -202,6 +231,8 @@ must be configured on each client.
 | `modules.refinedstorage` | `true` | Enable Refined Storage patch when RS2 is present. |
 | `modules.mekanism` | `true` | Enable Mekanism cable/network patch when Mekanism is present. |
 | `modules.waystones` | `true` | Enable the Waystones team visibility fix when Waystones and FTB Teams are present. |
+| `modules.cosmetic` | `true` | Enable the CosmeticWeapons / CosmeticArmours presence gate when those mods are present. |
+| `modules.accessories` | `true` | Enable the Accessories fast paths when Accessories 1.1.0-beta.54 is present. |
 
 ### BotanyPots
 
@@ -250,12 +281,20 @@ Best balanced profile:
 [refinedstorage]
 activeness_check_coalescing_enabled = true
 activeness_check_interval_ticks = 20
+single_component_lookup_enabled = true
+storage_save_cache_enabled = true
+storage_save_cache_verify_interval = 20
+quiet_hot_debug_logs_enabled = true
 ```
 
 | Setting | Best value | What it does |
 |---------|------------|--------------|
-| `activeness_check_coalescing_enabled` | `true` | Coalesces node/transmitter activeness state checks while keeping importer/exporter work cadence intact. |
-| `activeness_check_interval_ticks` | `20` | Best conservative value. Worst-case redstone/energy active-state visual delay is 19 ticks. |
+| `activeness_check_coalescing_enabled` | `true` | Coalesces node/transmitter activeness state checks while keeping importer/exporter work cadence intact. The skipped ticks are added to Refined Storage's own 20-tick debounce, so its timing is preserved. |
+| `activeness_check_interval_ticks` | `20` | Best conservative value. A redstone/energy/network change lands at most `interval - 1` ticks earlier or later than in plain Refined Storage. |
+| `single_component_lookup_enabled` | `true` | One hash lookup instead of two for every network component access. Same results, same exception for a missing component. |
+| `storage_save_cache_enabled` | `true` | Reuses the encoded form of storage disks that did not change since the last autosave, instead of re-encoding every disk of the world. The saved data is identical. |
+| `storage_save_cache_verify_interval` | `20` | Safety net: every Nth save re-encodes the cached disks and compares. On any difference the cache turns itself off until the next restart. `0` never verifies. |
+| `quiet_hot_debug_logs_enabled` | `true` | Drops two Refined Storage debug log lines written from the tick loop ("External storage has changed", transmitter retry). Only `logs/debug.log` changes. |
 
 Use `10` if you want quicker redstone/energy activeness response. Use `1` to
 disable coalescing without disabling the whole module.
@@ -320,6 +359,53 @@ lookup is replaced by the owner's FTB Teams party: party members see the
 waystone, allies do not, and a player without a party only sees their own. The
 Mixin is skipped when FTB Teams is not installed, and Waystones keeps its own
 behaviour.
+
+### CosmeticWeapons / CosmeticArmours
+
+This module is an optimization.
+
+```toml
+[cosmetic]
+contains_presence_gate = true
+```
+
+| Setting | Best value | What it does |
+|---------|------------|--------------|
+| `contains_presence_gate` | `true` | Item-presence gate for the 15 advancement tick procedures of the two mods: once a call has scanned the inventory, items that are not in it are answered without a new scan. |
+
+Every player tick, these procedures test up to 22 items each with
+`Inventory.contains`, and every call scans the inventory, Curios and Accessories.
+With the gate on, the first test of a call runs normally; if it finds nothing,
+the items present are listed once and the later tests skip the scan for any item
+that is not in that list, since it cannot match. The answers and the advancements
+are identical (the differential GameTests compare 822 placements, near misses and
+500 random inventories with the gate on and off), and the bench goes from 434 to
+100 microseconds per player tick for the 26 procedures. A startup audit turns the
+gate off, with a warning, if another mod hooks `Inventory.contains` or the
+ItemStack comparison it relies on.
+
+### Accessories
+
+This module is an optimization, pinned to Accessories 1.1.0-beta.54.
+
+```toml
+[accessories]
+contains_fast_path = true
+tick_allocation_trimmed = true
+```
+
+| Setting | Best value | What it does |
+|---------|------------|--------------|
+| `contains_fast_path` | `true` | Skips the accessory slot scan in `Inventory.contains(ItemStack)`, which can never match, while keeping every state-changing call in order. |
+| `tick_allocation_trimmed` | `true` | Runs an allocation-trimmed copy of the per-entity Accessories tick (about 45% less allocation per player tick). |
+
+Accessories' extension of `contains(ItemStack)` tests `isEmpty()` where it should
+test the opposite, so its scan never changes the answer; the fast path keeps the
+calls that change state and drops the rest (1.6 to 0.5-0.7 microseconds per
+call). The tick copy makes the same calls in the same order and only creates
+slot references, dirty maps and attribute builders when a slot needs them. Both
+are matched to the Accessories bytecode by fingerprints: on any other build they
+switch themselves off with one warning and Accessories keeps its own behaviour.
 
 ### Safety guards
 
@@ -422,10 +508,12 @@ Version actuelle : **0.2.0** (voir [CHANGELOG.md](CHANGELOG.md)).
 | Module | Cible | Type |
 |--------|-------|------|
 | `botany` | [BotanyPots](https://github.com/Darkhax-Minecraft/BotanyPots) | Optimisations du tick serveur (mémoïsation des correspondances, regroupement des ticks, temporisation des exports de hopper, cache du tick de croissance) |
-| `refinedstorage` | Refined Storage 2 | Vérifications d'activité des nœuds réseau et des transmetteurs regroupées |
+| `refinedstorage` | Refined Storage 2 | Vérifications d'activité des nœuds réseau et des transmetteurs regroupées (temporisation respectée), recherche unique de composant, sauvegardes de disques en cache, logs debug allégés |
 | `mekanism` | Mekanism | Temporisation des câbles, réseaux et Logistical Transporters inactifs, plus un correctif optionnel de sécurité du rendu client |
 | `waystones` | Waystones + FTB Teams | Les waystones « Visible to Team » suivent le groupe FTB Teams du propriétaire |
 | `simplyswords` | Simply Swords | La Runic Forge ne crée plus de Runic Tablets gratuits |
+| `cosmetic` | CosmeticWeapons + CosmeticArmours | Filtre de présence des objets pour les procédures de progrès exécutées à chaque tick (moins de parcours d'inventaire par tick joueur) |
+| `accessories` | Accessories | Raccourci de `contains` et tick d'entité allégé |
 | `[safety]` | Vanilla | Garde-fou de mouvement des entités contre les vitesses incontrôlées qui figent le serveur |
 
 Chaque mod cible est optionnel : un module dont le mod est absent reste dormant.
@@ -453,7 +541,8 @@ ArcadiaTweaks/
 │   │   │   ├── module/                          # ArcadiaModule SPI + ModuleRegistry
 │   │   │   └── modules/                         # one folder per module: Module + Config (kill switches)
 │   │   │       ├── botany/  mekanism/  refinedstorage/
-│   │   │       └── waystones/  simplyswords/
+│   │   │       ├── waystones/  simplyswords/
+│   │   │       └── cosmetic/  accessories/
 │   │   └── neoforge/
 │   │       ├── ArcadiaTweaksNeoForge.java       # @Mod entry point
 │   │       ├── admin/                           # /arcadia_tweaks gui (server-side inventory menu)
@@ -535,6 +624,15 @@ La commande d'administration en jeu dépend de la variante de jar :
 
 `admin` reste disponible comme alias de `gui`.
 
+### Menu d'administration
+
+`/arcadia_tweaks gui` ouvre un menu de coffre paginé de 9x6. Il affiche une ligne par module
+dont le mod est présent, avec l'interrupteur du module en premier, plus une ligne pour les
+gardes-fous. Le clic gauche et le clic droit modifient un nombre, le clic avec Maj remet une
+valeur à son défaut (indiqué dans chaque infobulle), et le bouton « Recommended defaults »
+remet tout à zéro après un second clic de confirmation. Les changements sont enregistrés
+immédiatement et lus par les patchs à leur prochaine exécution, sans redémarrage.
+
 La compatibilité des patchs est vérifiée par la structure, pas par le numéro de version. Si un mod
 cible plus récent expose toujours les mêmes classes, champs et descripteurs de méthodes, le patch
 s'applique. Si une cible a été déplacée ou a changé de signature, seul le Mixin concerné est
@@ -564,6 +662,17 @@ Jars requis (et la version à faire correspondre dans `gradle.properties`) :
 | `SimplyTooltips-neoforge-<ver>.jar` (exécution de dev) | `simplytooltips_version` |
 | `fzzy_config-<ver>+1.21+neoforge.jar` (exécution de dev) | `fzzyconfig_version` |
 | `kotlinforforge-<ver>-all.jar` (exécution de dev) | `kotlinforforge_version` |
+| `CosmeticWeapons - <ver> - 1.21.1 - NeoForge.jar` | `cosmeticweapons_version` |
+| `CosmeticArmours - <ver> - 1.21.1 - NeoForge.jar` | `cosmeticarmours_version` |
+| `curios-neoforge-<ver>.jar`                    | `curios_version`       |
+| `accessories-neoforge-<ver>.jar`               | `accessories_version`  |
+| `owo-lib-neoforge-<ver>.jar`                   | `owolib_version`       |
+| `fabric-api-base-<ver>.jar` (compilation seulement) | `fabricapibase_version` |
+| `endec-<ver>.jar` (compilation seulement)      | `endec_version`        |
+| `Patchouli-1.21.1-<ver>-NEOFORGE.jar` (exécution de dev) | `patchouli_version` |
+| `geckolib-neoforge-1.21.1-<ver>.jar` (exécution de dev) | `geckolib_version` |
+| `recipeessentials-1.21.1-<ver>.jar` (exécution de dev) | `recipeessentials_version` |
+| `cupboard-1.21.1-<ver>.jar` (exécution de dev) | `cupboard_version`     |
 
 `libs/*.jar` est ignoré par git : chaque développeur copie les siens depuis le pack de production. Lorsque le pack met à jour un mod ciblé, rafraîchir `libs/` et mettre à jour les valeurs correspondantes de `gradle.properties` selon les nouveaux noms de fichiers.
 
@@ -583,6 +692,8 @@ Jars requis (et la version à faire correspondre dans `gradle.properties`) :
 # NeoForge GameTests in a headless dev server
 ./gradlew runGameTestServer
 ```
+
+La suite compte 83 tests JUnit et 39 GameTests. `./gradlew runGameTestServer -ParcadiaBench` lance aussi les microbenchmarks.
 
 Les GameTests couvrent le garde-fou de mouvement des entités, la visibilité d'équipe de Waystones (avec de vraies parties FTB Teams) et la Runic Forge (un FakePlayer qui manipule le vrai menu de Simply Swords). Simply Swords a besoin de SimplyTooltips, fzzy_config et Kotlin for Forge à l'exécution, d'où les trois jars d'exécution de dev ci-dessus.
 
@@ -609,6 +720,10 @@ risque de régression tout en réduisant le travail de tick répété. Chaque r�
 disponible dans l'interface d'administration en jeu, sauf les réglages de rendu exclusivement client qui
 doivent être configurés sur chaque client.
 
+Valeurs par défaut : toute optimisation dont les tests ont prouvé qu'elle donne des résultats
+identiques est activée par défaut. BotanyPots A2 (`light_flag_downgrade_enabled`) reste
+désactivée, car elle change les mises à jour de voisinage.
+
 ### Interrupteurs de modules
 
 | Réglage | Recommandé | Notes |
@@ -617,6 +732,8 @@ doivent être configurés sur chaque client.
 | `modules.refinedstorage` | `true` | Active le patch Refined Storage lorsque RS2 est présent. |
 | `modules.mekanism` | `true` | Active le patch des câbles/réseaux Mekanism lorsque Mekanism est présent. |
 | `modules.waystones` | `true` | Active le correctif de visibilité d'équipe des Waystones lorsque Waystones et FTB Teams sont présents. |
+| `modules.cosmetic` | `true` | Active le filtre de présence de CosmeticWeapons / CosmeticArmours lorsque ces mods sont présents. |
+| `modules.accessories` | `true` | Active les raccourcis d'Accessories lorsque Accessories 1.1.0-beta.54 est présent. |
 
 ### BotanyPots
 
@@ -665,12 +782,20 @@ Meilleur profil équilibré :
 [refinedstorage]
 activeness_check_coalescing_enabled = true
 activeness_check_interval_ticks = 20
+single_component_lookup_enabled = true
+storage_save_cache_enabled = true
+storage_save_cache_verify_interval = 20
+quiet_hot_debug_logs_enabled = true
 ```
 
 | Réglage | Meilleure valeur | Effet |
 |---------|------------------|-------|
-| `activeness_check_coalescing_enabled` | `true` | Regroupe les vérifications d'état d'activité des nœuds et transmetteurs tout en conservant la cadence de travail des importers/exporters. |
-| `activeness_check_interval_ticks` | `20` | Meilleure valeur prudente. Le retard visuel maximal de l'état actif lié à la redstone ou à l'énergie est de 19 ticks. |
+| `activeness_check_coalescing_enabled` | `true` | Regroupe les vérifications d'état d'activité des nœuds et transmetteurs tout en conservant la cadence de travail des importers/exporters. Les ticks sautés sont ajoutés à la temporisation de 20 ticks de Refined Storage, dont le timing est donc préservé. |
+| `activeness_check_interval_ticks` | `20` | Meilleure valeur prudente. Un changement de redstone, d'énergie ou de réseau arrive au plus `interval - 1` ticks plus tôt ou plus tard que dans Refined Storage normal. |
+| `single_component_lookup_enabled` | `true` | Une seule recherche dans la table au lieu de deux pour chaque accès à un composant du réseau. Mêmes résultats, même exception pour un composant absent. |
+| `storage_save_cache_enabled` | `true` | Réutilise la forme encodée des disques de stockage inchangés depuis la dernière sauvegarde automatique, au lieu de réencoder tous les disques du monde. Les données sauvegardées sont identiques. |
+| `storage_save_cache_verify_interval` | `20` | Filet de sécurité : une sauvegarde sur N réencode les disques en cache et compare. À la moindre différence, le cache se coupe jusqu'au prochain redémarrage. `0` ne vérifie jamais. |
+| `quiet_hot_debug_logs_enabled` | `true` | Supprime deux lignes de log debug de Refined Storage écrites depuis la boucle de tick (« External storage has changed », nouvel essai des transmetteurs). Seul `logs/debug.log` change. |
 
 Utiliser `10` pour une réponse plus rapide de l'état d'activité à la redstone ou à l'énergie. Utiliser `1` pour
 désactiver le regroupement sans désactiver tout le module.
@@ -735,6 +860,53 @@ recherche par scoreboard est remplacée par le groupe FTB Teams du propriétaire
 groupe voient la waystone, les alliés non, et un joueur sans groupe ne voit que les siennes. Le
 Mixin est ignoré lorsque FTB Teams n'est pas installé, et Waystones conserve son propre
 comportement.
+
+### CosmeticWeapons / CosmeticArmours
+
+Ce module est une optimisation.
+
+```toml
+[cosmetic]
+contains_presence_gate = true
+```
+
+| Réglage | Meilleure valeur | Effet |
+|---------|------------------|-------|
+| `contains_presence_gate` | `true` | Filtre de présence des objets pour les 15 procédures de progrès exécutées à chaque tick par les deux mods : une fois l'inventaire parcouru par un appel, les objets qui n'y sont pas obtiennent leur réponse sans nouveau parcours. |
+
+À chaque tick joueur, ces procédures testent jusqu'à 22 objets chacune avec
+`Inventory.contains`, et chaque appel parcourt l'inventaire, Curios et Accessories.
+Avec le filtre, le premier test d'un appel s'exécute normalement ; s'il ne trouve rien,
+les objets présents sont listés une fois et les tests suivants sautent le parcours pour
+tout objet absent de cette liste, puisqu'il ne peut pas correspondre. Les réponses et les
+progrès sont identiques (les GameTests différentiels comparent 822 placements,
+quasi-correspondances et 500 inventaires aléatoires filtre activé et désactivé), et le banc
+passe de 434 à 100 microsecondes par tick joueur pour les 26 procédures. Un audit au
+démarrage coupe le filtre, avec un avertissement, si un autre mod modifie
+`Inventory.contains` ou la comparaison d'ItemStack dont il dépend.
+
+### Accessories
+
+Ce module est une optimisation, liée à Accessories 1.1.0-beta.54.
+
+```toml
+[accessories]
+contains_fast_path = true
+tick_allocation_trimmed = true
+```
+
+| Réglage | Meilleure valeur | Effet |
+|---------|------------------|-------|
+| `contains_fast_path` | `true` | Saute le parcours des emplacements d'accessoires dans `Inventory.contains(ItemStack)`, qui ne peut jamais correspondre, tout en gardant dans l'ordre chaque appel qui modifie un état. |
+| `tick_allocation_trimmed` | `true` | Exécute une copie du tick d'entité d'Accessories qui alloue moins (environ 45 % de moins par tick joueur). |
+
+L'extension d'Accessories pour `contains(ItemStack)` teste `isEmpty()` là où elle devrait
+tester l'inverse, donc son parcours ne change jamais la réponse ; le raccourci garde les
+appels qui modifient un état et supprime le reste (1,6 à 0,5-0,7 microseconde par
+appel). La copie du tick fait les mêmes appels dans le même ordre et ne crée les références
+d'emplacement, tables de modifications et constructeurs d'attributs que lorsqu'un emplacement
+en a besoin. Les deux sont liés au bytecode d'Accessories par des empreintes : sur toute autre
+version, ils se coupent seuls avec un avertissement et Accessories garde son comportement.
 
 ### Gardes-fous
 
