@@ -69,3 +69,10 @@
 **Root cause:** the GameTest server reuses `run/world`, and the disks created by each run stayed in the `refinedstorage_storages` saved data.
 **Fix:** the bench runs in its own `run-bench/` directory whose world is deleted before every run, and the scenario removes its disk storages from the repository on teardown.
 **Prevention:** a benchmark that measures saved data must start from a fresh world and clean up what it adds.
+
+## [2026-10-26 15:24] - Bench cosmetic players granted advancements
+**Context:** in-server bench `cosmetic` scenario, some players holding one item of a multi-item CosmeticWeapons / CosmeticArmours procedure, meant to complete nothing.
+**Error:** 4 cosmetic advancements were done after the first tick; a probe that looked for an item completing nothing found none.
+**Root cause:** in both mods a procedure's item list is a set of alternatives: holding any one of its items completes the advancement. There is no "partial chain" state.
+**Fix:** holders get their advancement from the procedure itself on a tick fired at build time, as a real player who held the item would have; the scenario records the count before measuring and checks it is unchanged at the end.
+**Prevention:** read what a procedure's item list means (any vs all) before building a "near miss" inventory.
