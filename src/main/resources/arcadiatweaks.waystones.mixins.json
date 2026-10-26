@@ -4,7 +4,6 @@
   "plugin": "com.teamarcadia.arcadiatweaks.neoforge.mixin.waystones.WaystonesMixinPlugin",
   "package": "com.teamarcadia.arcadiatweaks.neoforge.mixin.waystones",
   "compatibilityLevel": "JAVA_21",
-  "refmap": "arcadiatweaks.refmap.json",
   "mixins": [
     "WaystoneIndexManagerMixin"
   ],

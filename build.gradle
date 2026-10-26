@@ -32,6 +32,12 @@ configurations {
 }
 
 sourceSets {
+    // Dev-run data only (GameTests): gives players Curios slots, which no mod of the dev runtime does.
+    // Part of the dev mod in runs, never part of any jar.
+    gametestData {
+        java.srcDirs = []
+        resources.srcDirs = ['src/gametest/resources']
+    }
     test {
         compileClasspath += sourceSets.main.compileClasspath
         runtimeClasspath += sourceSets.main.runtimeClasspath
@@ -55,9 +61,18 @@ dependencies {
     compileOnly  files("libs/balm-neoforge-1.21.1-${balm_version}.jar")
     compileOnly  files("libs/ftb-teams-neoforge-${ftbteams_version}.jar")
     compileOnly  files("libs/ftb-library-neoforge-${ftblibrary_version}.jar")
-    // Simply Swords module: the Runic Forge fix targets RunicForgeScreenHandler. Compile only:
-    // Simply Swords needs fzzy_config and Kotlin for Forge at runtime, which dev runs do not ship.
+    // Simply Swords module: the Runic Forge fix targets RunicForgeScreenHandler.
     compileOnly  files("libs/simplyswords-neoforge-${simplyswords_version}.jar")
+    // Cosmetic module: the presence gate targets the CosmeticWeapons / CosmeticArmours procedures and reads
+    // Curios slots through the Curios API (soft class, only loaded when Curios is installed).
+    compileOnly  files("libs/CosmeticWeapons - ${cosmeticweapons_version} - 1.21.1 - NeoForge.jar")
+    compileOnly  files("libs/CosmeticArmours - ${cosmeticarmours_version} - 1.21.1 - NeoForge.jar")
+    compileOnly  files("libs/curios-neoforge-${curios_version}.jar")
+    compileOnly  files("libs/accessories-neoforge-${accessories_version}.jar")
+    // Accessories module: C1 and T-A target Accessories internals (owo-lib API types in signatures).
+    compileOnly  files("libs/owo-lib-neoforge-${owolib_version}.jar")
+    compileOnly  files("libs/fabric-api-base-${fabricapibase_version}.jar")
+    compileOnly  files("libs/endec-${endec_version}.jar")
 
     runtimeOnly  files("libs/botanypots-neoforge-1.21.1-${botanypots_version}.jar")
     runtimeOnly  files("libs/bookshelf-neoforge-1.21.1-${bookshelf_version}.jar")
@@ -69,6 +84,22 @@ dependencies {
     runtimeOnly  files("libs/ftb-teams-neoforge-${ftbteams_version}.jar")
     runtimeOnly  files("libs/ftb-library-neoforge-${ftblibrary_version}.jar")
     runtimeOnly  files("libs/architectury-${architectury_version}-neoforge.jar")
+    // Simply Swords and its runtime dependencies, so the Runic Forge GameTests run against it.
+    runtimeOnly  files("libs/simplyswords-neoforge-${simplyswords_version}.jar")
+    runtimeOnly  files("libs/SimplyTooltips-neoforge-${simplytooltips_version}.jar")
+    runtimeOnly  files("libs/fzzy_config-${fzzyconfig_version}+1.21+neoforge.jar")
+    runtimeOnly  files("libs/kotlinforforge-${kotlinforforge_version}-all.jar")
+    // CosmeticWeapons / CosmeticArmours, the mods that hook Inventory.contains (Curios, Accessories) and the
+    // ItemStack comparison (GeckoLib, RecipeEssentials), so the cosmetic GameTests run in the modpack shape.
+    runtimeOnly  files("libs/CosmeticWeapons - ${cosmeticweapons_version} - 1.21.1 - NeoForge.jar")
+    runtimeOnly  files("libs/CosmeticArmours - ${cosmeticarmours_version} - 1.21.1 - NeoForge.jar")
+    runtimeOnly  files("libs/Patchouli-1.21.1-${patchouli_version}-NEOFORGE.jar")
+    runtimeOnly  files("libs/curios-neoforge-${curios_version}.jar")
+    runtimeOnly  files("libs/accessories-neoforge-${accessories_version}.jar")
+    runtimeOnly  files("libs/owo-lib-neoforge-${owolib_version}.jar")
+    runtimeOnly  files("libs/geckolib-neoforge-1.21.1-${geckolib_version}.jar")
+    runtimeOnly  files("libs/recipeessentials-1.21.1-${recipeessentials_version}.jar")
+    runtimeOnly  files("libs/cupboard-1.21.1-${cupboard_version}.jar")
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.3'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -91,6 +122,10 @@ neoForge {
         }
         client {
             client()
+            // ./gradlew runClient -PquickPlayWorld=<save name> loads that singleplayer world on start.
+            if (project.hasProperty('quickPlayWorld')) {
+                programArguments.addAll '--quickPlaySingleplayer', project.property('quickPlayWorld').toString()
+            }
         }
         server {
             server()
@@ -99,6 +134,36 @@ neoForge {
             server()
             systemProperty 'neoforge.gameTestServer', 'true'
             systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
+            // ./gradlew runGameTestServer -ParcadiaBench also runs the microbenchmark GameTests.
+            if (project.hasProperty('arcadiaBench')) {
+                systemProperty 'arcadia.bench', 'true'
+            }
+            // -ParcadiaCosmeticBench=true also runs the cosmetic presence gate microbenchmark (slow, off by default).
+            systemProperty 'arcadia.cosmeticBench', (findProperty('arcadiaCosmeticBench') ?: 'false').toString()
+            programArgument '--nogui'
+        }
+        // In-server A/B benchmark: ./gradlew runBenchServer
+        // Optional: -PbenchCopyTo=<file> (copy of the results JSON), -PbenchScenarios=a,b,
+        // -PbenchRounds=, -PbenchWarmup=, -PbenchSettle=, -PbenchMeasure= (ticks).
+        benchServer {
+            server()
+            // Own directory: the bench deletes its world before every run (see prepareBenchServerRun).
+            gameDirectory = project.file('run-bench')
+            systemProperty 'neoforge.gameTestServer', 'true'
+            systemProperty 'neoforge.enabledGameTestNamespaces', "${mod_id}_bench"
+            systemProperty 'arcadia.bench', 'true'
+            // Production-like logging and Mixin settings while measuring.
+            systemProperty 'forge.logging.console.level', 'info'
+            systemProperty 'mixin.debug', 'false'
+            systemProperty 'mixin.debug.export', 'false'
+            [benchCopyTo: 'arcadia.bench.copyTo', benchScenarios: 'arcadia.bench.scenarios',
+             benchRounds: 'arcadia.bench.rounds', benchWarmup: 'arcadia.bench.warmup',
+             benchSettle: 'arcadia.bench.settle', benchMeasure: 'arcadia.bench.measure'].each { prop, sys ->
+                if (project.hasProperty(prop)) {
+                    systemProperty sys, project.property(prop).toString()
+                }
+            }
+            jvmArguments.addAll '-Xms4G', '-Xmx4G'
             programArgument '--nogui'
         }
         data {
@@ -112,6 +177,7 @@ neoForge {
     mods {
         "${mod_id}" {
             sourceSet sourceSets.main
+            sourceSet sourceSets.gametestData
         }
     }
 }
@@ -140,7 +206,9 @@ def patchMixinConfigs = [
     refinedstorage: "${mod_id}.refinedstorage.mixins.json",
     mekanism      : "${mod_id}.mekanism.mixins.json",
     waystones     : "${mod_id}.waystones.mixins.json",
-    simplyswords  : "${mod_id}.simplyswords.mixins.json"
+    simplyswords  : "${mod_id}.simplyswords.mixins.json",
+    cosmetic      : "${mod_id}.cosmetic.mixins.json",
+    accessories   : "${mod_id}.accessories.mixins.json"
 ]
 
 def patchJarVariants = [
@@ -148,8 +216,8 @@ def patchJarVariants = [
         taskName      : 'jarAllPatches',
         classifier    : 'all',
         displayName   : 'all patches',
-        mixinConfigs  : [baseMixinConfig, patchMixinConfigs.botany, patchMixinConfigs.refinedstorage, patchMixinConfigs.mekanism, patchMixinConfigs.waystones, patchMixinConfigs.simplyswords],
-        optionalDeps  : ['botanypots', 'refinedstorage', 'mekanism', 'waystones', 'ftbteams', 'simplyswords'],
+        mixinConfigs  : [baseMixinConfig, patchMixinConfigs.botany, patchMixinConfigs.refinedstorage, patchMixinConfigs.mekanism, patchMixinConfigs.waystones, patchMixinConfigs.simplyswords, patchMixinConfigs.cosmetic, patchMixinConfigs.accessories],
+        optionalDeps  : ['botanypots', 'refinedstorage', 'mekanism', 'waystones', 'ftbteams', 'simplyswords', 'cosmeticweaponsmod', 'cosmeticarmoursmod', 'accessories'],
         excludedClasses: []
     ],
     botany        : [
@@ -166,7 +234,11 @@ def patchJarVariants = [
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/waystones/**',
             'com/teamarcadia/arcadiatweaks/neoforge/waystones/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/simplyswords/**',
-            'com/teamarcadia/arcadiatweaks/common/modules/simplyswords/**'
+            'com/teamarcadia/arcadiatweaks/common/modules/simplyswords/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/cosmetic/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/cosmetic/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/accessories/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/accessories/**'
         ]
     ],
     refinedstorage: [
@@ -183,7 +255,11 @@ def patchJarVariants = [
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/waystones/**',
             'com/teamarcadia/arcadiatweaks/neoforge/waystones/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/simplyswords/**',
-            'com/teamarcadia/arcadiatweaks/common/modules/simplyswords/**'
+            'com/teamarcadia/arcadiatweaks/common/modules/simplyswords/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/cosmetic/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/cosmetic/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/accessories/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/accessories/**'
         ]
     ],
     mekanism      : [
@@ -200,7 +276,11 @@ def patchJarVariants = [
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/waystones/**',
             'com/teamarcadia/arcadiatweaks/neoforge/waystones/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/simplyswords/**',
-            'com/teamarcadia/arcadiatweaks/common/modules/simplyswords/**'
+            'com/teamarcadia/arcadiatweaks/common/modules/simplyswords/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/cosmetic/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/cosmetic/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/accessories/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/accessories/**'
         ]
     ],
     waystones     : [
@@ -217,7 +297,11 @@ def patchJarVariants = [
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/mekanism/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mekanism/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/simplyswords/**',
-            'com/teamarcadia/arcadiatweaks/common/modules/simplyswords/**'
+            'com/teamarcadia/arcadiatweaks/common/modules/simplyswords/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/cosmetic/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/cosmetic/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/accessories/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/accessories/**'
         ]
     ]
 ]
@@ -286,6 +370,42 @@ side = "BOTH"
 # Simply Swords is optional at load time. The Runic Forge fix only applies when it is present.
 [[dependencies.${mod_id}]]
 modId = "simplyswords"
+type = "optional"
+versionRange = "[0.0.0,)"
+ordering = "AFTER"
+side = "BOTH"
+"""
+    }
+    if (variant.optionalDeps.contains('cosmeticweaponsmod')) {
+        optionalDependencyBlocks += """
+
+# CosmeticWeapons is optional at load time. The presence gate only applies when it is present.
+[[dependencies.${mod_id}]]
+modId = "cosmeticweaponsmod"
+type = "optional"
+versionRange = "[0.0.0,)"
+ordering = "AFTER"
+side = "BOTH"
+"""
+    }
+    if (variant.optionalDeps.contains('cosmeticarmoursmod')) {
+        optionalDependencyBlocks += """
+
+# CosmeticArmours is optional at load time. The presence gate only applies when it is present.
+[[dependencies.${mod_id}]]
+modId = "cosmeticarmoursmod"
+type = "optional"
+versionRange = "[0.0.0,)"
+ordering = "AFTER"
+side = "BOTH"
+"""
+    }
+    if (variant.optionalDeps.contains('accessories')) {
+        optionalDependencyBlocks += """
+
+# Accessories is optional at load time. Its optimizations only apply to the verified build.
+[[dependencies.${mod_id}]]
+modId = "accessories"
 type = "optional"
 versionRange = "[0.0.0,)"
 ordering = "AFTER"
@@ -415,6 +535,21 @@ tasks.named('prepareGameTestServerRun') {
     dependsOn tasks.named('syncGameTestStructures')
 }
 
+tasks.register('syncBenchStructures', Copy) {
+    group = 'verification'
+    description = 'Copies SNBT GameTest structures into the bench run directory.'
+    from layout.projectDirectory.dir('gameteststructures')
+    into layout.projectDirectory.dir('run-bench/gameteststructures')
+}
+
+tasks.named('prepareBenchServerRun') {
+    dependsOn tasks.named('syncBenchStructures')
+    // Every bench starts from a fresh world, so saved data from an earlier run cannot skew it.
+    doFirst {
+        delete layout.projectDirectory.dir('run-bench/world')
+    }
+}
+
 tasks.named('test') {
     useJUnitPlatform()
     dependsOn tasks.named('jarPatchVariants')
@@ -438,7 +573,7 @@ jar {
             'Implementation-Title'    : mod_name,
             'Implementation-Version'  : mod_version,
             'Implementation-Vendor'   : mod_authors,
-            'MixinConfigs'            : "${mod_id}.mixins.json,${mod_id}.botany.mixins.json,${mod_id}.refinedstorage.mixins.json,${mod_id}.mekanism.mixins.json,${mod_id}.waystones.mixins.json,${mod_id}.simplyswords.mixins.json"
+            'MixinConfigs'            : "${mod_id}.mixins.json,${mod_id}.botany.mixins.json,${mod_id}.refinedstorage.mixins.json,${mod_id}.mekanism.mixins.json,${mod_id}.waystones.mixins.json,${mod_id}.simplyswords.mixins.json,${mod_id}.cosmetic.mixins.json,${mod_id}.accessories.mixins.json"
         ])
     }
 }

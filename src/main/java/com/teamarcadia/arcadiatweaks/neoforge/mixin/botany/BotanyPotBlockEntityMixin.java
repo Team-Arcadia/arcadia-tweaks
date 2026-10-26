@@ -199,7 +199,7 @@ public abstract class BotanyPotBlockEntityMixin implements ArcadiaPotState {
     @Unique
     private static int arcadia$activeCoalesceN() {
         if (!BotanyMixinCompatibility.isTickPotCoalescingCompatible()) return 1;
-        if (!ArcadiaConfig.BOTANY.s2TickCoalescing.get()) return 1;
+        if (!ArcadiaConfig.BOTANY.enabled(ArcadiaConfig.BOTANY.s2TickCoalescing)) return 1;
         final int n = ArcadiaConfig.BOTANY.s2CoalesceN.get();
         return Math.max(1, n);
     }
@@ -220,7 +220,7 @@ public abstract class BotanyPotBlockEntityMixin implements ArcadiaPotState {
     private static BlockState arcadia$gateHopperBackoff(
             ServerLevel level, BlockPos pos, Operation<BlockState> original,
             Level levelArg, BlockPos posArg, BlockState stateArg, BotanyPotBlockEntity pot) {
-        if (!ArcadiaConfig.BOTANY.s3HopperBackoff.get()) {
+        if (!ArcadiaConfig.BOTANY.enabled(ArcadiaConfig.BOTANY.s3HopperBackoff)) {
             return original.call(level, pos);
         }
         final ArcadiaPotState state = (ArcadiaPotState) pot;
@@ -247,7 +247,7 @@ public abstract class BotanyPotBlockEntityMixin implements ArcadiaPotState {
             IGameplayHelper svc, ServerLevel level, BlockPos pos, Direction dir, ItemStack stack, Operation<ItemStack> original,
             Level levelArg, BlockPos posArg, BlockState stateArg, BotanyPotBlockEntity pot) {
         final ItemStack result = original.call(svc, level, pos, dir, stack);
-        if (ArcadiaConfig.BOTANY.s3HopperBackoff.get()) {
+        if (ArcadiaConfig.BOTANY.enabled(ArcadiaConfig.BOTANY.s3HopperBackoff)) {
             final ArcadiaPotState state = (ArcadiaPotState) pot;
             state.arcadia$incrementTickInsertAttempts();
             if (result.getCount() < stack.getCount()) {
@@ -272,7 +272,7 @@ public abstract class BotanyPotBlockEntityMixin implements ArcadiaPotState {
     private static void arcadia$adjustHopperBackoff(
             Level levelArg, BlockPos posArg, BlockState stateArg, BotanyPotBlockEntity pot,
             CallbackInfo ci) {
-        if (!ArcadiaConfig.BOTANY.s3HopperBackoff.get()) return;
+        if (!ArcadiaConfig.BOTANY.enabled(ArcadiaConfig.BOTANY.s3HopperBackoff)) return;
         final ArcadiaPotState state = (ArcadiaPotState) pot;
         if (state.arcadia$getHopperBackoff() > 0) return;
 
@@ -306,7 +306,7 @@ public abstract class BotanyPotBlockEntityMixin implements ArcadiaPotState {
     private static int arcadia$cachedRequiredGrowthTicks(
             BotanyPotContext ctx, Level level, Crop crop, Soil soil, Operation<Integer> original,
             Level levelArg, BlockPos posArg, BlockState stateArg, BotanyPotBlockEntity pot) {
-        if (!ArcadiaConfig.BOTANY.a1RequiredGrowthTicksCache.get()) {
+        if (!ArcadiaConfig.BOTANY.enabled(ArcadiaConfig.BOTANY.a1RequiredGrowthTicksCache)) {
             return original.call(ctx, level, crop, soil);
         }
         final ArcadiaPotState state = (ArcadiaPotState) pot;
@@ -323,7 +323,7 @@ public abstract class BotanyPotBlockEntityMixin implements ArcadiaPotState {
 
     @WrapMethod(method = "getOrInvalidateSoil")
     private Soil arcadia$cachedSoil(Operation<Soil> original) {
-        if (!ArcadiaConfig.BOTANY.s1MatchesCache.get()) {
+        if (!ArcadiaConfig.BOTANY.enabled(ArcadiaConfig.BOTANY.s1MatchesCache)) {
             return original.call();
         }
         final BotanyPotBlockEntity self = (BotanyPotBlockEntity) (Object) this;
@@ -359,7 +359,7 @@ public abstract class BotanyPotBlockEntityMixin implements ArcadiaPotState {
 
     @WrapMethod(method = "getOrInvalidateCrop")
     private Crop arcadia$cachedCrop(Operation<Crop> original) {
-        if (!ArcadiaConfig.BOTANY.s1MatchesCache.get()) {
+        if (!ArcadiaConfig.BOTANY.enabled(ArcadiaConfig.BOTANY.s1MatchesCache)) {
             return original.call();
         }
         final BotanyPotBlockEntity self = (BotanyPotBlockEntity) (Object) this;

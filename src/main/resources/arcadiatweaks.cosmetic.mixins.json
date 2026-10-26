@@ -1,0 +1,17 @@
+{
+  "required": false,
+  "minVersion": "0.8.5",
+  "plugin": "com.teamarcadia.arcadiatweaks.neoforge.mixin.cosmetic.CosmeticMixinPlugin",
+  "package": "com.teamarcadia.arcadiatweaks.neoforge.mixin.cosmetic",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "CosmeticArmoursProcedureMixin",
+    "CosmeticWeaponsProcedureMixin",
+    "InventoryCompartmentsAccessor"
+  ],
+  "server": [],
+  "client": [],
+  "injectors": {
+    "defaultRequire": 0
+  }
+}

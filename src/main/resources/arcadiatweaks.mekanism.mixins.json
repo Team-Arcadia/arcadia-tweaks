@@ -4,7 +4,6 @@
   "plugin": "com.teamarcadia.arcadiatweaks.neoforge.mixin.mekanism.MekanismMixinPlugin",
   "package": "com.teamarcadia.arcadiatweaks.neoforge.mixin.mekanism",
   "compatibilityLevel": "JAVA_21",
-  "refmap": "arcadiatweaks.refmap.json",
   "mixins": [],
   "server": [
     "ChemicalNetworkMixin",
