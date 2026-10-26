@@ -1,6 +1,7 @@
 package com.teamarcadia.arcadiatweaks.neoforge.mixin;
 
 import com.teamarcadia.arcadiatweaks.neoforge.botany.BotanyMixinCompatibility;
+import com.teamarcadia.arcadiatweaks.neoforge.mixin.accessories.AccessoriesMixinPlugin;
 import com.teamarcadia.arcadiatweaks.neoforge.mixin.botany.BotanyMixinPlugin;
 import com.teamarcadia.arcadiatweaks.neoforge.mixin.mekanism.MekanismMixinPlugin;
 import com.teamarcadia.arcadiatweaks.neoforge.mixin.refinedstorage.RefinedStorageMixinPlugin;
@@ -119,6 +120,28 @@ final class MixinPluginCompatibilityTest {
         assertTrue(plugin.shouldApplyMixin(
                 "net.sweenus.simplyswords.screen.RunicForgeScreenHandler$TabletSlot",
                 "com.teamarcadia.arcadiatweaks.neoforge.mixin.simplyswords.RunicForgeTabletSlotMixin"
+        ));
+    }
+
+    @Test
+    void accessoriesPluginAcceptsBundledRuntimeTargets() {
+        final AccessoriesMixinPlugin plugin = new AccessoriesMixinPlugin();
+
+        assertTrue(plugin.shouldApplyMixin(
+                "net.minecraft.world.entity.player.Inventory",
+                "com.teamarcadia.arcadiatweaks.neoforge.mixin.accessories.AccessoriesInventoryAnchorMixin"
+        ));
+        assertTrue(plugin.shouldApplyMixin(
+                "io.wispforest.accessories.impl.AccessoriesEventHandler",
+                "com.teamarcadia.arcadiatweaks.neoforge.mixin.accessories.AccessoriesEventHandlerTickMixin"
+        ));
+        assertTrue(plugin.shouldApplyMixin(
+                "io.wispforest.accessories.impl.AccessoriesEventHandler",
+                "com.teamarcadia.arcadiatweaks.neoforge.mixin.accessories.AccessoriesEventHandlerInvoker"
+        ));
+        assertTrue(plugin.shouldApplyMixin(
+                "io.wispforest.accessories.impl.AccessoriesHolderImpl",
+                "com.teamarcadia.arcadiatweaks.neoforge.mixin.accessories.AccessoriesHolderImplAccessor"
         ));
     }
 

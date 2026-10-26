@@ -1,5 +1,6 @@
 package com.teamarcadia.arcadiatweaks.common.config;
 
+import com.teamarcadia.arcadiatweaks.common.modules.accessories.AccessoriesConfig;
 import com.teamarcadia.arcadiatweaks.common.modules.botany.BotanyConfig;
 import com.teamarcadia.arcadiatweaks.common.modules.mekanism.MekanismConfig;
 import com.teamarcadia.arcadiatweaks.common.modules.refinedstorage.RefinedStorageConfig;
@@ -14,6 +15,7 @@ public final class ArcadiaConfig {
     public static final ModConfigSpec.BooleanValue MODULE_REFINED_STORAGE_ENABLED;
     public static final ModConfigSpec.BooleanValue MODULE_MEKANISM_ENABLED;
     public static final ModConfigSpec.BooleanValue MODULE_WAYSTONES_ENABLED;
+    public static final ModConfigSpec.BooleanValue MODULE_ACCESSORIES_ENABLED;
 
     public static final ModConfigSpec.BooleanValue ENTITY_MOVE_GUARD_ENABLED;
     public static final ModConfigSpec.DoubleValue ENTITY_MOVE_GUARD_LIMIT;
@@ -23,6 +25,7 @@ public final class ArcadiaConfig {
     public static final RefinedStorageConfig REFINED_STORAGE;
     public static final MekanismConfig MEKANISM;
     public static final WaystonesConfig WAYSTONES;
+    public static final AccessoriesConfig ACCESSORIES;
 
     public static final ModConfigSpec SPEC;
 
@@ -40,6 +43,9 @@ public final class ArcadiaConfig {
         MODULE_WAYSTONES_ENABLED = BUILDER
                 .comment("Enable the Waystones fix module.")
                 .define("waystones", true);
+        MODULE_ACCESSORIES_ENABLED = BUILDER
+                .comment("Enable the Accessories (wisp-forest) optimization module.")
+                .define("accessories", true);
         BUILDER.pop();
 
         BUILDER.comment("Server safety guards").push("safety");
@@ -65,6 +71,7 @@ public final class ArcadiaConfig {
         REFINED_STORAGE = new RefinedStorageConfig(BUILDER);
         MEKANISM = new MekanismConfig(BUILDER);
         WAYSTONES = new WaystonesConfig(BUILDER);
+        ACCESSORIES = new AccessoriesConfig(BUILDER);
 
         SPEC = BUILDER.build();
     }

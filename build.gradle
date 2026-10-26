@@ -57,6 +57,11 @@ dependencies {
     compileOnly  files("libs/ftb-library-neoforge-${ftblibrary_version}.jar")
     // Simply Swords module: the Runic Forge fix targets RunicForgeScreenHandler.
     compileOnly  files("libs/simplyswords-neoforge-${simplyswords_version}.jar")
+    // Accessories module: C1 and T-A target Accessories internals (owo-lib API types in signatures).
+    compileOnly  files("libs/accessories-neoforge-${accessories_version}.jar")
+    compileOnly  files("libs/owo-lib-neoforge-${owolib_version}.jar")
+    compileOnly  files("libs/fabric-api-base-${fabricapibase_version}.jar")
+    compileOnly  files("libs/endec-${endec_version}.jar")
 
     runtimeOnly  files("libs/botanypots-neoforge-1.21.1-${botanypots_version}.jar")
     runtimeOnly  files("libs/bookshelf-neoforge-1.21.1-${bookshelf_version}.jar")
@@ -73,6 +78,9 @@ dependencies {
     runtimeOnly  files("libs/SimplyTooltips-neoforge-${simplytooltips_version}.jar")
     runtimeOnly  files("libs/fzzy_config-${fzzyconfig_version}+1.21+neoforge.jar")
     runtimeOnly  files("libs/kotlinforforge-${kotlinforforge_version}-all.jar")
+    // Accessories and owo-lib (which nests fabric-api-base and endec), for the Accessories GameTests.
+    runtimeOnly  files("libs/accessories-neoforge-${accessories_version}.jar")
+    runtimeOnly  files("libs/owo-lib-neoforge-${owolib_version}.jar")
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.3'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -107,6 +115,10 @@ neoForge {
             server()
             systemProperty 'neoforge.gameTestServer', 'true'
             systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
+            // ./gradlew runGameTestServer -ParcadiaBench also runs the timed microbenchmarks.
+            if (project.hasProperty('arcadiaBench')) {
+                systemProperty 'arcadia.bench', 'true'
+            }
             programArgument '--nogui'
         }
         data {
@@ -148,7 +160,8 @@ def patchMixinConfigs = [
     refinedstorage: "${mod_id}.refinedstorage.mixins.json",
     mekanism      : "${mod_id}.mekanism.mixins.json",
     waystones     : "${mod_id}.waystones.mixins.json",
-    simplyswords  : "${mod_id}.simplyswords.mixins.json"
+    simplyswords  : "${mod_id}.simplyswords.mixins.json",
+    accessories   : "${mod_id}.accessories.mixins.json"
 ]
 
 def patchJarVariants = [
@@ -156,8 +169,8 @@ def patchJarVariants = [
         taskName      : 'jarAllPatches',
         classifier    : 'all',
         displayName   : 'all patches',
-        mixinConfigs  : [baseMixinConfig, patchMixinConfigs.botany, patchMixinConfigs.refinedstorage, patchMixinConfigs.mekanism, patchMixinConfigs.waystones, patchMixinConfigs.simplyswords],
-        optionalDeps  : ['botanypots', 'refinedstorage', 'mekanism', 'waystones', 'ftbteams', 'simplyswords'],
+        mixinConfigs  : [baseMixinConfig, patchMixinConfigs.botany, patchMixinConfigs.refinedstorage, patchMixinConfigs.mekanism, patchMixinConfigs.waystones, patchMixinConfigs.simplyswords, patchMixinConfigs.accessories],
+        optionalDeps  : ['botanypots', 'refinedstorage', 'mekanism', 'waystones', 'ftbteams', 'simplyswords', 'accessories'],
         excludedClasses: []
     ],
     botany        : [
@@ -174,7 +187,9 @@ def patchJarVariants = [
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/waystones/**',
             'com/teamarcadia/arcadiatweaks/neoforge/waystones/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/simplyswords/**',
-            'com/teamarcadia/arcadiatweaks/common/modules/simplyswords/**'
+            'com/teamarcadia/arcadiatweaks/common/modules/simplyswords/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/accessories/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/accessories/**'
         ]
     ],
     refinedstorage: [
@@ -191,7 +206,9 @@ def patchJarVariants = [
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/waystones/**',
             'com/teamarcadia/arcadiatweaks/neoforge/waystones/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/simplyswords/**',
-            'com/teamarcadia/arcadiatweaks/common/modules/simplyswords/**'
+            'com/teamarcadia/arcadiatweaks/common/modules/simplyswords/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/accessories/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/accessories/**'
         ]
     ],
     mekanism      : [
@@ -208,7 +225,9 @@ def patchJarVariants = [
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/waystones/**',
             'com/teamarcadia/arcadiatweaks/neoforge/waystones/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/simplyswords/**',
-            'com/teamarcadia/arcadiatweaks/common/modules/simplyswords/**'
+            'com/teamarcadia/arcadiatweaks/common/modules/simplyswords/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/accessories/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/accessories/**'
         ]
     ],
     waystones     : [
@@ -225,7 +244,9 @@ def patchJarVariants = [
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/mekanism/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mekanism/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/simplyswords/**',
-            'com/teamarcadia/arcadiatweaks/common/modules/simplyswords/**'
+            'com/teamarcadia/arcadiatweaks/common/modules/simplyswords/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/accessories/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/accessories/**'
         ]
     ]
 ]
@@ -294,6 +315,18 @@ side = "BOTH"
 # Simply Swords is optional at load time. The Runic Forge fix only applies when it is present.
 [[dependencies.${mod_id}]]
 modId = "simplyswords"
+type = "optional"
+versionRange = "[0.0.0,)"
+ordering = "AFTER"
+side = "BOTH"
+"""
+    }
+    if (variant.optionalDeps.contains('accessories')) {
+        optionalDependencyBlocks += """
+
+# Accessories is optional at load time. Its optimizations only apply to the verified build.
+[[dependencies.${mod_id}]]
+modId = "accessories"
 type = "optional"
 versionRange = "[0.0.0,)"
 ordering = "AFTER"
@@ -446,7 +479,7 @@ jar {
             'Implementation-Title'    : mod_name,
             'Implementation-Version'  : mod_version,
             'Implementation-Vendor'   : mod_authors,
-            'MixinConfigs'            : "${mod_id}.mixins.json,${mod_id}.botany.mixins.json,${mod_id}.refinedstorage.mixins.json,${mod_id}.mekanism.mixins.json,${mod_id}.waystones.mixins.json,${mod_id}.simplyswords.mixins.json"
+            'MixinConfigs'            : "${mod_id}.mixins.json,${mod_id}.botany.mixins.json,${mod_id}.refinedstorage.mixins.json,${mod_id}.mekanism.mixins.json,${mod_id}.waystones.mixins.json,${mod_id}.simplyswords.mixins.json,${mod_id}.accessories.mixins.json"
         ])
     }
 }
