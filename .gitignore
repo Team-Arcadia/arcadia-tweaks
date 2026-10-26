@@ -35,3 +35,10 @@ libs/*.jar
 
 # Local upstream source checkouts used for audits.
 reference/
+
+# Local tooling and QA artefacts (never committed)
+.claude/
+CLAUDE.md
+test-procedures/
+TEST_PROCEDURE_*.html
+_temp/
