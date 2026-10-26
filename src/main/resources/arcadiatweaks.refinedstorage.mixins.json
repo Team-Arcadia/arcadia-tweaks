@@ -4,7 +4,6 @@
   "plugin": "com.teamarcadia.arcadiatweaks.neoforge.mixin.refinedstorage.RefinedStorageMixinPlugin",
   "package": "com.teamarcadia.arcadiatweaks.neoforge.mixin.refinedstorage",
   "compatibilityLevel": "JAVA_21",
-  "refmap": "arcadiatweaks.refmap.json",
   "mixins": [],
   "server": [
     "AbstractBaseNetworkNodeContainerBlockEntityMixin",

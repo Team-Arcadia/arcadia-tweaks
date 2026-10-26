@@ -41,7 +41,7 @@ ArcadiaTweaks/
 │   │   │       └── waystones/  simplyswords/
 │   │   └── neoforge/
 │   │       ├── ArcadiaTweaksNeoForge.java       # @Mod entry point
-│   │       ├── admin/                           # /arcadiatweaks gui (server-side inventory menu)
+│   │       ├── admin/                           # /arcadia_tweaks gui (server-side inventory menu)
 │   │       ├── gametest/                        # NeoForge GameTests (dev only, not shipped)
 │   │       ├── support/                         # shared helpers (interval gate, tick coalescing)
 │   │       └── mixin/                           # base Mixins + one sub-package and plugin per module
@@ -112,7 +112,7 @@ The in-game admin command follows the jar variant:
 
 | Jar variant | Command |
 |-------------|---------|
-| all patches | `/arcadiatweaks gui` |
+| all patches | `/arcadia_tweaks gui` |
 | BotanyPots only | `/botanypatch gui` |
 | Refined Storage only | `/refinedstoragepatch gui` |
 | Mekanism only | `/mekanismpatch gui` |
@@ -456,7 +456,7 @@ ArcadiaTweaks/
 │   │   │       └── waystones/  simplyswords/
 │   │   └── neoforge/
 │   │       ├── ArcadiaTweaksNeoForge.java       # @Mod entry point
-│   │       ├── admin/                           # /arcadiatweaks gui (server-side inventory menu)
+│   │       ├── admin/                           # /arcadia_tweaks gui (server-side inventory menu)
 │   │       ├── gametest/                        # NeoForge GameTests (dev only, not shipped)
 │   │       ├── support/                         # shared helpers (interval gate, tick coalescing)
 │   │       └── mixin/                           # base Mixins + one sub-package and plugin per module
@@ -527,7 +527,7 @@ La commande d'administration en jeu dépend de la variante de jar :
 
 | Variante de jar | Commande |
 |-----------------|----------|
-| tous les patchs | `/arcadiatweaks gui` |
+| tous les patchs | `/arcadia_tweaks gui` |
 | BotanyPots seul | `/botanypatch gui` |
 | Refined Storage seul | `/refinedstoragepatch gui` |
 | Mekanism seul | `/mekanismpatch gui` |

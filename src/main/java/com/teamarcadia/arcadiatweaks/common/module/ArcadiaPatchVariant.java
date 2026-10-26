@@ -51,7 +51,7 @@ public final class ArcadiaPatchVariant {
                 return "waystonespatch";
             }
         }
-        return ArcadiaTweaks.MOD_ID;
+        return ArcadiaTweaks.COMMAND_ROOT;
     }
 
     public static String menuTitle() {

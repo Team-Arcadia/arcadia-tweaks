@@ -15,6 +15,7 @@ All notable changes to ArcadiaTweaks are documented here.
 ### Changed
 
 - **Built against the current Arcadia modpack** — Target mod versions in `gradle.properties` now match the jars the modpack runs (BotanyPots 21.1.44, Refined Storage 2.0.9, Waystones 21.1.46, Balm 21.0.66, FTB Library 2101.1.37, Simply Swords 1.70.2), so a plain `./gradlew build` works without command line overrides.
+- **Admin command renamed** — The in-game admin command is now `/arcadia_tweaks gui` (was `/arcadiatweaks gui`); `admin` stays an alias of `gui`.
 - **Admin GUI** — The menu has a fourth row for the Waystones module.
 - **Tests** — JUnit coverage for the Waystones and Simply Swords Mixin targets and for the content of every jar variant.
 - **Documentation** — README lists every module, the `[safety]` section and the test commands; this changelog was added. Curveo added to the authors.
@@ -28,6 +29,7 @@ All notable changes to ArcadiaTweaks are documented here.
 ### Modifications
 
 - **Compilé contre le modpack Arcadia actuel** — Les versions des mods ciblés dans `gradle.properties` correspondent maintenant aux jars du modpack (BotanyPots 21.1.44, Refined Storage 2.0.9, Waystones 21.1.46, Balm 21.0.66, FTB Library 2101.1.37, Simply Swords 1.70.2) : un simple `./gradlew build` fonctionne sans paramètres en ligne de commande.
+- **Commande d'administration renommée** — La commande en jeu est maintenant `/arcadia_tweaks gui` (avant `/arcadiatweaks gui`) ; `admin` reste un alias de `gui`.
 - **Menu d'administration** — Le menu a une quatrième ligne pour le module Waystones.
 - **Tests** — Tests JUnit pour les cibles Mixin de Waystones et de Simply Swords et pour le contenu de chaque variante de jar.
 - **Documentation** — Le README liste chaque module, la section `[safety]` et les commandes de test ; ce changelog a été ajouté. Curveo ajouté aux auteurs.

@@ -65,6 +65,7 @@ ArcadiaTweaks 0.2.0
 ### Other changes
 
 - Built against the mod versions the Arcadia modpack runs (BotanyPots 21.1.44, Refined Storage 2.0.9, Waystones 21.1.46, Simply Swords 1.70.2).
+- The admin command is now `/arcadia_tweaks gui` (was `/arcadiatweaks gui`).
 - The admin GUI has a fourth row for the Waystones module.
 - One published file, `arcadiatweaks-0.2.0.jar`, with every module.
 
@@ -73,7 +74,7 @@ ArcadiaTweaks 0.2.0
 Use:
 
 ```text
-/arcadiatweaks gui
+/arcadia_tweaks gui
 ```
 
 ### Production notes
@@ -169,7 +170,7 @@ runicForgeImplicitLevelLock = true
 ## Commands
 
 ```text
-/arcadiatweaks gui
+/arcadia_tweaks gui
 ```
 
 `admin` is also available as an alias for `gui`.

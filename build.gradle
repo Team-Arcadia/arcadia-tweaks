@@ -95,6 +95,10 @@ neoForge {
         }
         client {
             client()
+            // ./gradlew runClient -PquickPlayWorld=<save name> loads that singleplayer world on start.
+            if (project.hasProperty('quickPlayWorld')) {
+                programArguments.addAll '--quickPlaySingleplayer', project.property('quickPlayWorld').toString()
+            }
         }
         server {
             server()

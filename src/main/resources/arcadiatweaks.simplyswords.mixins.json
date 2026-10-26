@@ -4,7 +4,6 @@
   "plugin": "com.teamarcadia.arcadiatweaks.neoforge.mixin.simplyswords.SimplySwordsMixinPlugin",
   "package": "com.teamarcadia.arcadiatweaks.neoforge.mixin.simplyswords",
   "compatibilityLevel": "JAVA_21",
-  "refmap": "arcadiatweaks.refmap.json",
   "mixins": [
     "RunicForgeScreenHandlerMixin",
     "RunicForgeTabletSlotMixin"

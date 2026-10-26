@@ -42,7 +42,7 @@ public final class ArcadiaTweaksGameTests {
                 "At least one patch resource should be present"
         );
         if (ArcadiaPatchVariant.hasBotany() && ArcadiaPatchVariant.hasRefinedStorage() && ArcadiaPatchVariant.hasMekanism()) {
-            helper.assertValueEqual(ArcadiaPatchVariant.commandRoot(), ArcadiaTweaks.MOD_ID, "All-patches runtime should use /arcadiatweaks");
+            helper.assertValueEqual(ArcadiaPatchVariant.commandRoot(), ArcadiaTweaks.COMMAND_ROOT, "All-patches runtime should use /arcadia_tweaks");
         }
         helper.succeed();
     }
