@@ -30,6 +30,7 @@ public final class ArcadiaTweaksGameTests {
         event.register(EntityMoveGuardGameTests.class);
         event.register(WaystoneTeamVisibilityGameTests.class);
         event.register(RunicForgeGameTests.class);
+        event.register(AdminMenuGameTests.class);
     }
 
     @GameTest(template = TEMPLATE, batch = BATCH, timeoutTicks = 20)
