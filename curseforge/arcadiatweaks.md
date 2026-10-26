@@ -1,23 +1,24 @@
-# ArcadiaTweaks All - CurseForge publication
+# ArcadiaTweaks - CurseForge publication
 
 ## Recommendation
 
 Use this as the main CurseForge page: **ArcadiaTweaks**.
 
-This is the default build and the recommended file for most servers. It contains every currently available patch module:
+ArcadiaTweaks is published as a single file, `arcadiatweaks-0.2.0.jar`. It contains every module, and each module stays dormant when its target mod is absent:
 
 - BotanyPots
 - Refined Storage
 - Mekanism
-
-Do not install this jar together with the single-patch variants. All variants use the same mod id: `arcadiatweaks`.
+- Waystones (team visibility through FTB Teams)
+- Simply Swords (Runic Forge tablet fix)
+- Safety guards (entity movement guard)
 
 ## File metadata
 
 | Field | Value |
 |---|---|
-| File | `arcadiatweaks-0.1.1-all.jar` or `arcadiatweaks-0.1.1.jar` |
-| Version | `0.1.1` |
+| File | `arcadiatweaks-0.2.0.jar` |
+| Version | `0.2.0` |
 | Release type | Beta |
 | Minecraft | `1.21.1` |
 | Loader | NeoForge |
@@ -28,38 +29,44 @@ Do not install this jar together with the single-patch variants. All variants us
 
 | Mod | Relation | Notes |
 |---|---|---|
-| NeoForge | Required | Loader, tested on `21.1.221`. |
+| NeoForge | Required | Loader, built against `21.1.221`, used in the Arcadia modpack on `21.1.264`. |
 | BotanyPots | Optional | Botany module only applies when BotanyPots is installed. |
 | Bookshelf | Optional | BotanyPots dependency. |
 | Prickle | Optional | BotanyPots dependency. |
 | Refined Storage | Optional | Refined Storage module only applies when RS2 is installed. |
 | Mekanism | Optional | Mekanism module only applies when Mekanism is installed. |
+| Waystones | Optional | Waystones module only applies when Waystones and FTB Teams are installed. |
+| FTB Teams | Optional | Party lookup for the Waystones module. |
+| Simply Swords | Optional | Runic Forge fix only applies when Simply Swords is installed. |
 
 ## Project summary
 
 ```text
-Optimization patches for BotanyPots, Refined Storage and Mekanism. Mostly server-side, with one optional client-side Mekanism rendering safety patch. Mixin-based, configurable, with per-patch kill switches and runtime safety checks.
+Optimization patches for BotanyPots, Refined Storage and Mekanism, fixes for Waystones and Simply Swords, and a server freeze guard. Mostly server-side, with one optional client-side Mekanism rendering safety patch. Mixin-based, configurable, with per-patch kill switches and runtime safety checks.
 ```
 
 ## Release title
 
 ```text
-ArcadiaTweaks 0.1.1 - All optimization patches
+ArcadiaTweaks 0.2.0
 ```
 
 ## Changelog
 
 ```markdown
-## 0.1.1 - All patch modules
+## 0.2.0
 
-Initial all-in-one ArcadiaTweaks release for NeoForge 1.21.1.
+### Fixes
 
-### Included modules
+- Simply Swords: the Runic Forge no longer creates 8 free Runic Tablets from a unique weapon that never got an awakening level (lootbox, quest or command weapons). The implicit level is locked on the weapon instead: it keeps its power and its gems can still be changed. Kill switch `[safety] runicForgeImplicitLevelLock`.
+- Waystones: a "Visible to Team" waystone is only offered to its owner and the owner's FTB Teams party, instead of everyone sharing a vanilla scoreboard team. Kill switches `[modules] waystones` and `[waystones] team_visibility_uses_ftb_teams`.
+- Server freeze guard: an entity whose movement for one tick is NaN, infinite or above 100 blocks on one axis is stopped instead of freezing the server. Dedicated servers only, kill switch `[safety] entityMoveGuard`.
 
-- BotanyPots: crop/soil memoization, tick coalescing, hopper export backoff and growth tick caching.
-- Refined Storage: coalesced network node/transmitter activeness checks.
-- Mekanism: conservative backoff for idle transmitter pull scans, network emit scans and logistical transporter idle path recalculations.
-- Mekanism client: safe rendering path for colored Logistical Transporters, keeping colors visible while guarding against progressive client FPS/memory degradation.
+### Other changes
+
+- Built against the mod versions the Arcadia modpack runs (BotanyPots 21.1.44, Refined Storage 2.0.9, Waystones 21.1.46, Simply Swords 1.70.2).
+- The admin GUI has a fourth row for the Waystones module.
+- One published file, `arcadiatweaks-0.2.0.jar`, with every module.
 
 ### Admin GUI
 
@@ -69,18 +76,9 @@ Use:
 /arcadiatweaks gui
 ```
 
-The menu is server-side only and uses a Minecraft inventory screen. Operators can enable/disable modules and tune patch settings without editing the config by hand.
-
-### Safety
-
-- Target mod classes are checked structurally, not by version string.
-- If a target method/class changes, only the affected Mixin is skipped.
-- One skipped patch does not disable the other modules.
-- Every strategy has a config kill switch.
-
 ### Production notes
 
-Install only one ArcadiaTweaks variant at a time. Do not combine this jar with `botany`, `refinedstorage` or `mekanism` single-patch jars.
+Replace any previous ArcadiaTweaks jar (`arcadiatweaks-0.1.1-all.jar` or a single-patch jar) with this one. Keep only one ArcadiaTweaks jar in `mods/`.
 ```
 
 ## Project description
@@ -144,6 +142,30 @@ logistical_transporter_idle_backoff_enabled = true
 logistical_transporter_idle_backoff_max_ticks = 20
 ```
 
+### Waystones
+
+Waystones decides who sees a "Visible to Team" waystone from the vanilla scoreboard team. Mods that use scoreboard teams for other reasons (tab list sorting, name colors) then show team waystones to unrelated players. With this module, a team waystone is offered to its owner and to the owner's FTB Teams party only. Allies are not included.
+
+```toml
+[waystones]
+team_visibility_uses_ftb_teams = true
+```
+
+### Simply Swords
+
+The Runic Forge turned the implicit awakening level of a unique weapon without awakening data into 8 real Runic Tablets. ArcadiaTweaks locks that implicit level on the weapon the first time it enters the forge: no free tablets, the weapon keeps its power, and its gems can still be changed. Weapons awakened with real tablets are untouched.
+
+### Safety guards
+
+```toml
+[safety]
+entityMoveGuard = true
+entityMoveGuardLimit = 100.0
+runicForgeImplicitLevelLock = true
+```
+
+`entityMoveGuard` stops an entity whose movement for one tick is NaN, infinite or above the limit, instead of letting the collision search freeze the server. An elytra with rockets moves about 3 blocks per tick, so nothing legitimate comes close to the limit.
+
 ## Commands
 
 ```text
@@ -158,12 +180,7 @@ Drop the jar into the server `mods/` folder.
 
 Most patches are server-side. The Mekanism M4 rendering safety patch requires the jar on the client too.
 
-Install only one ArcadiaTweaks variant at a time:
-
-- `all`: every patch module
-- `botany`: BotanyPots only
-- `refinedstorage`: Refined Storage only
-- `mekanism`: Mekanism only
+Keep only one ArcadiaTweaks jar in `mods/`.
 
 ## Safety model
 
