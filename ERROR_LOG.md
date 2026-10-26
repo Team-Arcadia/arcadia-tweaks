@@ -48,3 +48,10 @@
 **Root cause:** Curios 9 only gives an entity an inventory when some datapack assigns it slots; no mod of the dev runtime assigns player slots (in the modpack, other mods do).
 **Fix:** a dev-only `gametestData` source set (`src/gametest/resources`, part of the dev mod in runs, never in a jar) assigns `ring` and `necklace` to players.
 **Prevention:** assert that the slot type a test relies on is actually reached (the test counts Curios hits through `Inventory.contains`).
+
+## [2026-10-26 14:35] - Mixin plugin crashed the game on a synthetic switch class
+**Context:** first GameTest server start with `AccessoriesMixinPlugin`, whose `postApply` switched on an enum.
+**Error:** `IllegalClassLoadError: ...mixin.accessories.AccessoriesMixinPlugin$1 is in a defined mixin package ... owned by arcadiatweaks.accessories.mixins.json and cannot be referenced directly`, game crash while transforming `Inventory`.
+**Root cause:** javac compiles a `switch` on an enum from another class into a synthetic `$1` switch-map class next to the switching class. That class sits in the Mixin package, and Mixin refuses to load any class there that is not the plugin itself.
+**Fix:** replaced the enum `switch` with `if` comparisons.
+**Prevention:** no enum `switch`, anonymous class or inner class in a Mixin plugin; keep plugin logic in a class outside the Mixin package (as `AccessoriesContainsSurgery` does) or use `if` chains and string switches.

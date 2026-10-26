@@ -69,6 +69,10 @@ dependencies {
     compileOnly  files("libs/CosmeticArmours - ${cosmeticarmours_version} - 1.21.1 - NeoForge.jar")
     compileOnly  files("libs/curios-neoforge-${curios_version}.jar")
     compileOnly  files("libs/accessories-neoforge-${accessories_version}.jar")
+    // Accessories module: C1 and T-A target Accessories internals (owo-lib API types in signatures).
+    compileOnly  files("libs/owo-lib-neoforge-${owolib_version}.jar")
+    compileOnly  files("libs/fabric-api-base-${fabricapibase_version}.jar")
+    compileOnly  files("libs/endec-${endec_version}.jar")
 
     runtimeOnly  files("libs/botanypots-neoforge-1.21.1-${botanypots_version}.jar")
     runtimeOnly  files("libs/bookshelf-neoforge-1.21.1-${bookshelf_version}.jar")
@@ -179,7 +183,8 @@ def patchMixinConfigs = [
     mekanism      : "${mod_id}.mekanism.mixins.json",
     waystones     : "${mod_id}.waystones.mixins.json",
     simplyswords  : "${mod_id}.simplyswords.mixins.json",
-    cosmetic      : "${mod_id}.cosmetic.mixins.json"
+    cosmetic      : "${mod_id}.cosmetic.mixins.json",
+    accessories   : "${mod_id}.accessories.mixins.json"
 ]
 
 def patchJarVariants = [
@@ -187,8 +192,8 @@ def patchJarVariants = [
         taskName      : 'jarAllPatches',
         classifier    : 'all',
         displayName   : 'all patches',
-        mixinConfigs  : [baseMixinConfig, patchMixinConfigs.botany, patchMixinConfigs.refinedstorage, patchMixinConfigs.mekanism, patchMixinConfigs.waystones, patchMixinConfigs.simplyswords, patchMixinConfigs.cosmetic],
-        optionalDeps  : ['botanypots', 'refinedstorage', 'mekanism', 'waystones', 'ftbteams', 'simplyswords', 'cosmeticweaponsmod', 'cosmeticarmoursmod'],
+        mixinConfigs  : [baseMixinConfig, patchMixinConfigs.botany, patchMixinConfigs.refinedstorage, patchMixinConfigs.mekanism, patchMixinConfigs.waystones, patchMixinConfigs.simplyswords, patchMixinConfigs.cosmetic, patchMixinConfigs.accessories],
+        optionalDeps  : ['botanypots', 'refinedstorage', 'mekanism', 'waystones', 'ftbteams', 'simplyswords', 'cosmeticweaponsmod', 'cosmeticarmoursmod', 'accessories'],
         excludedClasses: []
     ],
     botany        : [
@@ -207,7 +212,9 @@ def patchJarVariants = [
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/simplyswords/**',
             'com/teamarcadia/arcadiatweaks/common/modules/simplyswords/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/cosmetic/**',
-            'com/teamarcadia/arcadiatweaks/neoforge/cosmetic/**'
+            'com/teamarcadia/arcadiatweaks/neoforge/cosmetic/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/accessories/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/accessories/**'
         ]
     ],
     refinedstorage: [
@@ -226,7 +233,9 @@ def patchJarVariants = [
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/simplyswords/**',
             'com/teamarcadia/arcadiatweaks/common/modules/simplyswords/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/cosmetic/**',
-            'com/teamarcadia/arcadiatweaks/neoforge/cosmetic/**'
+            'com/teamarcadia/arcadiatweaks/neoforge/cosmetic/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/accessories/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/accessories/**'
         ]
     ],
     mekanism      : [
@@ -245,7 +254,9 @@ def patchJarVariants = [
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/simplyswords/**',
             'com/teamarcadia/arcadiatweaks/common/modules/simplyswords/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/cosmetic/**',
-            'com/teamarcadia/arcadiatweaks/neoforge/cosmetic/**'
+            'com/teamarcadia/arcadiatweaks/neoforge/cosmetic/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/accessories/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/accessories/**'
         ]
     ],
     waystones     : [
@@ -264,7 +275,9 @@ def patchJarVariants = [
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/simplyswords/**',
             'com/teamarcadia/arcadiatweaks/common/modules/simplyswords/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/cosmetic/**',
-            'com/teamarcadia/arcadiatweaks/neoforge/cosmetic/**'
+            'com/teamarcadia/arcadiatweaks/neoforge/cosmetic/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/accessories/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/accessories/**'
         ]
     ]
 ]
@@ -357,6 +370,18 @@ side = "BOTH"
 # CosmeticArmours is optional at load time. The presence gate only applies when it is present.
 [[dependencies.${mod_id}]]
 modId = "cosmeticarmoursmod"
+type = "optional"
+versionRange = "[0.0.0,)"
+ordering = "AFTER"
+side = "BOTH"
+"""
+    }
+    if (variant.optionalDeps.contains('accessories')) {
+        optionalDependencyBlocks += """
+
+# Accessories is optional at load time. Its optimizations only apply to the verified build.
+[[dependencies.${mod_id}]]
+modId = "accessories"
 type = "optional"
 versionRange = "[0.0.0,)"
 ordering = "AFTER"
@@ -509,7 +534,7 @@ jar {
             'Implementation-Title'    : mod_name,
             'Implementation-Version'  : mod_version,
             'Implementation-Vendor'   : mod_authors,
-            'MixinConfigs'            : "${mod_id}.mixins.json,${mod_id}.botany.mixins.json,${mod_id}.refinedstorage.mixins.json,${mod_id}.mekanism.mixins.json,${mod_id}.waystones.mixins.json,${mod_id}.simplyswords.mixins.json,${mod_id}.cosmetic.mixins.json"
+            'MixinConfigs'            : "${mod_id}.mixins.json,${mod_id}.botany.mixins.json,${mod_id}.refinedstorage.mixins.json,${mod_id}.mekanism.mixins.json,${mod_id}.waystones.mixins.json,${mod_id}.simplyswords.mixins.json,${mod_id}.cosmetic.mixins.json,${mod_id}.accessories.mixins.json"
         ])
     }
 }

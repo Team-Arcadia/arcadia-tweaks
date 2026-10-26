@@ -35,6 +35,7 @@ public final class ArcadiaTweaksGameTests {
             event.register(RefinedStorageGameTests.class);
         }
         event.register(CosmeticPresenceGateGameTests.class);
+        event.register(AccessoriesGameTests.class);
     }
 
     @GameTest(template = TEMPLATE, batch = BATCH, timeoutTicks = 20)

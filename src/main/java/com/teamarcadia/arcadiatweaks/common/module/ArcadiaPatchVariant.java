@@ -9,16 +9,19 @@ public final class ArcadiaPatchVariant {
     private static final String MEKANISM_MIXIN_CONFIG = ArcadiaTweaks.MOD_ID + ".mekanism.mixins.json";
     private static final String WAYSTONES_MIXIN_CONFIG = ArcadiaTweaks.MOD_ID + ".waystones.mixins.json";
     private static final String COSMETIC_MIXIN_CONFIG = ArcadiaTweaks.MOD_ID + ".cosmetic.mixins.json";
+    private static final String ACCESSORIES_MIXIN_CONFIG = ArcadiaTweaks.MOD_ID + ".accessories.mixins.json";
 
     private static final boolean BOTANY_PRESENT = hasResource(BOTANY_MIXIN_CONFIG);
     private static final boolean REFINED_STORAGE_PRESENT = hasResource(REFINED_STORAGE_MIXIN_CONFIG);
     private static final boolean MEKANISM_PRESENT = hasResource(MEKANISM_MIXIN_CONFIG);
     private static final boolean WAYSTONES_PRESENT = hasResource(WAYSTONES_MIXIN_CONFIG);
     private static final boolean COSMETIC_PRESENT = hasResource(COSMETIC_MIXIN_CONFIG);
+    private static final boolean ACCESSORIES_PRESENT = hasResource(ACCESSORIES_MIXIN_CONFIG);
     private static final int PATCH_COUNT = (BOTANY_PRESENT ? 1 : 0)
             + (REFINED_STORAGE_PRESENT ? 1 : 0)
             + (MEKANISM_PRESENT ? 1 : 0)
-            + (WAYSTONES_PRESENT ? 1 : 0);
+            + (WAYSTONES_PRESENT ? 1 : 0)
+            + (ACCESSORIES_PRESENT ? 1 : 0);
 
     private ArcadiaPatchVariant() {}
 
@@ -41,6 +44,11 @@ public final class ArcadiaPatchVariant {
     /** True when this jar ships the CosmeticWeapons / CosmeticArmours Mixin config (all-patches jar). */
     public static boolean hasCosmetic() {
         return COSMETIC_PRESENT;
+    }
+
+    /** The Accessories module only ships in the all-patches jar. */
+    public static boolean hasAccessories() {
+        return ACCESSORIES_PRESENT;
     }
 
     public static String commandRoot() {

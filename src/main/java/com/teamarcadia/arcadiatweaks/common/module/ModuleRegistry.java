@@ -1,6 +1,7 @@
 package com.teamarcadia.arcadiatweaks.common.module;
 
 import com.teamarcadia.arcadiatweaks.ArcadiaTweaks;
+import com.teamarcadia.arcadiatweaks.common.modules.accessories.AccessoriesModule;
 import com.teamarcadia.arcadiatweaks.common.modules.botany.BotanyModule;
 import com.teamarcadia.arcadiatweaks.common.modules.cosmetic.CosmeticModule;
 import com.teamarcadia.arcadiatweaks.common.modules.mekanism.MekanismModule;
@@ -28,6 +29,7 @@ public final class ModuleRegistry {
         ALL.add(new MekanismModule());
         ALL.add(new WaystonesModule());
         ALL.add(new CosmeticModule());
+        ALL.add(new AccessoriesModule());
 
         for (ArcadiaModule m : ALL) {
             if (m.enabledByConfig()) {
