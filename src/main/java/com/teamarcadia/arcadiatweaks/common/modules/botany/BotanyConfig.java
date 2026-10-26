@@ -1,5 +1,6 @@
 package com.teamarcadia.arcadiatweaks.common.modules.botany;
 
+import com.teamarcadia.arcadiatweaks.common.config.ArcadiaConfig;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
 public final class BotanyConfig {
@@ -66,5 +67,13 @@ public final class BotanyConfig {
                 .defineInRange("safety_revalidate_period_ticks", 200, 0, 12000);
 
         b.pop();
+    }
+
+    /**
+     * A BotanyPots strategy runs only while both the [modules] botany switch and its own switch
+     * are on, so turning the module off in the config or the admin menu stops every strategy.
+     */
+    public boolean enabled(ModConfigSpec.BooleanValue strategy) {
+        return ArcadiaConfig.MODULE_BOTANY_ENABLED.get() && strategy.get();
     }
 }

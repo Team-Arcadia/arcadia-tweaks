@@ -79,6 +79,26 @@ public final class AdminMenuGameTests {
         helper.succeed();
     }
 
+    /** Turning the [modules] botany switch off must stop every BotanyPots strategy at once. */
+    @GameTest(template = TEMPLATE, batch = BATCH, timeoutTicks = 20)
+    public static void botanyModuleSwitchStopsEveryStrategy(GameTestHelper helper) {
+        final boolean original = ArcadiaConfig.MODULE_BOTANY_ENABLED.get();
+        try {
+            final var botany = ArcadiaConfig.BOTANY;
+            ArcadiaConfig.MODULE_BOTANY_ENABLED.set(true);
+            helper.assertTrue(botany.enabled(botany.s1MatchesCache) == botany.s1MatchesCache.get(),
+                    "With the module on, a strategy follows its own switch");
+            ArcadiaConfig.MODULE_BOTANY_ENABLED.set(false);
+            for (var strategy : java.util.List.of(botany.s1MatchesCache, botany.s2TickCoalescing,
+                    botany.s3HopperBackoff, botany.a1RequiredGrowthTicksCache, botany.a2LightFlagDowngrade)) {
+                helper.assertTrue(!botany.enabled(strategy), "With the module off, every strategy must be off");
+            }
+        } finally {
+            ArcadiaConfig.MODULE_BOTANY_ENABLED.set(original);
+        }
+        helper.succeed();
+    }
+
     private static int findOnAnyPage(ArcadiaAdminMenu menu, ServerPlayer player, String labelPrefix) {
         for (int page = 0; page < 10; page++) {
             for (int i = 0; i < 45; i++) {
