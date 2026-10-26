@@ -153,17 +153,16 @@ public final class AccessoriesMixinPlugin implements IMixinConfigPlugin {
         if (!mixinClassName.endsWith("." + ANCHOR)) {
             return;
         }
+        // No switch on the enum here: it would compile to a synthetic class inside this mixin package,
+        // which Mixin refuses to load.
         final AccessoriesContainsSurgery.Result result = AccessoriesContainsSurgery.apply(targetClass);
-        switch (result) {
-            case APPLIED, ALREADY_APPLIED -> {
-                AccessoriesTweaks.setContainsPatchState("applied");
-                ArcadiaTweaks.LOGGER.info("[accessories] C1 contains fast path installed in {}.", targetClassName);
-            }
-            default -> {
-                AccessoriesTweaks.setContainsPatchState("skipped, " + result);
-                ArcadiaTweaks.LOGGER.warn("[accessories] C1 (contains fast path) skipped: merged Accessories handler in {} "
-                        + "does not have the verified shape ({}). Accessories runs unchanged.", targetClassName, result);
-            }
+        if (result == AccessoriesContainsSurgery.Result.APPLIED || result == AccessoriesContainsSurgery.Result.ALREADY_APPLIED) {
+            AccessoriesTweaks.setContainsPatchState("applied");
+            ArcadiaTweaks.LOGGER.info("[accessories] C1 contains fast path installed in {}.", targetClassName);
+        } else {
+            AccessoriesTweaks.setContainsPatchState("skipped, " + result);
+            ArcadiaTweaks.LOGGER.warn("[accessories] C1 (contains fast path) skipped: merged Accessories handler in {} "
+                    + "does not have the verified shape ({}). Accessories runs unchanged.", targetClassName, result);
         }
     }
 }

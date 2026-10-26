@@ -39,7 +39,7 @@ public final class AccessoriesConfig {
                         "dirty maps and attribute builders are only created when a slot actually needs them.",
                         "Server side only. Skipped automatically on any Accessories build but 1.1.0-beta.54."
                 )
-                .define("tick_allocation_trimmed", false);
+                .define("tick_allocation_trimmed", true);
 
         b.pop();
     }
