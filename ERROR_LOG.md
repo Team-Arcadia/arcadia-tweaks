@@ -20,3 +20,24 @@
 **Root cause:** FTB Library checks `connection.hasChannel(...)` before sending; a NeoForge FakePlayer connection has no Netty channel.
 **Fix:** the sync is the last step of `playerLoggedIn`, after the personal team is registered; the test tolerates that NPE only when the team was registered and rethrows otherwise. `createParty` and `join` work on fake players.
 **Prevention:** expect any mod code that sends packets to a FakePlayer to fail; verify the state it was supposed to build instead.
+
+## [2026-10-26 14:30] - Mock server player crashes with Accessories installed
+**Context:** `GameTestHelper.makeMockServerPlayerInLevel()` in the cosmetic presence gate GameTests.
+**Error:** `UnsupportedOperationException: Payload accessories:main may not be sent to the client!` from `AccessoriesEventHandler.dataSync` during `PlayerList.placeNewPlayer`.
+**Root cause:** the mock connection never negotiated Accessories' channel, and Accessories syncs its data on the datapack sync event of the login.
+**Fix:** the tests build a `ServerPlayer` directly without placing it (its constructor still loads real `PlayerAdvancements`; Curios and Accessories data work on it).
+**Prevention:** with Accessories (owo networking) in the runtime, do not place test players through a mock connection.
+
+## [2026-10-26 14:31] - Mixins.getMixinsForClass is always empty for a target
+**Context:** cosmetic startup audit listing the Mixins applied to `Inventory` and `ItemStack`.
+**Error:** the listing came back empty although several Mixins were applied to `Inventory`.
+**Root cause:** in Mixin 0.8.7 `MixinInfo` calls `addAppliedMixin` on its own `ClassInfo` (the Mixin's), not on the target's, so `Mixins.getMixinsForClass(target)` / `ClassInfo.getAppliedMixins()` of a target is empty.
+**Fix:** read the target `ClassInfo`'s private `mixins` set (declared Mixins, a superset of the applied ones) by reflection; the audit checks that our own accessor Mixin is in the list before trusting it, and fails safe otherwise.
+**Prevention:** never trust an empty Mixin listing; cross-check it against a Mixin known to be applied.
+
+## [2026-10-26 14:34] - No Curios inventory on players in the dev runtime
+**Context:** GameTests putting target items in a Curios slot.
+**Error:** `CuriosApi.getCuriosInventory(player)` empty, Curios path never exercised.
+**Root cause:** Curios 9 only gives an entity an inventory when some datapack assigns it slots; no mod of the dev runtime assigns player slots (in the modpack, other mods do).
+**Fix:** a dev-only `gametestData` source set (`src/gametest/resources`, part of the dev mod in runs, never in a jar) assigns `ring` and `necklace` to players.
+**Prevention:** assert that the slot type a test relies on is actually reached (the test counts Curios hits through `Inventory.contains`).
