@@ -224,7 +224,11 @@ public final class ArcadiaAdminMenu extends ChestMenu {
         if (ArcadiaPatchVariant.hasRefinedStorage()) {
             result.add(new Section("Refined Storage", "Patchs Refined Storage 2", ArcadiaConfig.MODULE_REFINED_STORAGE_ENABLED, List.of(
                     Entry.bool("S1 activeness coalescing", ArcadiaConfig.REFINED_STORAGE.activenessCheckCoalescing),
-                    Entry.integer("S1 interval ticks", ArcadiaConfig.REFINED_STORAGE.activenessCheckInterval, 1))));
+                    Entry.integer("S1 interval ticks", ArcadiaConfig.REFINED_STORAGE.activenessCheckInterval, 1),
+                    Entry.bool("S2 single component lookup", ArcadiaConfig.REFINED_STORAGE.singleComponentLookup),
+                    Entry.bool("S3 disk save cache", ArcadiaConfig.REFINED_STORAGE.storageSaveCache),
+                    Entry.integer("S3 verify every N saves", ArcadiaConfig.REFINED_STORAGE.storageSaveCacheVerifyInterval, 5),
+                    Entry.bool("S4 quiet debug logs", ArcadiaConfig.REFINED_STORAGE.quietHotDebugLogs))));
         }
         if (ArcadiaPatchVariant.hasMekanism()) {
             result.add(new Section("Mekanism", "Patchs cables et reseaux Mekanism", ArcadiaConfig.MODULE_MEKANISM_ENABLED, List.of(
