@@ -4,6 +4,7 @@ import com.teamarcadia.arcadiatweaks.neoforge.botany.BotanyMixinCompatibility;
 import com.teamarcadia.arcadiatweaks.neoforge.mixin.botany.BotanyMixinPlugin;
 import com.teamarcadia.arcadiatweaks.neoforge.mixin.mekanism.MekanismMixinPlugin;
 import com.teamarcadia.arcadiatweaks.neoforge.mixin.refinedstorage.RefinedStorageMixinPlugin;
+import com.teamarcadia.arcadiatweaks.neoforge.mixin.simplyswords.SimplySwordsMixinPlugin;
 import com.teamarcadia.arcadiatweaks.neoforge.mixin.waystones.WaystonesMixinPlugin;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -108,11 +109,26 @@ final class MixinPluginCompatibilityTest {
     }
 
     @Test
+    void simplySwordsPluginAcceptsBundledRuntimeTargets() {
+        final SimplySwordsMixinPlugin plugin = new SimplySwordsMixinPlugin();
+
+        assertTrue(plugin.shouldApplyMixin(
+                "net.sweenus.simplyswords.screen.RunicForgeScreenHandler",
+                "com.teamarcadia.arcadiatweaks.neoforge.mixin.simplyswords.RunicForgeScreenHandlerMixin"
+        ));
+        assertTrue(plugin.shouldApplyMixin(
+                "net.sweenus.simplyswords.screen.RunicForgeScreenHandler$TabletSlot",
+                "com.teamarcadia.arcadiatweaks.neoforge.mixin.simplyswords.RunicForgeTabletSlotMixin"
+        ));
+    }
+
+    @Test
     void pluginsSkipMissingTargetsInsteadOfCrashing() {
         final BotanyMixinPlugin botany = new BotanyMixinPlugin();
         final RefinedStorageMixinPlugin refinedStorage = new RefinedStorageMixinPlugin();
         final MekanismMixinPlugin mekanism = new MekanismMixinPlugin();
         final WaystonesMixinPlugin waystones = new WaystonesMixinPlugin();
+        final SimplySwordsMixinPlugin simplySwords = new SimplySwordsMixinPlugin();
 
         assertFalse(botany.shouldApplyMixin(
                 "missing.botany.BotanyPotBlockEntity",
@@ -129,6 +145,10 @@ final class MixinPluginCompatibilityTest {
         assertFalse(waystones.shouldApplyMixin(
                 "missing.waystones.WaystoneIndexManager",
                 "com.teamarcadia.arcadiatweaks.neoforge.mixin.waystones.WaystoneIndexManagerMixin"
+        ));
+        assertFalse(simplySwords.shouldApplyMixin(
+                "missing.simplyswords.RunicForgeScreenHandler$TabletSlot",
+                "com.teamarcadia.arcadiatweaks.neoforge.mixin.simplyswords.RunicForgeTabletSlotMixin"
         ));
     }
 }

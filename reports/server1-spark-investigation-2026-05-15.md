@@ -1,6 +1,6 @@
 # Server 1 Spark investigation - 2026-05-15
 
-Profile: `C:/Users/curveo/Downloads/2ipVmJVLAr.sparkprofile`
+Profile: `2ipVmJVLAr.sparkprofile`
 
 Duration: ~60.5 seconds
 Ticks recorded: 653

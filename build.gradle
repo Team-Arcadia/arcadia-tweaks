@@ -72,6 +72,8 @@ dependencies {
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.3'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    // Unit tests only read the Simply Swords classes as bytes to check the Mixin targets.
+    testRuntimeOnly files("libs/simplyswords-neoforge-${simplyswords_version}.jar")
 }
 
 neoForge {
