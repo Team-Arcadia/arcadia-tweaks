@@ -145,7 +145,10 @@ Required jars (and the version each must match in `gradle.properties`):
 | `ftb-teams-neoforge-<ver>.jar`                 | `ftbteams_version`     |
 | `ftb-library-neoforge-<ver>.jar`               | `ftblibrary_version`   |
 | `architectury-<ver>-neoforge.jar`              | `architectury_version` |
-| `simplyswords-neoforge-<ver>.jar` (compile only) | `simplyswords_version` |
+| `simplyswords-neoforge-<ver>.jar`              | `simplyswords_version` |
+| `SimplyTooltips-neoforge-<ver>.jar` (dev runtime) | `simplytooltips_version` |
+| `fzzy_config-<ver>+1.21+neoforge.jar` (dev runtime) | `fzzyconfig_version` |
+| `kotlinforforge-<ver>-all.jar` (dev runtime)   | `kotlinforforge_version` |
 
 `libs/*.jar` is gitignored - each developer copies their own from the production pack. When the pack updates a targeted mod, refresh `libs/` and bump the corresponding `gradle.properties` values to match the new filenames.
 
@@ -166,7 +169,7 @@ Required jars (and the version each must match in `gradle.properties`):
 ./gradlew runGameTestServer
 ```
 
-Simply Swords is compile only, so its Mixins are skipped in dev runs; they are checked by the JUnit target tests instead.
+The GameTests cover the entity movement guard, the Waystones team visibility (with real FTB Teams parties) and the Runic Forge (a FakePlayer driving the real Simply Swords menu). Simply Swords needs SimplyTooltips, fzzy_config and Kotlin for Forge at runtime, hence the three dev runtime jars above.
 
 The dev runs are pre-configured with `mixin.debug=true` and `mixin.debug.export=true`, so the bytecode of every Mixin-applied class is dumped to `run/.mixin.out/class/` for inspection.
 
@@ -557,7 +560,10 @@ Jars requis (et la version à faire correspondre dans `gradle.properties`) :
 | `ftb-teams-neoforge-<ver>.jar`                 | `ftbteams_version`     |
 | `ftb-library-neoforge-<ver>.jar`               | `ftblibrary_version`   |
 | `architectury-<ver>-neoforge.jar`              | `architectury_version` |
-| `simplyswords-neoforge-<ver>.jar` (compilation seulement) | `simplyswords_version` |
+| `simplyswords-neoforge-<ver>.jar`              | `simplyswords_version` |
+| `SimplyTooltips-neoforge-<ver>.jar` (exécution de dev) | `simplytooltips_version` |
+| `fzzy_config-<ver>+1.21+neoforge.jar` (exécution de dev) | `fzzyconfig_version` |
+| `kotlinforforge-<ver>-all.jar` (exécution de dev) | `kotlinforforge_version` |
 
 `libs/*.jar` est ignoré par git : chaque développeur copie les siens depuis le pack de production. Lorsque le pack met à jour un mod ciblé, rafraîchir `libs/` et mettre à jour les valeurs correspondantes de `gradle.properties` selon les nouveaux noms de fichiers.
 
@@ -578,7 +584,7 @@ Jars requis (et la version à faire correspondre dans `gradle.properties`) :
 ./gradlew runGameTestServer
 ```
 
-Simply Swords n'est utilisé qu'à la compilation, donc ses Mixins sont ignorés lors des exécutions de développement ; ils sont vérifiés par les tests JUnit de cibles à la place.
+Les GameTests couvrent le garde-fou de mouvement des entités, la visibilité d'équipe de Waystones (avec de vraies parties FTB Teams) et la Runic Forge (un FakePlayer qui manipule le vrai menu de Simply Swords). Simply Swords a besoin de SimplyTooltips, fzzy_config et Kotlin for Forge à l'exécution, d'où les trois jars d'exécution de dev ci-dessus.
 
 Les exécutions de développement sont préconfigurées avec `mixin.debug=true` et `mixin.debug.export=true`, de sorte que le bytecode de chaque classe modifiée par Mixin est exporté dans `run/.mixin.out/class/` pour inspection.
 

@@ -55,8 +55,7 @@ dependencies {
     compileOnly  files("libs/balm-neoforge-1.21.1-${balm_version}.jar")
     compileOnly  files("libs/ftb-teams-neoforge-${ftbteams_version}.jar")
     compileOnly  files("libs/ftb-library-neoforge-${ftblibrary_version}.jar")
-    // Simply Swords module: the Runic Forge fix targets RunicForgeScreenHandler. Compile only:
-    // Simply Swords needs fzzy_config and Kotlin for Forge at runtime, which dev runs do not ship.
+    // Simply Swords module: the Runic Forge fix targets RunicForgeScreenHandler.
     compileOnly  files("libs/simplyswords-neoforge-${simplyswords_version}.jar")
 
     runtimeOnly  files("libs/botanypots-neoforge-1.21.1-${botanypots_version}.jar")
@@ -69,11 +68,14 @@ dependencies {
     runtimeOnly  files("libs/ftb-teams-neoforge-${ftbteams_version}.jar")
     runtimeOnly  files("libs/ftb-library-neoforge-${ftblibrary_version}.jar")
     runtimeOnly  files("libs/architectury-${architectury_version}-neoforge.jar")
+    // Simply Swords and its runtime dependencies, so the Runic Forge GameTests run against it.
+    runtimeOnly  files("libs/simplyswords-neoforge-${simplyswords_version}.jar")
+    runtimeOnly  files("libs/SimplyTooltips-neoforge-${simplytooltips_version}.jar")
+    runtimeOnly  files("libs/fzzy_config-${fzzyconfig_version}+1.21+neoforge.jar")
+    runtimeOnly  files("libs/kotlinforforge-${kotlinforforge_version}-all.jar")
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.3'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    // Unit tests only read the Simply Swords classes as bytes to check the Mixin targets.
-    testRuntimeOnly files("libs/simplyswords-neoforge-${simplyswords_version}.jar")
 }
 
 neoForge {

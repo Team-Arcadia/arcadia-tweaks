@@ -27,6 +27,9 @@ public final class ArcadiaTweaksGameTests {
 
     public static void register(RegisterGameTestsEvent event) {
         event.register(ArcadiaTweaksGameTests.class);
+        event.register(EntityMoveGuardGameTests.class);
+        event.register(WaystoneTeamVisibilityGameTests.class);
+        event.register(RunicForgeGameTests.class);
     }
 
     @GameTest(template = TEMPLATE, batch = BATCH, timeoutTicks = 20)
