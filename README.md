@@ -133,6 +133,7 @@ Required jars (and the version each must match in `gradle.properties`):
 | `ftb-teams-neoforge-<ver>.jar`                 | `ftbteams_version`     |
 | `ftb-library-neoforge-<ver>.jar`               | `ftblibrary_version`   |
 | `architectury-<ver>-neoforge.jar`              | `architectury_version` |
+| `simplyswords-neoforge-<ver>.jar` (compile only) | `simplyswords_version` |
 
 `libs/*.jar` is gitignored - each developer copies their own from the production pack. When the pack updates a targeted mod, refresh `libs/` and bump the corresponding `gradle.properties` values to match the new filenames.
 
@@ -294,6 +295,30 @@ lookup is replaced by the owner's FTB Teams party: party members see the
 waystone, allies do not, and a player without a party only sees their own. The
 Mixin is skipped when FTB Teams is not installed, and Waystones keeps its own
 behaviour.
+
+### Safety guards
+
+```toml
+[safety]
+entityMoveGuard = true
+entityMoveGuardLimit = 100.0
+runicForgeImplicitLevelLock = true
+```
+
+| Setting | Best value | What it does |
+|---------|------------|--------------|
+| `entityMoveGuard` | `true` | Stops an entity whose movement for one tick is NaN, infinite or above `entityMoveGuardLimit`, instead of letting the collision search freeze the server. |
+| `runicForgeImplicitLevelLock` | `true` | Simply Swords Runic Forge: no free Runic Tablets from a unique weapon whose awakening level is only implicit (see below). |
+
+Simply Swords reads a unique weapon without its `simplyswords:awakening` component as fully
+awakened (level 8): weapons from before the awakening system and every unique handed out as a
+plain item (lootboxes, quests, commands). The Runic Forge turns a weapon's level into that many
+Runic Tablet items, so such a weapon gave 8 tablets that never existed (Arcadia bug #321). With
+this setting on, the implicit level is stored on the weapon as a lock the first time it enters
+the forge: the forge hands out no tablet for it, the weapon keeps its power, its gems can still
+be changed, and only the tablet slots above the lock accept a tablet. Weapons awakened with real
+tablets never get a lock. The `simplyswords` Mixins are skipped when Simply Swords is absent or
+its forge internals changed.
 
 ## Validate the Mixin pipeline
 

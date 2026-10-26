@@ -27,6 +27,9 @@ config = "${mod_id}.mekanism.mixins.json"
 [[mixins]]
 config = "${mod_id}.waystones.mixins.json"
 
+[[mixins]]
+config = "${mod_id}.simplyswords.mixins.json"
+
 [[dependencies.${mod_id}]]
 modId = "neoforge"
 type = "required"
@@ -77,6 +80,14 @@ side = "BOTH"
 # FTB Teams is optional at load time. The Waystones team visibility fix is skipped without it.
 [[dependencies.${mod_id}]]
 modId = "ftbteams"
+type = "optional"
+versionRange = "[0.0.0,)"
+ordering = "AFTER"
+side = "BOTH"
+
+# Simply Swords is optional at load time. The Runic Forge fix only applies when it is present.
+[[dependencies.${mod_id}]]
+modId = "simplyswords"
 type = "optional"
 versionRange = "[0.0.0,)"
 ordering = "AFTER"
