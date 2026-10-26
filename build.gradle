@@ -109,6 +109,30 @@ neoForge {
             systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
             programArgument '--nogui'
         }
+        // In-server A/B benchmark: ./gradlew runBenchServer
+        // Optional: -PbenchCopyTo=<file> (copy of the results JSON), -PbenchScenarios=a,b,
+        // -PbenchRounds=, -PbenchWarmup=, -PbenchSettle=, -PbenchMeasure= (ticks).
+        benchServer {
+            server()
+            // Own directory: the bench deletes its world before every run (see prepareBenchServerRun).
+            gameDirectory = project.file('run-bench')
+            systemProperty 'neoforge.gameTestServer', 'true'
+            systemProperty 'neoforge.enabledGameTestNamespaces', "${mod_id}_bench"
+            systemProperty 'arcadia.bench', 'true'
+            // Production-like logging and Mixin settings while measuring.
+            systemProperty 'forge.logging.console.level', 'info'
+            systemProperty 'mixin.debug', 'false'
+            systemProperty 'mixin.debug.export', 'false'
+            [benchCopyTo: 'arcadia.bench.copyTo', benchScenarios: 'arcadia.bench.scenarios',
+             benchRounds: 'arcadia.bench.rounds', benchWarmup: 'arcadia.bench.warmup',
+             benchSettle: 'arcadia.bench.settle', benchMeasure: 'arcadia.bench.measure'].each { prop, sys ->
+                if (project.hasProperty(prop)) {
+                    systemProperty sys, project.property(prop).toString()
+                }
+            }
+            jvmArguments.addAll '-Xms4G', '-Xmx4G'
+            programArgument '--nogui'
+        }
         data {
             data()
             programArguments.addAll '--mod', mod_id, '--all',
@@ -421,6 +445,21 @@ tasks.register('syncGameTestStructures', Copy) {
 
 tasks.named('prepareGameTestServerRun') {
     dependsOn tasks.named('syncGameTestStructures')
+}
+
+tasks.register('syncBenchStructures', Copy) {
+    group = 'verification'
+    description = 'Copies SNBT GameTest structures into the bench run directory.'
+    from layout.projectDirectory.dir('gameteststructures')
+    into layout.projectDirectory.dir('run-bench/gameteststructures')
+}
+
+tasks.named('prepareBenchServerRun') {
+    dependsOn tasks.named('syncBenchStructures')
+    // Every bench starts from a fresh world, so saved data from an earlier run cannot skew it.
+    doFirst {
+        delete layout.projectDirectory.dir('run-bench/world')
+    }
 }
 
 tasks.named('test') {
