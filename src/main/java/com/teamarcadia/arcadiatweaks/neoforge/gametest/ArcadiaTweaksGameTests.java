@@ -34,6 +34,7 @@ public final class ArcadiaTweaksGameTests {
         if (ArcadiaPatchVariant.hasRefinedStorage()) {
             event.register(RefinedStorageGameTests.class);
         }
+        event.register(CosmeticPresenceGateGameTests.class);
     }
 
     @GameTest(template = TEMPLATE, batch = BATCH, timeoutTicks = 20)

@@ -32,6 +32,12 @@ configurations {
 }
 
 sourceSets {
+    // Dev-run data only (GameTests): gives players Curios slots, which no mod of the dev runtime does.
+    // Part of the dev mod in runs, never part of any jar.
+    gametestData {
+        java.srcDirs = []
+        resources.srcDirs = ['src/gametest/resources']
+    }
     test {
         compileClasspath += sourceSets.main.compileClasspath
         runtimeClasspath += sourceSets.main.runtimeClasspath
@@ -57,6 +63,12 @@ dependencies {
     compileOnly  files("libs/ftb-library-neoforge-${ftblibrary_version}.jar")
     // Simply Swords module: the Runic Forge fix targets RunicForgeScreenHandler.
     compileOnly  files("libs/simplyswords-neoforge-${simplyswords_version}.jar")
+    // Cosmetic module: the presence gate targets the CosmeticWeapons / CosmeticArmours procedures and reads
+    // Curios slots through the Curios API (soft class, only loaded when Curios is installed).
+    compileOnly  files("libs/CosmeticWeapons - ${cosmeticweapons_version} - 1.21.1 - NeoForge.jar")
+    compileOnly  files("libs/CosmeticArmours - ${cosmeticarmours_version} - 1.21.1 - NeoForge.jar")
+    compileOnly  files("libs/curios-neoforge-${curios_version}.jar")
+    compileOnly  files("libs/accessories-neoforge-${accessories_version}.jar")
 
     runtimeOnly  files("libs/botanypots-neoforge-1.21.1-${botanypots_version}.jar")
     runtimeOnly  files("libs/bookshelf-neoforge-1.21.1-${bookshelf_version}.jar")
@@ -73,6 +85,17 @@ dependencies {
     runtimeOnly  files("libs/SimplyTooltips-neoforge-${simplytooltips_version}.jar")
     runtimeOnly  files("libs/fzzy_config-${fzzyconfig_version}+1.21+neoforge.jar")
     runtimeOnly  files("libs/kotlinforforge-${kotlinforforge_version}-all.jar")
+    // CosmeticWeapons / CosmeticArmours, the mods that hook Inventory.contains (Curios, Accessories) and the
+    // ItemStack comparison (GeckoLib, RecipeEssentials), so the cosmetic GameTests run in the modpack shape.
+    runtimeOnly  files("libs/CosmeticWeapons - ${cosmeticweapons_version} - 1.21.1 - NeoForge.jar")
+    runtimeOnly  files("libs/CosmeticArmours - ${cosmeticarmours_version} - 1.21.1 - NeoForge.jar")
+    runtimeOnly  files("libs/Patchouli-1.21.1-${patchouli_version}-NEOFORGE.jar")
+    runtimeOnly  files("libs/curios-neoforge-${curios_version}.jar")
+    runtimeOnly  files("libs/accessories-neoforge-${accessories_version}.jar")
+    runtimeOnly  files("libs/owo-lib-neoforge-${owolib_version}.jar")
+    runtimeOnly  files("libs/geckolib-neoforge-1.21.1-${geckolib_version}.jar")
+    runtimeOnly  files("libs/recipeessentials-1.21.1-${recipeessentials_version}.jar")
+    runtimeOnly  files("libs/cupboard-1.21.1-${cupboard_version}.jar")
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.3'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -111,6 +134,8 @@ neoForge {
             if (project.hasProperty('arcadiaBench')) {
                 systemProperty 'arcadia.bench', 'true'
             }
+            // -ParcadiaCosmeticBench=true also runs the cosmetic presence gate microbenchmark (slow, off by default).
+            systemProperty 'arcadia.cosmeticBench', (findProperty('arcadiaCosmeticBench') ?: 'false').toString()
             programArgument '--nogui'
         }
         data {
@@ -124,6 +149,7 @@ neoForge {
     mods {
         "${mod_id}" {
             sourceSet sourceSets.main
+            sourceSet sourceSets.gametestData
         }
     }
 }
@@ -152,7 +178,8 @@ def patchMixinConfigs = [
     refinedstorage: "${mod_id}.refinedstorage.mixins.json",
     mekanism      : "${mod_id}.mekanism.mixins.json",
     waystones     : "${mod_id}.waystones.mixins.json",
-    simplyswords  : "${mod_id}.simplyswords.mixins.json"
+    simplyswords  : "${mod_id}.simplyswords.mixins.json",
+    cosmetic      : "${mod_id}.cosmetic.mixins.json"
 ]
 
 def patchJarVariants = [
@@ -160,8 +187,8 @@ def patchJarVariants = [
         taskName      : 'jarAllPatches',
         classifier    : 'all',
         displayName   : 'all patches',
-        mixinConfigs  : [baseMixinConfig, patchMixinConfigs.botany, patchMixinConfigs.refinedstorage, patchMixinConfigs.mekanism, patchMixinConfigs.waystones, patchMixinConfigs.simplyswords],
-        optionalDeps  : ['botanypots', 'refinedstorage', 'mekanism', 'waystones', 'ftbteams', 'simplyswords'],
+        mixinConfigs  : [baseMixinConfig, patchMixinConfigs.botany, patchMixinConfigs.refinedstorage, patchMixinConfigs.mekanism, patchMixinConfigs.waystones, patchMixinConfigs.simplyswords, patchMixinConfigs.cosmetic],
+        optionalDeps  : ['botanypots', 'refinedstorage', 'mekanism', 'waystones', 'ftbteams', 'simplyswords', 'cosmeticweaponsmod', 'cosmeticarmoursmod'],
         excludedClasses: []
     ],
     botany        : [
@@ -178,7 +205,9 @@ def patchJarVariants = [
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/waystones/**',
             'com/teamarcadia/arcadiatweaks/neoforge/waystones/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/simplyswords/**',
-            'com/teamarcadia/arcadiatweaks/common/modules/simplyswords/**'
+            'com/teamarcadia/arcadiatweaks/common/modules/simplyswords/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/cosmetic/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/cosmetic/**'
         ]
     ],
     refinedstorage: [
@@ -195,7 +224,9 @@ def patchJarVariants = [
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/waystones/**',
             'com/teamarcadia/arcadiatweaks/neoforge/waystones/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/simplyswords/**',
-            'com/teamarcadia/arcadiatweaks/common/modules/simplyswords/**'
+            'com/teamarcadia/arcadiatweaks/common/modules/simplyswords/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/cosmetic/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/cosmetic/**'
         ]
     ],
     mekanism      : [
@@ -212,7 +243,9 @@ def patchJarVariants = [
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/waystones/**',
             'com/teamarcadia/arcadiatweaks/neoforge/waystones/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/simplyswords/**',
-            'com/teamarcadia/arcadiatweaks/common/modules/simplyswords/**'
+            'com/teamarcadia/arcadiatweaks/common/modules/simplyswords/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/cosmetic/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/cosmetic/**'
         ]
     ],
     waystones     : [
@@ -229,7 +262,9 @@ def patchJarVariants = [
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/mekanism/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mekanism/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/simplyswords/**',
-            'com/teamarcadia/arcadiatweaks/common/modules/simplyswords/**'
+            'com/teamarcadia/arcadiatweaks/common/modules/simplyswords/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/cosmetic/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/cosmetic/**'
         ]
     ]
 ]
@@ -298,6 +333,30 @@ side = "BOTH"
 # Simply Swords is optional at load time. The Runic Forge fix only applies when it is present.
 [[dependencies.${mod_id}]]
 modId = "simplyswords"
+type = "optional"
+versionRange = "[0.0.0,)"
+ordering = "AFTER"
+side = "BOTH"
+"""
+    }
+    if (variant.optionalDeps.contains('cosmeticweaponsmod')) {
+        optionalDependencyBlocks += """
+
+# CosmeticWeapons is optional at load time. The presence gate only applies when it is present.
+[[dependencies.${mod_id}]]
+modId = "cosmeticweaponsmod"
+type = "optional"
+versionRange = "[0.0.0,)"
+ordering = "AFTER"
+side = "BOTH"
+"""
+    }
+    if (variant.optionalDeps.contains('cosmeticarmoursmod')) {
+        optionalDependencyBlocks += """
+
+# CosmeticArmours is optional at load time. The presence gate only applies when it is present.
+[[dependencies.${mod_id}]]
+modId = "cosmeticarmoursmod"
 type = "optional"
 versionRange = "[0.0.0,)"
 ordering = "AFTER"
@@ -450,7 +509,7 @@ jar {
             'Implementation-Title'    : mod_name,
             'Implementation-Version'  : mod_version,
             'Implementation-Vendor'   : mod_authors,
-            'MixinConfigs'            : "${mod_id}.mixins.json,${mod_id}.botany.mixins.json,${mod_id}.refinedstorage.mixins.json,${mod_id}.mekanism.mixins.json,${mod_id}.waystones.mixins.json,${mod_id}.simplyswords.mixins.json"
+            'MixinConfigs'            : "${mod_id}.mixins.json,${mod_id}.botany.mixins.json,${mod_id}.refinedstorage.mixins.json,${mod_id}.mekanism.mixins.json,${mod_id}.waystones.mixins.json,${mod_id}.simplyswords.mixins.json,${mod_id}.cosmetic.mixins.json"
         ])
     }
 }

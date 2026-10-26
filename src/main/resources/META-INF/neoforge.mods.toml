@@ -30,6 +30,9 @@ config = "${mod_id}.waystones.mixins.json"
 [[mixins]]
 config = "${mod_id}.simplyswords.mixins.json"
 
+[[mixins]]
+config = "${mod_id}.cosmetic.mixins.json"
+
 [[dependencies.${mod_id}]]
 modId = "neoforge"
 type = "required"
@@ -88,6 +91,22 @@ side = "BOTH"
 # Simply Swords is optional at load time. The Runic Forge fix only applies when it is present.
 [[dependencies.${mod_id}]]
 modId = "simplyswords"
+type = "optional"
+versionRange = "[0.0.0,)"
+ordering = "AFTER"
+side = "BOTH"
+
+# CosmeticWeapons and CosmeticArmours are optional at load time. The presence gate only applies when they
+# are present, and only on the server (client calls pass through).
+[[dependencies.${mod_id}]]
+modId = "cosmeticweaponsmod"
+type = "optional"
+versionRange = "[0.0.0,)"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies.${mod_id}]]
+modId = "cosmeticarmoursmod"
 type = "optional"
 versionRange = "[0.0.0,)"
 ordering = "AFTER"
