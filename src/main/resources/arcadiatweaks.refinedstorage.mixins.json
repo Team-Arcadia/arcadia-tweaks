@@ -8,7 +8,12 @@
   "server": [
     "AbstractBaseNetworkNodeContainerBlockEntityMixin",
     "NetworkNodeBlockEntityTickerMixin",
-    "NetworkTransmitterBlockEntityTickerMixin"
+    "NetworkTransmitterBlockEntityTickerMixin",
+    "ComponentMapMixin",
+    "PlatformStorageMixin",
+    "StorageRepositoryImplMixin",
+    "ExternalStorageDebugLogMixin",
+    "NetworkTransmitterDebugLogMixin"
   ],
   "client": [],
   "injectors": {

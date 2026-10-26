@@ -107,6 +107,10 @@ neoForge {
             server()
             systemProperty 'neoforge.gameTestServer', 'true'
             systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
+            // ./gradlew runGameTestServer -ParcadiaBench also runs the microbenchmark GameTests.
+            if (project.hasProperty('arcadiaBench')) {
+                systemProperty 'arcadia.bench', 'true'
+            }
             programArgument '--nogui'
         }
         data {

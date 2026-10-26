@@ -20,3 +20,10 @@
 **Root cause:** FTB Library checks `connection.hasChannel(...)` before sending; a NeoForge FakePlayer connection has no Netty channel.
 **Fix:** the sync is the last step of `playerLoggedIn`, after the personal team is registered; the test tolerates that NPE only when the team was registered and rethrows otherwise. `createParty` and `join` work on fake players.
 **Prevention:** expect any mod code that sends packets to a FakePlayer to fail; verify the state it was supposed to build instead.
+
+## [2026-10-26 14:20] - Worktree created on a stale base
+**Context:** RS optimization work in an agent worktree; first `./gradlew compileJava`.
+**Error:** `package net.darkhax.botanypots.common.impl.block.entity does not exist` and other missing classes.
+**Root cause:** the worktree branch started from `main`, while the target jars in `libs/` (RS 2.0.9, BotanyPots 21.1.44...) match `gradle.properties` of `chore/release-0.2.0`; `main` still names the older jar versions, so Gradle found no file for them.
+**Fix:** fast-forwarded the worktree branch to `chore/release-0.2.0` (no local commits yet).
+**Prevention:** before coding in a worktree, compare its `gradle.properties` versions with the jar names in `libs/` and check which branch the other worktrees start from.

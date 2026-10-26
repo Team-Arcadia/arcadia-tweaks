@@ -50,6 +50,41 @@ final class MixinPluginCompatibilityTest {
                 "com.refinedmods.refinedstorage.common.networking.NetworkTransmitterBlockEntityTicker",
                 "com.teamarcadia.arcadiatweaks.neoforge.mixin.refinedstorage.NetworkTransmitterBlockEntityTickerMixin"
         ));
+        assertTrue(plugin.shouldApplyMixin(
+                "com.refinedmods.refinedstorage.api.core.component.ComponentMap",
+                "com.teamarcadia.arcadiatweaks.neoforge.mixin.refinedstorage.ComponentMapMixin"
+        ));
+        assertTrue(plugin.shouldApplyMixin(
+                "com.refinedmods.refinedstorage.common.storage.PlatformStorage",
+                "com.teamarcadia.arcadiatweaks.neoforge.mixin.refinedstorage.PlatformStorageMixin"
+        ));
+        assertTrue(plugin.shouldApplyMixin(
+                "com.refinedmods.refinedstorage.common.storage.StorageRepositoryImpl",
+                "com.teamarcadia.arcadiatweaks.neoforge.mixin.refinedstorage.StorageRepositoryImplMixin"
+        ));
+        assertTrue(plugin.shouldApplyMixin(
+                "com.refinedmods.refinedstorage.common.storage.externalstorage.AbstractExternalStorageBlockEntity",
+                "com.teamarcadia.arcadiatweaks.neoforge.mixin.refinedstorage.ExternalStorageDebugLogMixin"
+        ));
+        assertTrue(plugin.shouldApplyMixin(
+                "com.refinedmods.refinedstorage.common.networking.NetworkTransmitterBlockEntity",
+                "com.teamarcadia.arcadiatweaks.neoforge.mixin.refinedstorage.NetworkTransmitterDebugLogMixin"
+        ));
+    }
+
+    @Test
+    void refinedStorageDebugLogMixinsSkipChangedTargets() {
+        final RefinedStorageMixinPlugin plugin = new RefinedStorageMixinPlugin();
+
+        // A class whose doWork has no matching Logger.debug call.
+        assertFalse(plugin.shouldApplyMixin(
+                "com.refinedmods.refinedstorage.common.support.network.AbstractBaseNetworkNodeContainerBlockEntity",
+                "com.teamarcadia.arcadiatweaks.neoforge.mixin.refinedstorage.ExternalStorageDebugLogMixin"
+        ));
+        assertFalse(plugin.shouldApplyMixin(
+                "missing.refinedstorage.ComponentMap",
+                "com.teamarcadia.arcadiatweaks.neoforge.mixin.refinedstorage.ComponentMapMixin"
+        ));
     }
 
     @Test

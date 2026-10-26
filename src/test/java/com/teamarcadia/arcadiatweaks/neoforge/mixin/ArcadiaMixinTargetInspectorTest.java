@@ -1,8 +1,14 @@
 package com.teamarcadia.arcadiatweaks.neoforge.mixin;
 
 import org.junit.jupiter.api.Test;
+import org.objectweb.asm.Opcodes;
 
+import java.util.List;
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class ArcadiaMixinTargetInspectorTest {
@@ -43,6 +49,52 @@ final class ArcadiaMixinTargetInspectorTest {
                 "missing",
                 "()V"
         ));
+    }
+
+    @Test
+    void detectsIntConstantsAndOpcodesInsideMethodBody() {
+        final String className = DebounceFixture.class.getName();
+
+        assertTrue(ArcadiaMixinTargetInspector.hasIntConstantInMethod(className, "debounce", "()Z", 20));
+        assertTrue(ArcadiaMixinTargetInspector.hasIntConstantInMethod(className, "small", "()I", 3));
+        assertTrue(ArcadiaMixinTargetInspector.hasIntConstantInMethod(className, "large", "()I", 100_000));
+        assertFalse(ArcadiaMixinTargetInspector.hasIntConstantInMethod(className, "debounce", "()Z", 21));
+        assertTrue(ArcadiaMixinTargetInspector.hasOpcodeInMethod(className, "debounce", "()Z", Opcodes.IREM));
+        assertFalse(ArcadiaMixinTargetInspector.hasOpcodeInMethod(className, "debounce", "()Z", Opcodes.IDIV));
+        assertFalse(ArcadiaMixinTargetInspector.hasOpcodeInMethod(className, "missing", "()Z", Opcodes.IREM));
+    }
+
+    @Test
+    void listsMethodCallsInOrderAndDeclaredMethods() {
+        final String className = MethodCallFixture.class.getName();
+        final String owner = className.replace('.', '/');
+
+        assertEquals(List.of(owner + ".callee ()V"),
+                ArcadiaMixinTargetInspector.methodCallsInMethod(className, "caller", "()V"));
+        assertNull(ArcadiaMixinTargetInspector.methodCallsInMethod(className, "missing", "()V"));
+        assertNull(ArcadiaMixinTargetInspector.methodCallsInMethod("missing.Fixture", "caller", "()V"));
+
+        final Set<String> methods = ArcadiaMixinTargetInspector.declaredMethods(className);
+        assertTrue(methods.contains("caller ()V"));
+        assertTrue(methods.contains("callee ()V"));
+        assertFalse(methods.contains("inherited ()Z"));
+        assertNull(ArcadiaMixinTargetInspector.declaredMethods("missing.Fixture"));
+    }
+
+    private static final class DebounceFixture {
+        private int ticks;
+
+        boolean debounce() {
+            return ticks++ % 20 == 0;
+        }
+
+        int small() {
+            return 3;
+        }
+
+        int large() {
+            return 100_000;
+        }
     }
 
     private static class ParentFixture {

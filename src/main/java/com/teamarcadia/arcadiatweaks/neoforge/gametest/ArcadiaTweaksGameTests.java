@@ -31,6 +31,9 @@ public final class ArcadiaTweaksGameTests {
         event.register(WaystoneTeamVisibilityGameTests.class);
         event.register(RunicForgeGameTests.class);
         event.register(AdminMenuGameTests.class);
+        if (ArcadiaPatchVariant.hasRefinedStorage()) {
+            event.register(RefinedStorageGameTests.class);
+        }
     }
 
     @GameTest(template = TEMPLATE, batch = BATCH, timeoutTicks = 20)
