@@ -243,6 +243,15 @@ public final class ArcadiaAdminMenu extends ChestMenu {
             result.add(new Section("Waystones", "Visibilite team via FTB Teams", ArcadiaConfig.MODULE_WAYSTONES_ENABLED, List.of(
                     Entry.bool("W1 team via FTB Teams", ArcadiaConfig.WAYSTONES.ftbTeamsTeamVisibility))));
         }
+        if (ArcadiaPatchVariant.hasCosmetic()) {
+            result.add(new Section("CosmeticWeapons", "CosmeticWeapons et CosmeticArmours", ArcadiaConfig.MODULE_COSMETIC_ENABLED, List.of(
+                    Entry.bool("C1 item presence gate", ArcadiaConfig.COSMETIC.containsPresenceGate))));
+        }
+        if (ArcadiaPatchVariant.hasAccessories()) {
+            result.add(new Section("Accessories", "Patchs Accessories (wisp-forest)", ArcadiaConfig.MODULE_ACCESSORIES_ENABLED, List.of(
+                    Entry.bool("A1 contains fast path", ArcadiaConfig.ACCESSORIES.containsFastPath),
+                    Entry.bool("A2 trimmed entity tick", ArcadiaConfig.ACCESSORIES.tickAllocationTrimmed))));
+        }
         result.add(new Section("Safety guards", "Gardes-fous du serveur", (ModConfigSpec.BooleanValue) null, List.of(
                 Entry.bool("Entity move guard", ArcadiaConfig.ENTITY_MOVE_GUARD_ENABLED),
                 Entry.decimal("Move guard limit", ArcadiaConfig.ENTITY_MOVE_GUARD_LIMIT, 10.0),
