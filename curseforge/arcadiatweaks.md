@@ -21,7 +21,7 @@ ArcadiaTweaks is published as a single file, `arcadiatweaks-0.2.0.jar`. It conta
 |---|---|
 | File | `arcadiatweaks-0.2.0.jar` |
 | Version | `0.2.0` |
-| Release type | Beta |
+| Release type | Release |
 | Minecraft | `1.21.1` |
 | Loader | NeoForge |
 | Side | Server + optional client patch |
@@ -56,6 +56,8 @@ Optimization patches for BotanyPots, Refined Storage, Mekanism, CosmeticWeapons,
 ```text
 ArcadiaTweaks 0.2.0
 ```
+
+Every file uses the display name `ArcadiaTweaks <version>` (for example `ArcadiaTweaks 0.2.0`), never the jar file name.
 
 ## Changelog
 
