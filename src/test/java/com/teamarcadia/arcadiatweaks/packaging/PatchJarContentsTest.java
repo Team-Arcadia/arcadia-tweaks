@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 final class PatchJarContentsTest {
 
     private static final String MOD_ID = System.getProperty("arcadia.modId", "arcadiatweaks");
-    private static final String MOD_VERSION = System.getProperty("arcadia.modVersion", "0.1.0");
+    private static final String MOD_VERSION = System.getProperty("arcadia.modVersion", "0.2.0");
     private static final Path PATCH_JAR_DIR = Path.of(System.getProperty("arcadia.patchJarDir", "build/libs"));
 
     @Test
@@ -26,6 +26,17 @@ final class PatchJarContentsTest {
             assertEntryPresent(jar, "arcadiatweaks.refinedstorage.mixins.json");
             assertEntryPresent(jar, "arcadiatweaks.mekanism.mixins.json");
             assertEntryPresent(jar, "arcadiatweaks.waystones.mixins.json");
+            assertEntryPresent(jar, "arcadiatweaks.simplyswords.mixins.json");
+            assertEntryPresent(jar, "arcadiatweaks.accessories.mixins.json");
+            assertEntryPresent(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/accessories/AccessoriesMixinPlugin.class");
+            assertEntryPresent(jar, "com/teamarcadia/arcadiatweaks/neoforge/accessories/ArcadiaAccessoriesContains.class");
+            assertEntryPresent(jar, "com/teamarcadia/arcadiatweaks/neoforge/accessories/ArcadiaAccessoriesTick.class");
+            assertEntryPresent(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/simplyswords/RunicForgeScreenHandlerMixin.class");
+            assertEntryPresent(jar, "com/teamarcadia/arcadiatweaks/common/modules/simplyswords/RunicForgeLock.class");
+            assertEntryPresent(jar, "arcadiatweaks.cosmetic.mixins.json");
+            assertEntryPresent(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/cosmetic/CosmeticWeaponsProcedureMixin.class");
+            assertEntryPresent(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/cosmetic/CosmeticArmoursProcedureMixin.class");
+            assertEntryPresent(jar, "com/teamarcadia/arcadiatweaks/neoforge/cosmetic/CosmeticGate.class");
             assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/gametest/");
 
             final String modsToml = readEntry(jar, "META-INF/neoforge.mods.toml");
@@ -33,6 +44,13 @@ final class PatchJarContentsTest {
             assertTrue(modsToml.contains("config = \"arcadiatweaks.refinedstorage.mixins.json\""));
             assertTrue(modsToml.contains("config = \"arcadiatweaks.mekanism.mixins.json\""));
             assertTrue(modsToml.contains("config = \"arcadiatweaks.waystones.mixins.json\""));
+            assertTrue(modsToml.contains("config = \"arcadiatweaks.simplyswords.mixins.json\""));
+            assertTrue(modsToml.contains("modId = \"simplyswords\""));
+            assertTrue(modsToml.contains("config = \"arcadiatweaks.cosmetic.mixins.json\""));
+            assertTrue(modsToml.contains("modId = \"cosmeticweaponsmod\""));
+            assertTrue(modsToml.contains("modId = \"cosmeticarmoursmod\""));
+            assertTrue(modsToml.contains("config = \"arcadiatweaks.accessories.mixins.json\""));
+            assertTrue(modsToml.contains("modId = \"accessories\""));
         }
     }
 
@@ -48,6 +66,12 @@ final class PatchJarContentsTest {
     void singlePatchJarsExcludeOtherPatchImplementationPackages() throws IOException {
         try (JarFile jar = openVariant("botany")) {
             assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/gametest/");
+            assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/simplyswords/");
+            assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/common/modules/simplyswords/");
+            assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/cosmetic/");
+            assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/cosmetic/");
+            assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/accessories/");
+            assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/accessories/");
             assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/mekanism/");
             assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/refinedstorage/");
             assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/waystones/");
@@ -55,6 +79,12 @@ final class PatchJarContentsTest {
         }
         try (JarFile jar = openVariant("refinedstorage")) {
             assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/gametest/");
+            assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/simplyswords/");
+            assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/common/modules/simplyswords/");
+            assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/cosmetic/");
+            assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/cosmetic/");
+            assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/accessories/");
+            assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/accessories/");
             assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/botany/");
             assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/mekanism/");
             assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/waystones/");
@@ -62,6 +92,12 @@ final class PatchJarContentsTest {
         }
         try (JarFile jar = openVariant("mekanism")) {
             assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/gametest/");
+            assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/simplyswords/");
+            assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/common/modules/simplyswords/");
+            assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/cosmetic/");
+            assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/cosmetic/");
+            assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/accessories/");
+            assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/accessories/");
             assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/botany/");
             assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/refinedstorage/");
             assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/waystones/");
@@ -70,6 +106,12 @@ final class PatchJarContentsTest {
         }
         try (JarFile jar = openVariant("waystones")) {
             assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/gametest/");
+            assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/simplyswords/");
+            assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/common/modules/simplyswords/");
+            assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/cosmetic/");
+            assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/cosmetic/");
+            assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/accessories/");
+            assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/accessories/");
             assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/botany/");
             assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/refinedstorage/");
             assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/mekanism/");
@@ -85,7 +127,10 @@ final class PatchJarContentsTest {
                     "arcadiatweaks.botany.mixins.json",
                     "arcadiatweaks.refinedstorage.mixins.json",
                     "arcadiatweaks.mekanism.mixins.json",
-                    "arcadiatweaks.waystones.mixins.json"
+                    "arcadiatweaks.waystones.mixins.json",
+                    "arcadiatweaks.simplyswords.mixins.json",
+                    "arcadiatweaks.cosmetic.mixins.json",
+                    "arcadiatweaks.accessories.mixins.json"
             )) {
                 if (expectedPatchConfigs.contains(config)) {
                     assertEntryPresent(jar, config);

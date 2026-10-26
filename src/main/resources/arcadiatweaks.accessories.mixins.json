@@ -1,0 +1,18 @@
+{
+  "required": false,
+  "minVersion": "0.8.5",
+  "plugin": "com.teamarcadia.arcadiatweaks.neoforge.mixin.accessories.AccessoriesMixinPlugin",
+  "package": "com.teamarcadia.arcadiatweaks.neoforge.mixin.accessories",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "AccessoriesEventHandlerInvoker",
+    "AccessoriesEventHandlerTickMixin",
+    "AccessoriesHolderImplAccessor",
+    "AccessoriesInventoryAnchorMixin"
+  ],
+  "server": [],
+  "client": [],
+  "injectors": {
+    "defaultRequire": 0
+  }
+}

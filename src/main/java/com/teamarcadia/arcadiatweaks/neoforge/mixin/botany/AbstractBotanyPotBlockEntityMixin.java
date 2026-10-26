@@ -41,7 +41,7 @@ public abstract class AbstractBotanyPotBlockEntityMixin {
     private void arcadia$downgradeUpdateFlags(
             Level level, BlockPos pos, BlockState oldState, BlockState newState, int flags,
             Operation<Void> original) {
-        if (ArcadiaConfig.BOTANY.a2LightFlagDowngrade.get()) {
+        if (ArcadiaConfig.BOTANY.enabled(ArcadiaConfig.BOTANY.a2LightFlagDowngrade)) {
             original.call(level, pos, oldState, newState, Block.UPDATE_CLIENTS);
         } else {
             original.call(level, pos, oldState, newState, flags);

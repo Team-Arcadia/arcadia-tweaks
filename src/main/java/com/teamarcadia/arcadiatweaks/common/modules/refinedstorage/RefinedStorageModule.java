@@ -19,10 +19,15 @@ public final class RefinedStorageModule implements ArcadiaModule {
 
     @Override
     public void onServerStarting() {
+        RefinedStorageRuntimeFlags.refresh();
         ArcadiaTweaks.LOGGER.info(
-                "[refinedstorage] Active strategies: S1={}(N={})",
+                "[refinedstorage] Active strategies: S1={}(N={}) S2={} S3={}(verify every {} saves) S4={}",
                 ArcadiaConfig.REFINED_STORAGE.activenessCheckCoalescing.get(),
-                ArcadiaConfig.REFINED_STORAGE.activenessCheckInterval.get()
+                ArcadiaConfig.REFINED_STORAGE.activenessCheckInterval.get(),
+                ArcadiaConfig.REFINED_STORAGE.singleComponentLookup.get(),
+                ArcadiaConfig.REFINED_STORAGE.storageSaveCache.get(),
+                ArcadiaConfig.REFINED_STORAGE.storageSaveCacheVerifyInterval.get(),
+                ArcadiaConfig.REFINED_STORAGE.quietHotDebugLogs.get()
         );
     }
 }

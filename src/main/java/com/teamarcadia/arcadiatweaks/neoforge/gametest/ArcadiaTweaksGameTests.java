@@ -27,6 +27,15 @@ public final class ArcadiaTweaksGameTests {
 
     public static void register(RegisterGameTestsEvent event) {
         event.register(ArcadiaTweaksGameTests.class);
+        event.register(EntityMoveGuardGameTests.class);
+        event.register(WaystoneTeamVisibilityGameTests.class);
+        event.register(RunicForgeGameTests.class);
+        event.register(AdminMenuGameTests.class);
+        if (ArcadiaPatchVariant.hasRefinedStorage()) {
+            event.register(RefinedStorageGameTests.class);
+        }
+        event.register(CosmeticPresenceGateGameTests.class);
+        event.register(AccessoriesGameTests.class);
     }
 
     @GameTest(template = TEMPLATE, batch = BATCH, timeoutTicks = 20)
@@ -39,7 +48,7 @@ public final class ArcadiaTweaksGameTests {
                 "At least one patch resource should be present"
         );
         if (ArcadiaPatchVariant.hasBotany() && ArcadiaPatchVariant.hasRefinedStorage() && ArcadiaPatchVariant.hasMekanism()) {
-            helper.assertValueEqual(ArcadiaPatchVariant.commandRoot(), ArcadiaTweaks.MOD_ID, "All-patches runtime should use /arcadiatweaks");
+            helper.assertValueEqual(ArcadiaPatchVariant.commandRoot(), ArcadiaTweaks.COMMAND_ROOT, "All-patches runtime should use /arcadia_tweaks");
         }
         helper.succeed();
     }

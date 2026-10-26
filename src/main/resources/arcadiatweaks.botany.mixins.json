@@ -4,7 +4,6 @@
   "plugin": "com.teamarcadia.arcadiatweaks.neoforge.mixin.botany.BotanyMixinPlugin",
   "package": "com.teamarcadia.arcadiatweaks.neoforge.mixin.botany",
   "compatibilityLevel": "JAVA_21",
-  "refmap": "arcadiatweaks.refmap.json",
   "mixins": [],
   "server": [
     "AbstractBotanyPotBlockEntityMixin",

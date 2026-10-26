@@ -3,7 +3,6 @@
   "minVersion": "0.8.5",
   "package": "com.teamarcadia.arcadiatweaks.neoforge.mixin",
   "compatibilityLevel": "JAVA_21",
-  "refmap": "arcadiatweaks.refmap.json",
   "mixins": [],
   "server": [
     "EntityMoveGuardMixin",
