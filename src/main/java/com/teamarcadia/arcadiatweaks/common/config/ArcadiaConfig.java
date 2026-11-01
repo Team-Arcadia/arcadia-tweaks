@@ -22,6 +22,7 @@ public final class ArcadiaConfig {
     public static final ModConfigSpec.BooleanValue ENTITY_MOVE_GUARD_ENABLED;
     public static final ModConfigSpec.DoubleValue ENTITY_MOVE_GUARD_LIMIT;
     public static final ModConfigSpec.BooleanValue RUNIC_FORGE_LOCK_ENABLED;
+    public static final ModConfigSpec.BooleanValue GLOAM_PURGE_DEFERRED_DISCARD;
 
     public static final BotanyConfig BOTANY;
     public static final RefinedStorageConfig REFINED_STORAGE;
@@ -71,6 +72,11 @@ public final class ArcadiaConfig {
                         "items (bug #321). The implicit level is locked on the weapon instead: the forge gives",
                         "no tablet for it, the weapon keeps its power, and only the free tablet slots accept one.")
                 .define("runicForgeImplicitLevelLock", true);
+        GLOAM_PURGE_DEFERRED_DISCARD = BUILDER
+                .comment("Simply Swords: the gloam stain purge discarded orphan stain visuals while walking the",
+                        "level's entity index, which shrinks under it and crashes the server (bug #328, Server1,",
+                        "a dungeon teleport). The stains are collected during the walk and discarded after it.")
+                .define("gloamStainPurgeDeferredDiscard", true);
         BUILDER.pop();
 
         BOTANY = new BotanyConfig(BUILDER);
