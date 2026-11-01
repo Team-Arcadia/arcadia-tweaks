@@ -255,7 +255,8 @@ public final class ArcadiaAdminMenu extends ChestMenu {
         result.add(new Section("Safety guards", "Gardes-fous du serveur", (ModConfigSpec.BooleanValue) null, List.of(
                 Entry.bool("Entity move guard", ArcadiaConfig.ENTITY_MOVE_GUARD_ENABLED),
                 Entry.decimal("Move guard limit", ArcadiaConfig.ENTITY_MOVE_GUARD_LIMIT, 10.0),
-                Entry.bool("Runic Forge level lock", ArcadiaConfig.RUNIC_FORGE_LOCK_ENABLED))));
+                Entry.bool("Runic Forge level lock", ArcadiaConfig.RUNIC_FORGE_LOCK_ENABLED),
+                Entry.bool("Gloam stain purge fix", ArcadiaConfig.GLOAM_PURGE_DEFERRED_DISCARD))));
         return result;
     }
 

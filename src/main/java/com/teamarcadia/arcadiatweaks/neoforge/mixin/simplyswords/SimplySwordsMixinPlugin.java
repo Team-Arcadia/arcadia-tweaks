@@ -38,6 +38,8 @@ public final class SimplySwordsMixinPlugin implements IMixinConfigPlugin {
             case "RunicForgeScreenHandlerMixin" -> handlerCompatible();
             case "RunicForgeTabletSlotMixin" -> handlerCompatible()
                     && ArcadiaMixinTargetInspector.hasMethod(targetClassName, "mayPlace", "(Lnet/minecraft/world/item/ItemStack;)Z");
+            case "GloamStainPurgeMixin" -> ArcadiaMixinTargetInspector.hasMethod(targetClassName, "purgeOrphans",
+                    "(Lnet/minecraft/server/level/ServerLevel;Ljava/util/Set;)V");
             default -> true;
         };
         if (!compatible && LOGGED_SKIPS.add(simpleMixinName)) {

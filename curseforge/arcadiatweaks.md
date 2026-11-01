@@ -4,7 +4,7 @@
 
 Use this as the main CurseForge page: **ArcadiaTweaks**.
 
-ArcadiaTweaks is published as a single file, `arcadiatweaks-0.2.0.jar`. It contains every module, and each module stays dormant when its target mod is absent:
+ArcadiaTweaks is published as a single file, `arcadiatweaks-0.2.1.jar`. It contains every module, and each module stays dormant when its target mod is absent:
 
 - BotanyPots
 - Refined Storage
@@ -19,8 +19,8 @@ ArcadiaTweaks is published as a single file, `arcadiatweaks-0.2.0.jar`. It conta
 
 | Field | Value |
 |---|---|
-| File | `arcadiatweaks-0.2.0.jar` |
-| Version | `0.2.0` |
+| File | `arcadiatweaks-0.2.1.jar` |
+| Version | `0.2.1` |
 | Release type | Release |
 | Minecraft | `1.21.1` |
 | Loader | NeoForge |
@@ -54,14 +54,20 @@ Optimization patches for BotanyPots, Refined Storage, Mekanism, CosmeticWeapons,
 ## Release title
 
 ```text
-ArcadiaTweaks 0.2.0
+ArcadiaTweaks 0.2.1
 ```
 
-Every file uses the display name `ArcadiaTweaks <version>` (for example `ArcadiaTweaks 0.2.0`), never the jar file name.
+Every file uses the display name `ArcadiaTweaks <version>` (for example `ArcadiaTweaks 0.2.1`), never the jar file name.
 
 ## Changelog
 
 ```markdown
+## 0.2.1
+
+### Fixes
+
+- Simply Swords: the gloam stain purge no longer crashes the server. It removed stain entities while walking the level's entity list, which broke the list under it (Arcadia bug #328, seen when a player was teleported into a dungeon). Kill switch `[safety] gloamStainPurgeDeferredDiscard`.
+
 ## 0.2.0
 
 ### Fixes
@@ -84,7 +90,7 @@ Every file uses the display name `ArcadiaTweaks <version>` (for example `Arcadia
 - The admin command is now `/arcadia_tweaks gui` (was `/arcadiatweaks gui`).
 - The admin GUI is now a paged 9x6 menu: one row per module with its switch first, a safety guards row, the default value in every tooltip and a two-click "Recommended defaults" reset.
 - Every optimization proven identical by the tests is on by default. BotanyPots A2 stays off.
-- One published file, `arcadiatweaks-0.2.0.jar`, with every module.
+- One published file, `arcadiatweaks-0.2.1.jar`, with every module.
 
 ### Admin GUI
 
@@ -205,6 +211,7 @@ tick_allocation_trimmed = true
 entityMoveGuard = true
 entityMoveGuardLimit = 100.0
 runicForgeImplicitLevelLock = true
+gloamStainPurgeDeferredDiscard = true
 ```
 
 `entityMoveGuard` stops an entity whose movement for one tick is NaN, infinite or above the limit, instead of letting the collision search freeze the server. An elytra with rockets moves about 3 blocks per tick, so nothing legitimate comes close to the limit.
