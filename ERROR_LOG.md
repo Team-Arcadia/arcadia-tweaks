@@ -76,3 +76,11 @@
 **Root cause:** in both mods a procedure's item list is a set of alternatives: holding any one of its items completes the advancement. There is no "partial chain" state.
 **Fix:** holders get their advancement from the procedure itself on a tick fired at build time, as a real player who held the item would have; the scenario records the count before measuring and checks it is unchanged at the end.
 **Prevention:** read what a procedure's item list means (any vs all) before building a "near miss" inventory.
+
+## [2026-10-26 16:10] - CurseForge update-file returned HTTP 500
+**Context:** renaming already published files with the CurseForge upload API (`POST /api/projects/{id}/update-file`).
+**Error:** `{"errorCode":500,"errorMessage":"An unhandled exception occurred while processing the request."}`
+**Root cause:** the `metadata` form part was sent with an explicit `;type=application/json` content type; the endpoint only accepts it as a plain form field. A metadata object carrying a `changelog` also returned 500.
+**Fix:** send `-F 'metadata={"fileID":<id>,"displayName":"..."}'` with no content type; file ids come from `https://www.curseforge.com/api/v1/mods/<projectId>/files`.
+**Prevention:** for update-file, send only the fields to change, as a plain form field, and test on one file first.
+

@@ -5,6 +5,7 @@
   "package": "com.teamarcadia.arcadiatweaks.neoforge.mixin.simplyswords",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "GloamStainPurgeMixin",
     "RunicForgeScreenHandlerMixin",
     "RunicForgeTabletSlotMixin"
   ],

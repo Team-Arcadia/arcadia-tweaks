@@ -4,6 +4,18 @@ All notable changes to ArcadiaTweaks are documented here.
 
 ---
 
+## [0.2.1] - 2026-11-01
+
+### Fixed
+
+- **Simply Swords: server crash in the gloam stain purge (Arcadia bug #328)** — `GloamStainManager.purgeOrphans` walks every entity of the level and discarded orphan gloam stain visuals during that walk. Each discard removes the entity from the level's entity index, the map the walk is reading; once enough entities go, the map shrinks and the walk reads past its table (`ArrayIndexOutOfBoundsException` in `Int2ObjectLinkedOpenHashMap`) and the server crashes. Server1 crashed this way when a player was teleported into a dungeon: their chunks stayed loaded but stopped ticking, so their stains outlived their own tick and the purge removed them all at once. The stains are now collected during the walk and discarded right after it, in the same tick. Reproduced on a test server with 400 orphan stains (crash with 0.2.0, all 400 removed and no crash with 0.2.1). Kill switch `[safety] gloamStainPurgeDeferredDiscard`.
+
+### Correctifs
+
+- **Simply Swords : crash du serveur pendant la purge des taches de Gloam (bug Arcadia #328)** — `GloamStainManager.purgeOrphans` parcourt toutes les entités du monde et supprimait les visuels de taches de Gloam orphelins pendant ce parcours. Chaque suppression retire l'entité de l'index des entités du monde, la table que le parcours est en train de lire ; une fois assez d'entités retirées, la table rétrécit, le parcours lit au-delà (`ArrayIndexOutOfBoundsException` dans `Int2ObjectLinkedOpenHashMap`) et le serveur crashe. Server1 a crashé ainsi quand un joueur a été téléporté dans un donjon : ses chunks restaient chargés mais ne tournaient plus, ses taches survivaient donc à leur propre tick et la purge les retirait toutes d'un coup. Les taches sont maintenant relevées pendant le parcours et supprimées juste après, dans le même tick. Reproduit sur un serveur de test avec 400 taches orphelines (crash en 0.2.0, les 400 retirées sans crash en 0.2.1). Interrupteur `[safety] gloamStainPurgeDeferredDiscard`.
+
+---
+
 ## [0.2.0] - 2026-10-26
 
 ### Fixed
