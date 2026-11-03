@@ -4,6 +4,7 @@ import com.teamarcadia.arcadiatweaks.neoforge.botany.BotanyMixinCompatibility;
 import com.teamarcadia.arcadiatweaks.neoforge.cosmetic.CosmeticGate;
 import com.teamarcadia.arcadiatweaks.neoforge.mixin.accessories.AccessoriesMixinPlugin;
 import com.teamarcadia.arcadiatweaks.neoforge.mixin.botany.BotanyMixinPlugin;
+import com.teamarcadia.arcadiatweaks.neoforge.mixin.copycats.CopycatsMixinPlugin;
 import com.teamarcadia.arcadiatweaks.neoforge.mixin.cosmetic.CosmeticMixinPlugin;
 import com.teamarcadia.arcadiatweaks.neoforge.mixin.mekanism.MekanismMixinPlugin;
 import com.teamarcadia.arcadiatweaks.neoforge.mixin.refinedstorage.RefinedStorageMixinPlugin;
@@ -51,6 +52,20 @@ final class MixinPluginCompatibilityTest {
                 "com.teamarcadia.arcadiatweaks.neoforge.mixin.botany.BotanyPotBlockEntityMixin"
         ));
         assertTrue(BotanyMixinCompatibility.isTickPotCoalescingCompatible());
+    }
+
+    @Test
+    void copycatsPluginAcceptsBundledRuntimeTarget() {
+        final CopycatsMixinPlugin plugin = new CopycatsMixinPlugin();
+
+        assertTrue(plugin.shouldApplyMixin(
+                "com.copycatsplus.copycats.foundation.copycat.multistate.MultiStateCopycatBlockEntity",
+                "com.teamarcadia.arcadiatweaks.neoforge.mixin.copycats.MultiStateCopycatKeepMaterialsMixin"
+        ));
+        assertFalse(plugin.shouldApplyMixin(
+                "missing.copycats.MultiStateCopycatBlockEntity",
+                "com.teamarcadia.arcadiatweaks.neoforge.mixin.copycats.MultiStateCopycatKeepMaterialsMixin"
+        ));
     }
 
     @Test
