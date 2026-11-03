@@ -4,7 +4,7 @@
 
 Use this as the main CurseForge page: **ArcadiaTweaks**.
 
-ArcadiaTweaks is published as a single file, `arcadiatweaks-0.2.1.jar`. It contains every module, and each module stays dormant when its target mod is absent:
+ArcadiaTweaks is published as a single file, `arcadiatweaks-0.2.2.jar`. It contains every module, and each module stays dormant when its target mod is absent:
 
 - BotanyPots
 - Refined Storage
@@ -13,18 +13,19 @@ ArcadiaTweaks is published as a single file, `arcadiatweaks-0.2.1.jar`. It conta
 - Simply Swords (Runic Forge tablet fix)
 - CosmeticWeapons and CosmeticArmours (item presence gate)
 - Accessories (`contains` fast path and lighter entity tick)
-- Safety guards (entity movement guard)
+- Create: Copycats+ (client crash fix for copycat chunk meshes)
+- Safety guards (entity movement guard, client block entity thread guard)
 
 ## File metadata
 
 | Field | Value |
 |---|---|
-| File | `arcadiatweaks-0.2.1.jar` |
-| Version | `0.2.1` |
+| File | `arcadiatweaks-0.2.2.jar` |
+| Version | `0.2.2` |
 | Release type | Release |
 | Minecraft | `1.21.1` |
 | Loader | NeoForge |
-| Side | Server + optional client patch |
+| Side | Server + client (client crash fixes and an optional rendering patch) |
 | License | MIT |
 
 ## CurseForge relations
@@ -44,24 +45,32 @@ ArcadiaTweaks is published as a single file, `arcadiatweaks-0.2.1.jar`. It conta
 | CosmeticArmours | Optional | Same cosmetic module, for the armour advancement procedures. |
 | Curios API | Optional | Read by the cosmetic presence gate when Curios is installed. |
 | Accessories | Optional | Accessories module only applies on Accessories 1.1.0-beta.54. |
+| Create: Copycats+ | Optional | Copycats+ crash fix only applies when Copycats+ is installed. |
 
 ## Project summary
 
 ```text
-Optimization patches for BotanyPots, Refined Storage, Mekanism, CosmeticWeapons, CosmeticArmours and Accessories, fixes for Waystones and Simply Swords, and a server freeze guard. Mostly server-side, with one optional client-side Mekanism rendering safety patch. Mixin-based, configurable, with per-patch kill switches and runtime safety checks.
+Optimization patches for BotanyPots, Refined Storage, Mekanism, CosmeticWeapons, CosmeticArmours and Accessories, fixes for Waystones and Simply Swords, a Copycats+ client crash fix, a server freeze guard and a client guard for block entity maps. Mostly server-side; the client gets two crash fixes and one optional Mekanism rendering safety patch. Mixin-based, configurable, with per-patch kill switches and runtime safety checks.
 ```
 
 ## Release title
 
 ```text
-ArcadiaTweaks 0.2.1
+ArcadiaTweaks 0.2.2
 ```
 
-Every file uses the display name `ArcadiaTweaks <version>` (for example `ArcadiaTweaks 0.2.1`), never the jar file name.
+Every file uses the display name `ArcadiaTweaks <version>` (for example `ArcadiaTweaks 0.2.2`), never the jar file name.
 
 ## Changelog
 
 ```markdown
+## 0.2.2
+
+### Fixes
+
+- Copycats+: the client no longer crashes with "Encountered exception while building chunk meshes" (NullPointerException in `isCTEnabled`, seen on copycat slabs). A copycat removed when its chunk unloads or is resent emptied its materials while Sodium was still building a mesh with it; it now keeps them. Kill switch `[safety] copycatsKeepMaterialsOnRemove`.
+- Client: no more `ConcurrentModificationException` in `LevelChunk.updateBlockEntityTicker` or `ArrayIndexOutOfBoundsException` in `Object2ObjectOpenHashMap.rehash` while chunks render. A block entity read or write on a client chunk from another thread than the render thread changed the chunk's block entity maps under it; such reads now only read and such writes run on the render thread. The first five calls are written to `latest.log` with the calling mod's stack trace. Kill switch `[safety] clientBlockEntityThreadGuard` in each player's own config.
+
 ## 0.2.1
 
 ### Fixes
@@ -90,7 +99,7 @@ Every file uses the display name `ArcadiaTweaks <version>` (for example `Arcadia
 - The admin command is now `/arcadia_tweaks gui` (was `/arcadiatweaks gui`).
 - The admin GUI is now a paged 9x6 menu: one row per module with its switch first, a safety guards row, the default value in every tooltip and a two-click "Recommended defaults" reset.
 - Every optimization proven identical by the tests is on by default. BotanyPots A2 stays off.
-- One published file, `arcadiatweaks-0.2.1.jar`, with every module.
+- One published file, `arcadiatweaks-0.2.2.jar`, with every module.
 
 ### Admin GUI
 
@@ -212,6 +221,8 @@ entityMoveGuard = true
 entityMoveGuardLimit = 100.0
 runicForgeImplicitLevelLock = true
 gloamStainPurgeDeferredDiscard = true
+copycatsKeepMaterialsOnRemove = true
+clientBlockEntityThreadGuard = true
 ```
 
 `entityMoveGuard` stops an entity whose movement for one tick is NaN, infinite or above the limit, instead of letting the collision search freeze the server. An elytra with rockets moves about 3 blocks per tick, so nothing legitimate comes close to the limit.

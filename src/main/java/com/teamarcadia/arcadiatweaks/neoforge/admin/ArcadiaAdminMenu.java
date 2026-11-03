@@ -256,7 +256,8 @@ public final class ArcadiaAdminMenu extends ChestMenu {
                 Entry.bool("Entity move guard", ArcadiaConfig.ENTITY_MOVE_GUARD_ENABLED),
                 Entry.decimal("Move guard limit", ArcadiaConfig.ENTITY_MOVE_GUARD_LIMIT, 10.0),
                 Entry.bool("Runic Forge level lock", ArcadiaConfig.RUNIC_FORGE_LOCK_ENABLED),
-                Entry.bool("Gloam stain purge fix", ArcadiaConfig.GLOAM_PURGE_DEFERRED_DISCARD))));
+                Entry.bool("Gloam stain purge fix", ArcadiaConfig.GLOAM_PURGE_DEFERRED_DISCARD),
+                Entry.bool("Copycats+ keep materials", ArcadiaConfig.COPYCATS_KEEP_MATERIALS_ON_REMOVE))));
         return result;
     }
 

@@ -1,8 +1,8 @@
 # ArcadiaTweaks
 
-Umbrella mod-patch for the **Arcadia** modpack. Mostly server-side, non-invasive, Mixin-based optimizations and tweaks for NeoForge **1.21.1** (build 21.1.221+). The Mekanism module also contains one optional client-side rendering safety patch.
+Umbrella mod-patch for the **Arcadia** modpack. Mostly server-side, non-invasive, Mixin-based optimizations and tweaks for NeoForge **1.21.1** (build 21.1.221+). The Mekanism module also contains one optional client-side rendering safety patch, and two crash fixes apply on the client (Copycats+ chunk meshes, block entity maps of client chunks).
 
-Current version: **0.2.1** (see [CHANGELOG.md](CHANGELOG.md)).
+Current version: **0.2.2** (see [CHANGELOG.md](CHANGELOG.md)).
 
 | Module | Target | Kind |
 |--------|--------|------|
@@ -13,7 +13,8 @@ Current version: **0.2.1** (see [CHANGELOG.md](CHANGELOG.md)).
 | `simplyswords` | Simply Swords | Runic Forge no longer creates free Runic Tablets |
 | `cosmetic` | CosmeticWeapons + CosmeticArmours | Item presence gate for the advancement tick procedures (fewer inventory scans per player tick) |
 | `accessories` | Accessories | `contains` fast path and a lighter per-entity tick |
-| `[safety]` | Vanilla | Entity movement guard against runaway velocities that freeze the server |
+| `copycats` | Create: Copycats+ | Client crash fix: a removed copycat no longer empties its materials while Sodium still meshes it |
+| `[safety]` | Vanilla | Entity movement guard against runaway velocities that freeze the server, and a client guard that keeps the block entity maps of client chunks on the render thread |
 
 Every target mod is optional: a module whose mod is absent stays dormant.
 
@@ -172,6 +173,7 @@ Required jars (and the version each must match in `gradle.properties`):
 | `geckolib-neoforge-1.21.1-<ver>.jar` (dev runtime) | `geckolib_version`  |
 | `recipeessentials-1.21.1-<ver>.jar` (dev runtime) | `recipeessentials_version` |
 | `cupboard-1.21.1-<ver>.jar` (dev runtime)      | `cupboard_version`     |
+| `copycats-<ver>-neoforge.jar` (compile and tests only) | `copycats_version` |
 
 `libs/*.jar` is gitignored - each developer copies their own from the production pack. When the pack updates a targeted mod, refresh `libs/` and bump the corresponding `gradle.properties` values to match the new filenames.
 
@@ -415,6 +417,8 @@ entityMoveGuard = true
 entityMoveGuardLimit = 100.0
 runicForgeImplicitLevelLock = true
 gloamStainPurgeDeferredDiscard = true
+copycatsKeepMaterialsOnRemove = true
+clientBlockEntityThreadGuard = true
 ```
 
 | Setting | Best value | What it does |
@@ -422,6 +426,8 @@ gloamStainPurgeDeferredDiscard = true
 | `entityMoveGuard` | `true` | Stops an entity whose movement for one tick is NaN, infinite or above `entityMoveGuardLimit`, instead of letting the collision search freeze the server. |
 | `runicForgeImplicitLevelLock` | `true` | Simply Swords Runic Forge: no free Runic Tablets from a unique weapon whose awakening level is only implicit (see below). |
 | `gloamStainPurgeDeferredDiscard` | `true` | Simply Swords: the gloam stain purge no longer crashes the server by removing entities while it walks the level's entity index (bug #328). |
+| `copycatsKeepMaterialsOnRemove` | `true` | Copycats+: a removed multi-state copycat keeps its materials, so a Sodium mesh task still using it no longer crashes the client with a NullPointerException in `isCTEnabled`. |
+| `clientBlockEntityThreadGuard` | `true` | Client only, read from each player's own config file. A block entity read or write on a client chunk from another thread than the render thread no longer changes the chunk's maps under it (`ConcurrentModificationException` in `LevelChunk.updateBlockEntityTicker`, `ArrayIndexOutOfBoundsException` in `rehash`). The first five such calls are logged with a stack trace that names the calling mod. |
 
 Simply Swords reads a unique weapon without its `simplyswords:awakening` component as fully
 awakened (level 8): weapons from before the awakening system and every unique handed out as a
@@ -503,9 +509,9 @@ Authors: Curveo, Team Arcadia, vyrriox
 
 # ArcadiaTweaks (Version Française)
 
-Mod-patch parapluie pour le modpack **Arcadia**. Optimisations et ajustements en grande partie côté serveur, non invasifs, basés sur Mixin, pour NeoForge **1.21.1** (build 21.1.221+). Le module Mekanism contient aussi un correctif optionnel de sécurité du rendu côté client.
+Mod-patch parapluie pour le modpack **Arcadia**. Optimisations et ajustements en grande partie côté serveur, non invasifs, basés sur Mixin, pour NeoForge **1.21.1** (build 21.1.221+). Le module Mekanism contient aussi un correctif optionnel de sécurité du rendu côté client, et deux correctifs de crash s'appliquent sur le client (meshes de chunks avec Copycats+, tables de block entities des chunks client).
 
-Version actuelle : **0.2.1** (voir [CHANGELOG.md](CHANGELOG.md)).
+Version actuelle : **0.2.2** (voir [CHANGELOG.md](CHANGELOG.md)).
 
 | Module | Cible | Type |
 |--------|-------|------|
@@ -516,7 +522,8 @@ Version actuelle : **0.2.1** (voir [CHANGELOG.md](CHANGELOG.md)).
 | `simplyswords` | Simply Swords | La Runic Forge ne crée plus de Runic Tablets gratuits |
 | `cosmetic` | CosmeticWeapons + CosmeticArmours | Filtre de présence des objets pour les procédures de progrès exécutées à chaque tick (moins de parcours d'inventaire par tick joueur) |
 | `accessories` | Accessories | Raccourci de `contains` et tick d'entité allégé |
-| `[safety]` | Vanilla | Garde-fou de mouvement des entités contre les vitesses incontrôlées qui figent le serveur |
+| `copycats` | Create: Copycats+ | Correctif de crash client : un copycat retiré ne vide plus ses matériaux pendant que Sodium construit encore son mesh |
+| `[safety]` | Vanilla | Garde-fou de mouvement des entités contre les vitesses incontrôlées qui figent le serveur, et garde client qui laisse les tables de block entities des chunks client au thread de rendu |
 
 Chaque mod cible est optionnel : un module dont le mod est absent reste dormant.
 
@@ -675,6 +682,7 @@ Jars requis (et la version à faire correspondre dans `gradle.properties`) :
 | `geckolib-neoforge-1.21.1-<ver>.jar` (exécution de dev) | `geckolib_version` |
 | `recipeessentials-1.21.1-<ver>.jar` (exécution de dev) | `recipeessentials_version` |
 | `cupboard-1.21.1-<ver>.jar` (exécution de dev) | `cupboard_version`     |
+| `copycats-<ver>-neoforge.jar` (compilation et tests seulement) | `copycats_version` |
 
 `libs/*.jar` est ignoré par git : chaque développeur copie les siens depuis le pack de production. Lorsque le pack met à jour un mod ciblé, rafraîchir `libs/` et mettre à jour les valeurs correspondantes de `gradle.properties` selon les nouveaux noms de fichiers.
 
@@ -918,6 +926,8 @@ entityMoveGuard = true
 entityMoveGuardLimit = 100.0
 runicForgeImplicitLevelLock = true
 gloamStainPurgeDeferredDiscard = true
+copycatsKeepMaterialsOnRemove = true
+clientBlockEntityThreadGuard = true
 ```
 
 | Réglage | Meilleure valeur | Effet |
@@ -925,6 +935,8 @@ gloamStainPurgeDeferredDiscard = true
 | `entityMoveGuard` | `true` | Arrête une entité dont le déplacement sur un tick est NaN, infini ou supérieur à `entityMoveGuardLimit`, au lieu de laisser la recherche de collisions figer le serveur. |
 | `runicForgeImplicitLevelLock` | `true` | Runic Forge de Simply Swords : aucun Runic Tablet gratuit à partir d'une arme unique dont le niveau d'éveil n'est qu'implicite (voir ci-dessous). |
 | `gloamStainPurgeDeferredDiscard` | `true` | Simply Swords : la purge des taches de Gloam ne fait plus crasher le serveur en retirant des entités pendant qu'elle parcourt l'index des entités du monde (bug #328). |
+| `copycatsKeepMaterialsOnRemove` | `true` | Copycats+ : un copycat multi-état retiré garde ses matériaux ; une tâche de mesh Sodium qui l'utilise encore ne fait plus crasher le client (NullPointerException dans `isCTEnabled`). |
+| `clientBlockEntityThreadGuard` | `true` | Client uniquement, lu dans le fichier de config de chaque joueur. Une lecture ou écriture de block entity sur un chunk client depuis un autre thread que celui du rendu ne modifie plus les tables du chunk sous ses pieds (`ConcurrentModificationException` dans `LevelChunk.updateBlockEntityTicker`, `ArrayIndexOutOfBoundsException` dans `rehash`). Les cinq premiers appels de ce type sont journalisés avec une pile d'appels qui nomme le mod appelant. |
 
 Simply Swords lit une arme unique sans son composant `simplyswords:awakening` comme entièrement
 éveillée (niveau 8) : les armes antérieures au système d'éveil et toutes les armes uniques

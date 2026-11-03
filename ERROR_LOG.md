@@ -84,3 +84,10 @@
 **Fix:** send `-F 'metadata={"fileID":<id>,"displayName":"..."}'` with no content type; file ids come from `https://www.curseforge.com/api/v1/mods/<projectId>/files`.
 **Prevention:** for update-file, send only the fields to change, as a plain form field, and test on one file first.
 
+
+## [2026-11-03 22:38] - Mixin plugin test could not see a compileOnly jar
+**Context:** `MixinPluginCompatibilityTest` checking `CopycatsMixinPlugin` against the Copycats+ jar in `libs/`.
+**Error:** `copycatsPluginAcceptsBundledRuntimeTarget()` failed, `expected: <true> but was: <false>`.
+**Root cause:** the test source set adds `main.compileClasspath` and `main.runtimeClasspath`, but `ArcadiaMixinTargetInspector` reads target classes from the runtime class loader. Copycats+ was only `compileOnly` (it cannot be `runtimeOnly`: it needs Create, which the dev runs do not have), so its classes were missing at test time.
+**Fix:** `testRuntimeOnly files("libs/copycats-${copycats_version}-neoforge.jar")`.
+**Prevention:** a target jar that stays out of the dev runs still needs a `testRuntimeOnly` line for the plugin tests to read it.

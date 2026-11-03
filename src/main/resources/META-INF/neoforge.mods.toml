@@ -36,6 +36,9 @@ config = "${mod_id}.cosmetic.mixins.json"
 [[mixins]]
 config = "${mod_id}.accessories.mixins.json"
 
+[[mixins]]
+config = "${mod_id}.copycats.mixins.json"
+
 [[dependencies.${mod_id}]]
 modId = "neoforge"
 type = "required"
@@ -118,6 +121,14 @@ side = "BOTH"
 # Accessories is optional at load time. Its optimizations only apply to the verified build.
 [[dependencies.${mod_id}]]
 modId = "accessories"
+type = "optional"
+versionRange = "[0.0.0,)"
+ordering = "AFTER"
+side = "BOTH"
+
+# Copycats+ is optional at load time. Its crash fix only applies when it is present.
+[[dependencies.${mod_id}]]
+modId = "copycats"
 type = "optional"
 versionRange = "[0.0.0,)"
 ordering = "AFTER"
