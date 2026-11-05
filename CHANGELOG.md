@@ -15,6 +15,7 @@ All notable changes to ArcadiaTweaks are documented here.
 
 - With every 0.3.0 patch, the `refinedstorage_autocraft` bench goes from 20.9 ms to 0.16 ms per tick.
 - New admin menu row "Refined Storage IO" with B1 to B3 and the maximum.
+- The startup log now says whether A1 and B1 to B3 are applied (`patches applied: A1=true ...`): their target classes are loaded at server start, so a patch that no longer fits a Refined Storage version shows at once instead of the first time a node uses it.
 - Bench: two new scenarios (`refinedstorage_autocraft`, `refinedstorage_idle_io`), each filter's last result recorded per phase, and `-PbenchJfr=<file.jfr>` records a Java Flight Recorder profile of a run.
 - This release also carries the 0.2.2 client crash fixes, which were handed out as a jar but never published.
 
@@ -27,6 +28,7 @@ All notable changes to ArcadiaTweaks are documented here.
 
 - Avec tous les patchs de la 0.3.0, le banc `refinedstorage_autocraft` passe de 20,9 ms à 0,16 ms par tick.
 - Nouvelle ligne « Refined Storage IO » dans le menu d'administration, avec B1 à B3 et le maximum.
+- Le log de démarrage indique maintenant si A1 et B1 à B3 sont appliqués (`patches applied: A1=true ...`) : leurs classes cibles sont chargées au démarrage du serveur, donc un patch qui ne correspond plus à une version de Refined Storage se voit tout de suite, et pas la première fois qu'un nœud l'utilise.
 - Banc : deux nouveaux scénarios (`refinedstorage_autocraft`, `refinedstorage_idle_io`), le dernier résultat de chaque filtre relevé à chaque phase, et `-PbenchJfr=<fichier.jfr>` enregistre un profil Java Flight Recorder d'une exécution.
 - Cette version contient aussi les correctifs de crash client de la 0.2.2, distribuée en jar mais jamais publiée.
 
