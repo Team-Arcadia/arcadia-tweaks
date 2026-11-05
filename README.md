@@ -1,19 +1,20 @@
 # ArcadiaTweaks
 
-Umbrella mod-patch for the **Arcadia** modpack. Mostly server-side, non-invasive, Mixin-based optimizations and tweaks for NeoForge **1.21.1** (build 21.1.221+). The Mekanism module also contains one optional client-side rendering safety patch.
+Umbrella mod-patch for the **Arcadia** modpack. Mostly server-side, non-invasive, Mixin-based optimizations and tweaks for NeoForge **1.21.1** (build 21.1.221+). The Mekanism module also contains one optional client-side rendering safety patch, and two crash fixes apply on the client (Copycats+ chunk meshes, block entity maps of client chunks).
 
-Current version: **0.2.1** (see [CHANGELOG.md](CHANGELOG.md)).
+Current version: **0.3.0** (see [CHANGELOG.md](CHANGELOG.md)).
 
 | Module | Target | Kind |
 |--------|--------|------|
 | `botany` | [BotanyPots](https://github.com/Darkhax-Minecraft/BotanyPots) | Server tick optimizations (match memoization, tick coalescing, hopper export backoff, growth tick cache) |
-| `refinedstorage` | Refined Storage 2 | Coalesced network node and transmitter activeness checks (debounce-correct), single component lookup, cached disk saves, quieter debug logs |
+| `refinedstorage` | Refined Storage 2 | Coalesced network node and transmitter activeness checks (debounce-correct), single component lookup, cached disk saves, quieter debug logs, autocrafting calculations without a copy of the network, idle importers, exporters and refused crafting steps that try less often |
 | `mekanism` | Mekanism | Idle cable, network and Logistical Transporter backoff, plus an optional client rendering safety patch |
 | `waystones` | Waystones + FTB Teams | "Visible to Team" waystones follow the owner's FTB Teams party |
 | `simplyswords` | Simply Swords | Runic Forge no longer creates free Runic Tablets |
 | `cosmetic` | CosmeticWeapons + CosmeticArmours | Item presence gate for the advancement tick procedures (fewer inventory scans per player tick) |
 | `accessories` | Accessories | `contains` fast path and a lighter per-entity tick |
-| `[safety]` | Vanilla | Entity movement guard against runaway velocities that freeze the server |
+| `copycats` | Create: Copycats+ | Client crash fix: a removed copycat no longer empties its materials while Sodium still meshes it |
+| `[safety]` | Vanilla | Entity movement guard against runaway velocities that freeze the server, and a client guard that keeps the block entity maps of client chunks on the render thread |
 
 Every target mod is optional: a module whose mod is absent stays dormant.
 
@@ -172,6 +173,7 @@ Required jars (and the version each must match in `gradle.properties`):
 | `geckolib-neoforge-1.21.1-<ver>.jar` (dev runtime) | `geckolib_version`  |
 | `recipeessentials-1.21.1-<ver>.jar` (dev runtime) | `recipeessentials_version` |
 | `cupboard-1.21.1-<ver>.jar` (dev runtime)      | `cupboard_version`     |
+| `copycats-<ver>-neoforge.jar` (compile and tests only) | `copycats_version` |
 
 `libs/*.jar` is gitignored - each developer copies their own from the production pack. When the pack updates a targeted mod, refresh `libs/` and bump the corresponding `gradle.properties` values to match the new filenames.
 
@@ -285,6 +287,11 @@ single_component_lookup_enabled = true
 storage_save_cache_enabled = true
 storage_save_cache_verify_interval = 20
 quiet_hot_debug_logs_enabled = true
+autocrafting_live_storage_view_enabled = true
+importer_idle_backoff_enabled = true
+exporter_idle_backoff_enabled = true
+autocrafting_sink_backoff_enabled = true
+idle_backoff_max_ticks = 10
 ```
 
 | Setting | Best value | What it does |
@@ -295,9 +302,19 @@ quiet_hot_debug_logs_enabled = true
 | `storage_save_cache_enabled` | `true` | Reuses the encoded form of storage disks that did not change since the last autosave, instead of re-encoding every disk of the world. The saved data is identical. |
 | `storage_save_cache_verify_interval` | `20` | Safety net: every Nth save re-encodes the cached disks and compares. On any difference the cache turns itself off until the next restart. `0` never verifies. |
 | `quiet_hot_debug_logs_enabled` | `true` | Drops two Refined Storage debug log lines written from the tick loop ("External storage has changed", transmitter retry). Only `logs/debug.log` changes. |
+| `autocrafting_live_storage_view_enabled` | `true` | A1. Autocrafting calculations on the server thread read the network instead of copying its whole content first. An exporter, interface or constructor with an autocrafting upgrade that asks for an item it cannot craft runs at least two calculations per filter and work cycle; on a network of thousands of resources the copy was most of their cost. Same results; crafting previews keep the copy. |
+| `importer_idle_backoff_enabled` | `true` | B1. An importer whose attempts move nothing tries again after 2 ticks, then 4, 8... up to `idle_backoff_max_ticks`, and is back to every work cycle as soon as something moves. Energy use is unchanged. |
+| `exporter_idle_backoff_enabled` | `true` | B2. Same rule for an exporter whose filters export nothing (destination full, item missing). Starting an autocrafting task counts as activity. |
+| `autocrafting_sink_backoff_enabled` | `true` | B3. Same rule for a processing step of a running autocrafting task whose machine (or autocrafter lock) refuses the next batch of inputs. |
+| `idle_backoff_max_ticks` | `10` | Longest time between two attempts of an idle node. The first item after an idle period moves at most this many ticks later than in plain Refined Storage; a node whose own cycle is this slow (no speed upgrades) is never slowed down. |
 
 Use `10` if you want quicker redstone/energy activeness response. Use `1` to
 disable coalescing without disabling the whole module.
+
+B1 to B3 only change when an idle node tries again: a node that keeps moving items works on every
+cycle as before (the bench loop moves the same items with and without), and any change of filters,
+upgrades, facing or network brings a node back to every cycle at once. Lower `idle_backoff_max_ticks`
+for quicker reactions after an idle period, raise it (up to 40) to save more on large idle bases.
 
 ### Mekanism
 
@@ -415,6 +432,8 @@ entityMoveGuard = true
 entityMoveGuardLimit = 100.0
 runicForgeImplicitLevelLock = true
 gloamStainPurgeDeferredDiscard = true
+copycatsKeepMaterialsOnRemove = true
+clientBlockEntityThreadGuard = true
 ```
 
 | Setting | Best value | What it does |
@@ -422,6 +441,8 @@ gloamStainPurgeDeferredDiscard = true
 | `entityMoveGuard` | `true` | Stops an entity whose movement for one tick is NaN, infinite or above `entityMoveGuardLimit`, instead of letting the collision search freeze the server. |
 | `runicForgeImplicitLevelLock` | `true` | Simply Swords Runic Forge: no free Runic Tablets from a unique weapon whose awakening level is only implicit (see below). |
 | `gloamStainPurgeDeferredDiscard` | `true` | Simply Swords: the gloam stain purge no longer crashes the server by removing entities while it walks the level's entity index (bug #328). |
+| `copycatsKeepMaterialsOnRemove` | `true` | Copycats+: a removed multi-state copycat keeps its materials, so a Sodium mesh task still using it no longer crashes the client with a NullPointerException in `isCTEnabled`. |
+| `clientBlockEntityThreadGuard` | `true` | Client only, read from each player's own config file. A block entity read or write on a client chunk from another thread than the render thread no longer changes the chunk's maps under it (`ConcurrentModificationException` in `LevelChunk.updateBlockEntityTicker`, `ArrayIndexOutOfBoundsException` in `rehash`). The first five such calls are logged with a stack trace that names the calling mod. |
 
 Simply Swords reads a unique weapon without its `simplyswords:awakening` component as fully
 awakened (level 8): weapons from before the awakening system and every unique handed out as a
@@ -503,20 +524,21 @@ Authors: Curveo, Team Arcadia, vyrriox
 
 # ArcadiaTweaks (Version Française)
 
-Mod-patch parapluie pour le modpack **Arcadia**. Optimisations et ajustements en grande partie côté serveur, non invasifs, basés sur Mixin, pour NeoForge **1.21.1** (build 21.1.221+). Le module Mekanism contient aussi un correctif optionnel de sécurité du rendu côté client.
+Mod-patch parapluie pour le modpack **Arcadia**. Optimisations et ajustements en grande partie côté serveur, non invasifs, basés sur Mixin, pour NeoForge **1.21.1** (build 21.1.221+). Le module Mekanism contient aussi un correctif optionnel de sécurité du rendu côté client, et deux correctifs de crash s'appliquent sur le client (meshes de chunks avec Copycats+, tables de block entities des chunks client).
 
-Version actuelle : **0.2.1** (voir [CHANGELOG.md](CHANGELOG.md)).
+Version actuelle : **0.3.0** (voir [CHANGELOG.md](CHANGELOG.md)).
 
 | Module | Cible | Type |
 |--------|-------|------|
 | `botany` | [BotanyPots](https://github.com/Darkhax-Minecraft/BotanyPots) | Optimisations du tick serveur (mémoïsation des correspondances, regroupement des ticks, temporisation des exports de hopper, cache du tick de croissance) |
-| `refinedstorage` | Refined Storage 2 | Vérifications d'activité des nœuds réseau et des transmetteurs regroupées (temporisation respectée), recherche unique de composant, sauvegardes de disques en cache, logs debug allégés |
+| `refinedstorage` | Refined Storage 2 | Vérifications d'activité des nœuds réseau et des transmetteurs regroupées (temporisation respectée), recherche unique de composant, sauvegardes de disques en cache, logs debug allégés, calculs d'autocrafting sans copie du réseau, importers, exporters et étapes de craft refusées inactifs qui réessaient moins souvent |
 | `mekanism` | Mekanism | Temporisation des câbles, réseaux et Logistical Transporters inactifs, plus un correctif optionnel de sécurité du rendu client |
 | `waystones` | Waystones + FTB Teams | Les waystones « Visible to Team » suivent le groupe FTB Teams du propriétaire |
 | `simplyswords` | Simply Swords | La Runic Forge ne crée plus de Runic Tablets gratuits |
 | `cosmetic` | CosmeticWeapons + CosmeticArmours | Filtre de présence des objets pour les procédures de progrès exécutées à chaque tick (moins de parcours d'inventaire par tick joueur) |
 | `accessories` | Accessories | Raccourci de `contains` et tick d'entité allégé |
-| `[safety]` | Vanilla | Garde-fou de mouvement des entités contre les vitesses incontrôlées qui figent le serveur |
+| `copycats` | Create: Copycats+ | Correctif de crash client : un copycat retiré ne vide plus ses matériaux pendant que Sodium construit encore son mesh |
+| `[safety]` | Vanilla | Garde-fou de mouvement des entités contre les vitesses incontrôlées qui figent le serveur, et garde client qui laisse les tables de block entities des chunks client au thread de rendu |
 
 Chaque mod cible est optionnel : un module dont le mod est absent reste dormant.
 
@@ -675,6 +697,7 @@ Jars requis (et la version à faire correspondre dans `gradle.properties`) :
 | `geckolib-neoforge-1.21.1-<ver>.jar` (exécution de dev) | `geckolib_version` |
 | `recipeessentials-1.21.1-<ver>.jar` (exécution de dev) | `recipeessentials_version` |
 | `cupboard-1.21.1-<ver>.jar` (exécution de dev) | `cupboard_version`     |
+| `copycats-<ver>-neoforge.jar` (compilation et tests seulement) | `copycats_version` |
 
 `libs/*.jar` est ignoré par git : chaque développeur copie les siens depuis le pack de production. Lorsque le pack met à jour un mod ciblé, rafraîchir `libs/` et mettre à jour les valeurs correspondantes de `gradle.properties` selon les nouveaux noms de fichiers.
 
@@ -788,6 +811,11 @@ single_component_lookup_enabled = true
 storage_save_cache_enabled = true
 storage_save_cache_verify_interval = 20
 quiet_hot_debug_logs_enabled = true
+autocrafting_live_storage_view_enabled = true
+importer_idle_backoff_enabled = true
+exporter_idle_backoff_enabled = true
+autocrafting_sink_backoff_enabled = true
+idle_backoff_max_ticks = 10
 ```
 
 | Réglage | Meilleure valeur | Effet |
@@ -798,9 +826,20 @@ quiet_hot_debug_logs_enabled = true
 | `storage_save_cache_enabled` | `true` | Réutilise la forme encodée des disques de stockage inchangés depuis la dernière sauvegarde automatique, au lieu de réencoder tous les disques du monde. Les données sauvegardées sont identiques. |
 | `storage_save_cache_verify_interval` | `20` | Filet de sécurité : une sauvegarde sur N réencode les disques en cache et compare. À la moindre différence, le cache se coupe jusqu'au prochain redémarrage. `0` ne vérifie jamais. |
 | `quiet_hot_debug_logs_enabled` | `true` | Supprime deux lignes de log debug de Refined Storage écrites depuis la boucle de tick (« External storage has changed », nouvel essai des transmetteurs). Seul `logs/debug.log` change. |
+| `autocrafting_live_storage_view_enabled` | `true` | A1. Les calculs d'autocrafting faits sur le thread serveur lisent le réseau au lieu d'en copier d'abord tout le contenu. Un exporter, une interface ou un constructeur avec upgrade d'autocrafting qui demande un objet impossible à crafter lance au moins deux calculs par filtre et par cycle ; sur un réseau de milliers d'objets, la copie faisait l'essentiel de leur coût. Mêmes résultats ; les aperçus de craft gardent la copie. |
+| `importer_idle_backoff_enabled` | `true` | B1. Un importer dont les essais ne déplacent rien réessaie après 2 ticks, puis 4, 8... jusqu'à `idle_backoff_max_ticks`, et revient à chaque cycle de travail dès que quelque chose bouge. La consommation d'énergie ne change pas. |
+| `exporter_idle_backoff_enabled` | `true` | B2. Même règle pour un exporter dont les filtres n'exportent rien (destination pleine, objet absent). Lancer une tâche d'autocrafting compte comme une activité. |
+| `autocrafting_sink_backoff_enabled` | `true` | B3. Même règle pour une étape de traitement d'une tâche d'autocrafting en cours dont la machine (ou le verrou de l'autocrafter) refuse le lot d'ingrédients suivant. |
+| `idle_backoff_max_ticks` | `10` | Temps maximal entre deux essais d'un nœud inactif. Le premier objet après une période d'attente bouge au plus ce nombre de ticks plus tard que dans Refined Storage normal ; un nœud dont le cycle est déjà aussi lent (sans upgrade de vitesse) n'est jamais ralenti. |
 
 Utiliser `10` pour une réponse plus rapide de l'état d'activité à la redstone ou à l'énergie. Utiliser `1` pour
 désactiver le regroupement sans désactiver tout le module.
+
+B1 à B3 ne changent que le moment où un nœud inactif réessaie : un nœud qui déplace des objets travaille
+à chaque cycle comme avant (la boucle du banc déplace les mêmes objets avec et sans), et tout changement de
+filtres, d'upgrades, d'orientation ou de réseau ramène aussitôt un nœud à chaque cycle. Baisser
+`idle_backoff_max_ticks` pour des réactions plus rapides après une attente, l'augmenter (jusqu'à 40) pour
+économiser davantage sur une grande base inactive.
 
 ### Mekanism
 
@@ -918,6 +957,8 @@ entityMoveGuard = true
 entityMoveGuardLimit = 100.0
 runicForgeImplicitLevelLock = true
 gloamStainPurgeDeferredDiscard = true
+copycatsKeepMaterialsOnRemove = true
+clientBlockEntityThreadGuard = true
 ```
 
 | Réglage | Meilleure valeur | Effet |
@@ -925,6 +966,8 @@ gloamStainPurgeDeferredDiscard = true
 | `entityMoveGuard` | `true` | Arrête une entité dont le déplacement sur un tick est NaN, infini ou supérieur à `entityMoveGuardLimit`, au lieu de laisser la recherche de collisions figer le serveur. |
 | `runicForgeImplicitLevelLock` | `true` | Runic Forge de Simply Swords : aucun Runic Tablet gratuit à partir d'une arme unique dont le niveau d'éveil n'est qu'implicite (voir ci-dessous). |
 | `gloamStainPurgeDeferredDiscard` | `true` | Simply Swords : la purge des taches de Gloam ne fait plus crasher le serveur en retirant des entités pendant qu'elle parcourt l'index des entités du monde (bug #328). |
+| `copycatsKeepMaterialsOnRemove` | `true` | Copycats+ : un copycat multi-état retiré garde ses matériaux ; une tâche de mesh Sodium qui l'utilise encore ne fait plus crasher le client (NullPointerException dans `isCTEnabled`). |
+| `clientBlockEntityThreadGuard` | `true` | Client uniquement, lu dans le fichier de config de chaque joueur. Une lecture ou écriture de block entity sur un chunk client depuis un autre thread que celui du rendu ne modifie plus les tables du chunk sous ses pieds (`ConcurrentModificationException` dans `LevelChunk.updateBlockEntityTicker`, `ArrayIndexOutOfBoundsException` dans `rehash`). Les cinq premiers appels de ce type sont journalisés avec une pile d'appels qui nomme le mod appelant. |
 
 Simply Swords lit une arme unique sans son composant `simplyswords:awakening` comme entièrement
 éveillée (niveau 8) : les armes antérieures au système d'éveil et toutes les armes uniques

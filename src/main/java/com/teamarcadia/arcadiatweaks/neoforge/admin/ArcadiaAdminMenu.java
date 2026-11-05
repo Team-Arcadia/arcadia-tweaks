@@ -228,7 +228,13 @@ public final class ArcadiaAdminMenu extends ChestMenu {
                     Entry.bool("S2 single component lookup", ArcadiaConfig.REFINED_STORAGE.singleComponentLookup),
                     Entry.bool("S3 disk save cache", ArcadiaConfig.REFINED_STORAGE.storageSaveCache),
                     Entry.integer("S3 verify every N saves", ArcadiaConfig.REFINED_STORAGE.storageSaveCacheVerifyInterval, 5),
-                    Entry.bool("S4 quiet debug logs", ArcadiaConfig.REFINED_STORAGE.quietHotDebugLogs))));
+                    Entry.bool("S4 quiet debug logs", ArcadiaConfig.REFINED_STORAGE.quietHotDebugLogs),
+                    Entry.bool("A1 autocrafting live view", ArcadiaConfig.REFINED_STORAGE.autocraftingLiveView))));
+            result.add(new Section("Refined Storage IO", "Importers, exporters et machines inactifs", (ModConfigSpec.BooleanValue) null, List.of(
+                    Entry.bool("B1 idle importer backoff", ArcadiaConfig.REFINED_STORAGE.importerIdleBackoff),
+                    Entry.bool("B2 idle exporter backoff", ArcadiaConfig.REFINED_STORAGE.exporterIdleBackoff),
+                    Entry.bool("B3 refusing machine backoff", ArcadiaConfig.REFINED_STORAGE.autocraftingSinkBackoff),
+                    Entry.integer("B max ticks between tries", ArcadiaConfig.REFINED_STORAGE.idleBackoffMaxTicks, 2))));
         }
         if (ArcadiaPatchVariant.hasMekanism()) {
             result.add(new Section("Mekanism", "Patchs cables et reseaux Mekanism", ArcadiaConfig.MODULE_MEKANISM_ENABLED, List.of(
@@ -256,7 +262,8 @@ public final class ArcadiaAdminMenu extends ChestMenu {
                 Entry.bool("Entity move guard", ArcadiaConfig.ENTITY_MOVE_GUARD_ENABLED),
                 Entry.decimal("Move guard limit", ArcadiaConfig.ENTITY_MOVE_GUARD_LIMIT, 10.0),
                 Entry.bool("Runic Forge level lock", ArcadiaConfig.RUNIC_FORGE_LOCK_ENABLED),
-                Entry.bool("Gloam stain purge fix", ArcadiaConfig.GLOAM_PURGE_DEFERRED_DISCARD))));
+                Entry.bool("Gloam stain purge fix", ArcadiaConfig.GLOAM_PURGE_DEFERRED_DISCARD),
+                Entry.bool("Copycats+ keep materials", ArcadiaConfig.COPYCATS_KEEP_MATERIALS_ON_REMOVE))));
         return result;
     }
 

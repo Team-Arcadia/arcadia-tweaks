@@ -84,3 +84,17 @@
 **Fix:** send `-F 'metadata={"fileID":<id>,"displayName":"..."}'` with no content type; file ids come from `https://www.curseforge.com/api/v1/mods/<projectId>/files`.
 **Prevention:** for update-file, send only the fields to change, as a plain form field, and test on one file first.
 
+
+## [2026-11-03 22:38] - Mixin plugin test could not see a compileOnly jar
+**Context:** `MixinPluginCompatibilityTest` checking `CopycatsMixinPlugin` against the Copycats+ jar in `libs/`.
+**Error:** `copycatsPluginAcceptsBundledRuntimeTarget()` failed, `expected: <true> but was: <false>`.
+**Root cause:** the test source set adds `main.compileClasspath` and `main.runtimeClasspath`, but `ArcadiaMixinTargetInspector` reads target classes from the runtime class loader. Copycats+ was only `compileOnly` (it cannot be `runtimeOnly`: it needs Create, which the dev runs do not have), so its classes were missing at test time.
+**Fix:** `testRuntimeOnly files("libs/copycats-${copycats_version}-neoforge.jar")`.
+**Prevention:** a target jar that stays out of the dev runs still needs a `testRuntimeOnly` line for the plugin tests to read it.
+
+## [2026-11-05 01:05] - Bench exporters never asked to autocraft
+**Context:** `refinedstorage_autocraft` bench scenario, exporters given 4 speed upgrades and then an autocrafting upgrade.
+**Error:** every filter ended its cycle as `RESOURCE_MISSING` instead of `AUTOCRAFTING_MISSING_RESOURCES`; the tick cost 0.5 ms instead of 22 ms.
+**Root cause:** an RS2 upgrade container has 4 slots. `addUpgrade` returns false when it is full and the fifth upgrade (autocrafting) was silently dropped, so the exporter's strategy had no autocrafting listener.
+**Fix:** 3 speed upgrades and 1 autocrafting upgrade; the scenario now records each filter's last result (`extra.lastResult.*`) in every phase.
+**Prevention:** check the return value of `addUpgrade`, and record in the bench what the nodes actually did, not only how long the tick took.

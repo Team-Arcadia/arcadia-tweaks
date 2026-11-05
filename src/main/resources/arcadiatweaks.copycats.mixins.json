@@ -1,0 +1,15 @@
+{
+  "required": false,
+  "minVersion": "0.8.5",
+  "plugin": "com.teamarcadia.arcadiatweaks.neoforge.mixin.copycats.CopycatsMixinPlugin",
+  "package": "com.teamarcadia.arcadiatweaks.neoforge.mixin.copycats",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "MultiStateCopycatKeepMaterialsMixin"
+  ],
+  "server": [],
+  "client": [],
+  "injectors": {
+    "defaultRequire": 0
+  }
+}

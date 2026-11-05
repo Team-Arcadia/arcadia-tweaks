@@ -53,7 +53,7 @@ import java.util.UUID;
  * 64k disks holding thousands of distinct resources, importer/exporter pairs that move cobblestone
  * in a loop (network to chest to network) every tick, and external storages on full chests.
  *
- * <p>Every Refined Storage switch of ArcadiaTweaks is switched (S1 to S4). After each phase the
+ * <p>Every Refined Storage switch of ArcadiaTweaks is switched (S1 to S4, A1, B1 to B3). After each phase the
  * Refined Storage saved data ({@code refinedstorage_storages}) is saved {@value #SAVE_REPEATS} times
  * the way an autosave does and timed ({@code extra.rsSave*}, see {@link RsSaveTimer}); the network
  * moves items every tick, so the loop disks changed between saves. The storage-heavy save is the
@@ -97,6 +97,11 @@ public final class RefinedStorageScenario implements BenchScenario {
 
     @Override
     public List<BenchSwitches.Switch> switches() {
+        return allSwitches();
+    }
+
+    /** Every Refined Storage switch of ArcadiaTweaks, shared by the Refined Storage scenarios. */
+    static List<BenchSwitches.Switch> allSwitches() {
         return List.of(
                 BenchSwitches.Switch.of("modules.refinedstorage", ArcadiaConfig.MODULE_REFINED_STORAGE_ENABLED),
                 BenchSwitches.Switch.of("refinedstorage.activeness_check_coalescing_enabled", ArcadiaConfig.REFINED_STORAGE.activenessCheckCoalescing),
@@ -104,7 +109,12 @@ public final class RefinedStorageScenario implements BenchScenario {
                 BenchSwitches.Switch.of("refinedstorage.single_component_lookup_enabled", ArcadiaConfig.REFINED_STORAGE.singleComponentLookup),
                 BenchSwitches.Switch.of("refinedstorage.storage_save_cache_enabled", ArcadiaConfig.REFINED_STORAGE.storageSaveCache),
                 BenchSwitches.Switch.of("refinedstorage.storage_save_cache_verify_interval", ArcadiaConfig.REFINED_STORAGE.storageSaveCacheVerifyInterval),
-                BenchSwitches.Switch.of("refinedstorage.quiet_hot_debug_logs_enabled", ArcadiaConfig.REFINED_STORAGE.quietHotDebugLogs)
+                BenchSwitches.Switch.of("refinedstorage.quiet_hot_debug_logs_enabled", ArcadiaConfig.REFINED_STORAGE.quietHotDebugLogs),
+                BenchSwitches.Switch.of("refinedstorage.autocrafting_live_storage_view_enabled", ArcadiaConfig.REFINED_STORAGE.autocraftingLiveView),
+                BenchSwitches.Switch.of("refinedstorage.importer_idle_backoff_enabled", ArcadiaConfig.REFINED_STORAGE.importerIdleBackoff),
+                BenchSwitches.Switch.of("refinedstorage.exporter_idle_backoff_enabled", ArcadiaConfig.REFINED_STORAGE.exporterIdleBackoff),
+                BenchSwitches.Switch.of("refinedstorage.autocrafting_sink_backoff_enabled", ArcadiaConfig.REFINED_STORAGE.autocraftingSinkBackoff),
+                BenchSwitches.Switch.of("refinedstorage.idle_backoff_max_ticks", ArcadiaConfig.REFINED_STORAGE.idleBackoffMaxTicks)
         );
     }
 

@@ -23,6 +23,8 @@ public final class ArcadiaConfig {
     public static final ModConfigSpec.DoubleValue ENTITY_MOVE_GUARD_LIMIT;
     public static final ModConfigSpec.BooleanValue RUNIC_FORGE_LOCK_ENABLED;
     public static final ModConfigSpec.BooleanValue GLOAM_PURGE_DEFERRED_DISCARD;
+    public static final ModConfigSpec.BooleanValue COPYCATS_KEEP_MATERIALS_ON_REMOVE;
+    public static final ModConfigSpec.BooleanValue CLIENT_BLOCK_ENTITY_THREAD_GUARD;
 
     public static final BotanyConfig BOTANY;
     public static final RefinedStorageConfig REFINED_STORAGE;
@@ -77,6 +79,20 @@ public final class ArcadiaConfig {
                         "level's entity index, which shrinks under it and crashes the server (bug #328, Server1,",
                         "a dungeon teleport). The stains are collected during the walk and discarded after it.")
                 .define("gloamStainPurgeDeferredDiscard", true);
+        COPYCATS_KEEP_MATERIALS_ON_REMOVE = BUILDER
+                .comment("Copycats+: a removed multi-state copycat block entity emptied its material storage while",
+                        "Sodium could still be building a chunk mesh with it, which crashed the client with a",
+                        "NullPointerException in IMultiStateCopycatBlockEntity.isCTEnabled (2026-11-02). The",
+                        "materials are kept on removal.")
+                .define("copycatsKeepMaterialsOnRemove", true);
+        CLIENT_BLOCK_ENTITY_THREAD_GUARD = BUILDER
+                .comment("Client only, read from each player's own config. A block entity read or write on a client",
+                        "chunk from a thread other than the render thread could change the chunk's block entity",
+                        "maps under the render thread, which crashed the client (ConcurrentModificationException",
+                        "in LevelChunk.updateBlockEntityTicker, ArrayIndexOutOfBoundsException in",
+                        "Object2ObjectOpenHashMap.rehash, 2026-11-03). Such reads now only read and such writes run",
+                        "on the render thread. The first five are logged with the calling mod's stack trace.")
+                .define("clientBlockEntityThreadGuard", true);
         BUILDER.pop();
 
         BOTANY = new BotanyConfig(BUILDER);

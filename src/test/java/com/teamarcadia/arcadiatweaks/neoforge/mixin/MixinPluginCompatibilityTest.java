@@ -4,6 +4,7 @@ import com.teamarcadia.arcadiatweaks.neoforge.botany.BotanyMixinCompatibility;
 import com.teamarcadia.arcadiatweaks.neoforge.cosmetic.CosmeticGate;
 import com.teamarcadia.arcadiatweaks.neoforge.mixin.accessories.AccessoriesMixinPlugin;
 import com.teamarcadia.arcadiatweaks.neoforge.mixin.botany.BotanyMixinPlugin;
+import com.teamarcadia.arcadiatweaks.neoforge.mixin.copycats.CopycatsMixinPlugin;
 import com.teamarcadia.arcadiatweaks.neoforge.mixin.cosmetic.CosmeticMixinPlugin;
 import com.teamarcadia.arcadiatweaks.neoforge.mixin.mekanism.MekanismMixinPlugin;
 import com.teamarcadia.arcadiatweaks.neoforge.mixin.refinedstorage.RefinedStorageMixinPlugin;
@@ -54,6 +55,20 @@ final class MixinPluginCompatibilityTest {
     }
 
     @Test
+    void copycatsPluginAcceptsBundledRuntimeTarget() {
+        final CopycatsMixinPlugin plugin = new CopycatsMixinPlugin();
+
+        assertTrue(plugin.shouldApplyMixin(
+                "com.copycatsplus.copycats.foundation.copycat.multistate.MultiStateCopycatBlockEntity",
+                "com.teamarcadia.arcadiatweaks.neoforge.mixin.copycats.MultiStateCopycatKeepMaterialsMixin"
+        ));
+        assertFalse(plugin.shouldApplyMixin(
+                "missing.copycats.MultiStateCopycatBlockEntity",
+                "com.teamarcadia.arcadiatweaks.neoforge.mixin.copycats.MultiStateCopycatKeepMaterialsMixin"
+        ));
+    }
+
+    @Test
     void refinedStoragePluginAcceptsBundledRuntimeTargets() {
         final RefinedStorageMixinPlugin plugin = new RefinedStorageMixinPlugin();
 
@@ -88,6 +103,27 @@ final class MixinPluginCompatibilityTest {
         assertTrue(plugin.shouldApplyMixin(
                 "com.refinedmods.refinedstorage.common.networking.NetworkTransmitterBlockEntity",
                 "com.teamarcadia.arcadiatweaks.neoforge.mixin.refinedstorage.NetworkTransmitterDebugLogMixin"
+        ));
+        assertTrue(plugin.shouldApplyMixin(
+                "com.refinedmods.refinedstorage.api.autocrafting.calculation.CraftingState",
+                "com.teamarcadia.arcadiatweaks.neoforge.mixin.refinedstorage.CraftingStateLiveViewMixin"
+        ));
+        assertFalse(plugin.shouldApplyMixin(
+                "missing.refinedstorage.CraftingState",
+                "com.teamarcadia.arcadiatweaks.neoforge.mixin.refinedstorage.CraftingStateLiveViewMixin"
+        ));
+        for (String[] backoff : new String[][] {
+                {"com.refinedmods.refinedstorage.api.network.impl.node.importer.ImporterNetworkNode", "ImporterIdleBackoffMixin"},
+                {"com.refinedmods.refinedstorage.api.network.impl.node.exporter.ExporterNetworkNode", "ExporterIdleBackoffMixin"},
+                {"com.refinedmods.refinedstorage.api.network.impl.node.exporter.ExporterNetworkNode$ExporterTask", "ExporterTaskActivityMixin"},
+                {"com.refinedmods.refinedstorage.api.autocrafting.task.ExternalTaskPattern", "ExternalTaskPatternSinkBackoffMixin"}
+        }) {
+            assertTrue(plugin.shouldApplyMixin(backoff[0],
+                    "com.teamarcadia.arcadiatweaks.neoforge.mixin.refinedstorage." + backoff[1]), backoff[1]);
+        }
+        assertFalse(plugin.shouldApplyMixin(
+                "missing.refinedstorage.ImporterNetworkNode",
+                "com.teamarcadia.arcadiatweaks.neoforge.mixin.refinedstorage.ImporterIdleBackoffMixin"
         ));
     }
 

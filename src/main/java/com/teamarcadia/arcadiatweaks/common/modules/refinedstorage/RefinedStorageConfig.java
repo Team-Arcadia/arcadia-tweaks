@@ -10,6 +10,11 @@ public final class RefinedStorageConfig {
     public final ModConfigSpec.BooleanValue storageSaveCache;
     public final ModConfigSpec.IntValue storageSaveCacheVerifyInterval;
     public final ModConfigSpec.BooleanValue quietHotDebugLogs;
+    public final ModConfigSpec.BooleanValue autocraftingLiveView;
+    public final ModConfigSpec.BooleanValue importerIdleBackoff;
+    public final ModConfigSpec.BooleanValue exporterIdleBackoff;
+    public final ModConfigSpec.BooleanValue autocraftingSinkBackoff;
+    public final ModConfigSpec.IntValue idleBackoffMaxTicks;
 
     public RefinedStorageConfig(ModConfigSpec.Builder b) {
         b.comment(
@@ -68,6 +73,53 @@ public final class RefinedStorageConfig {
                         "Only logs/debug.log changes; nothing in the world does."
                 )
                 .define("quiet_hot_debug_logs_enabled", true);
+
+        autocraftingLiveView = b
+                .comment(
+                        "A1 - Autocrafting calculations read the network instead of copying it.",
+                        "RS2 starts every autocrafting calculation by copying the whole network content, and",
+                        "runs at least two calculations each time an exporter, interface or constructor with an",
+                        "autocrafting upgrade asks for an item it cannot find. On a network of thousands of",
+                        "resources that copy is most of the cost. Calculations on the server thread read the",
+                        "network directly instead: nothing can change it while they run, so the results are the",
+                        "same. Crafting previews, which run on RS2's own threads, keep the copy."
+                )
+                .define("autocrafting_live_storage_view_enabled", true);
+
+        importerIdleBackoff = b
+                .comment(
+                        "B1 - Idle importers try less often.",
+                        "An importer whose attempts move nothing (empty source, full network, filtered items) tries",
+                        "again after 2 ticks, then 4, 8... up to idle_backoff_max_ticks, and is back to every work",
+                        "cycle as soon as something moves. Energy use is unchanged. Without speed upgrades an importer",
+                        "already works every 9 ticks and is not slowed down with the default maximum."
+                )
+                .define("importer_idle_backoff_enabled", true);
+
+        exporterIdleBackoff = b
+                .comment(
+                        "B2 - Idle exporters try less often.",
+                        "Same rule for an exporter whose filters export nothing (destination full, item missing).",
+                        "Starting an autocrafting task counts as activity, so an exporter waiting for its craft is",
+                        "never slowed down."
+                )
+                .define("exporter_idle_backoff_enabled", true);
+
+        autocraftingSinkBackoff = b
+                .comment(
+                        "B3 - A running autocrafting task retries a refusing machine less often.",
+                        "A processing step whose machine (or autocrafter lock) refuses the next batch of inputs",
+                        "tries again after 2 ticks, then 4, 8... up to idle_backoff_max_ticks, and sends at every",
+                        "step again once a batch is accepted."
+                )
+                .define("autocrafting_sink_backoff_enabled", true);
+
+        idleBackoffMaxTicks = b
+                .comment(
+                        "B1 to B3 - Longest time between two attempts of an idle node, in ticks. The first item",
+                        "after an idle period moves at most this many ticks later than in plain RS."
+                )
+                .defineInRange("idle_backoff_max_ticks", 10, 2, 40);
 
         b.pop();
     }

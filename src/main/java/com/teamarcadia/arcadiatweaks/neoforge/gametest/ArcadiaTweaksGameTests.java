@@ -33,6 +33,8 @@ public final class ArcadiaTweaksGameTests {
         event.register(AdminMenuGameTests.class);
         if (ArcadiaPatchVariant.hasRefinedStorage()) {
             event.register(RefinedStorageGameTests.class);
+            event.register(RefinedStorageAutocraftingGameTests.class);
+            event.register(RefinedStorageIdleBackoffGameTests.class);
         }
         event.register(CosmeticPresenceGateGameTests.class);
         event.register(AccessoriesGameTests.class);

@@ -4,7 +4,7 @@
 
 Use this as the main CurseForge page: **ArcadiaTweaks**.
 
-ArcadiaTweaks is published as a single file, `arcadiatweaks-0.2.1.jar`. It contains every module, and each module stays dormant when its target mod is absent:
+ArcadiaTweaks is published as a single file, `arcadiatweaks-0.3.0.jar`. It contains every module, and each module stays dormant when its target mod is absent:
 
 - BotanyPots
 - Refined Storage
@@ -13,18 +13,19 @@ ArcadiaTweaks is published as a single file, `arcadiatweaks-0.2.1.jar`. It conta
 - Simply Swords (Runic Forge tablet fix)
 - CosmeticWeapons and CosmeticArmours (item presence gate)
 - Accessories (`contains` fast path and lighter entity tick)
-- Safety guards (entity movement guard)
+- Create: Copycats+ (client crash fix for copycat chunk meshes)
+- Safety guards (entity movement guard, client block entity thread guard)
 
 ## File metadata
 
 | Field | Value |
 |---|---|
-| File | `arcadiatweaks-0.2.1.jar` |
-| Version | `0.2.1` |
+| File | `arcadiatweaks-0.3.0.jar` |
+| Version | `0.3.0` |
 | Release type | Release |
 | Minecraft | `1.21.1` |
 | Loader | NeoForge |
-| Side | Server + optional client patch |
+| Side | Server + client (client crash fixes and an optional rendering patch) |
 | License | MIT |
 
 ## CurseForge relations
@@ -44,24 +45,41 @@ ArcadiaTweaks is published as a single file, `arcadiatweaks-0.2.1.jar`. It conta
 | CosmeticArmours | Optional | Same cosmetic module, for the armour advancement procedures. |
 | Curios API | Optional | Read by the cosmetic presence gate when Curios is installed. |
 | Accessories | Optional | Accessories module only applies on Accessories 1.1.0-beta.54. |
+| Create: Copycats+ | Optional | Copycats+ crash fix only applies when Copycats+ is installed. |
 
 ## Project summary
 
 ```text
-Optimization patches for BotanyPots, Refined Storage, Mekanism, CosmeticWeapons, CosmeticArmours and Accessories, fixes for Waystones and Simply Swords, and a server freeze guard. Mostly server-side, with one optional client-side Mekanism rendering safety patch. Mixin-based, configurable, with per-patch kill switches and runtime safety checks.
+Optimization patches for BotanyPots, Refined Storage, Mekanism, CosmeticWeapons, CosmeticArmours and Accessories, fixes for Waystones and Simply Swords, a Copycats+ client crash fix, a server freeze guard and a client guard for block entity maps. Mostly server-side; the client gets two crash fixes and one optional Mekanism rendering safety patch. Mixin-based, configurable, with per-patch kill switches and runtime safety checks.
 ```
 
 ## Release title
 
 ```text
-ArcadiaTweaks 0.2.1
+ArcadiaTweaks 0.3.0
 ```
 
-Every file uses the display name `ArcadiaTweaks <version>` (for example `ArcadiaTweaks 0.2.1`), never the jar file name.
+Every file uses the display name `ArcadiaTweaks <version>` (for example `ArcadiaTweaks 0.3.0`), never the jar file name.
 
 ## Changelog
 
 ```markdown
+## 0.3.0
+
+### Performance
+
+- Refined Storage: exporters, interfaces and constructors with an autocrafting upgrade no longer cost a lot when they ask for an item they cannot craft. Each autocrafting calculation copied the whole network first; calculations on the server thread now read it directly, with the same results (bench: 22.7 ms to 0.29 ms per tick). Kill switch `[refinedstorage] autocrafting_live_storage_view_enabled`.
+- Refined Storage: idle importers, exporters and crafting steps refused by their machine try again after 2, 4, 8... up to 10 ticks instead of every tick, and work on every cycle again as soon as something moves. Busy nodes are not slowed down, and the first item after an idle period moves at most 10 ticks later (bench: 5.06 ms to 0.72 ms per tick). Kill switches `[refinedstorage] importer_idle_backoff_enabled`, `exporter_idle_backoff_enabled`, `autocrafting_sink_backoff_enabled`, maximum `idle_backoff_max_ticks`.
+
+Also includes the 0.2.2 fixes below.
+
+## 0.2.2
+
+### Fixes
+
+- Copycats+: the client no longer crashes with "Encountered exception while building chunk meshes" (NullPointerException in `isCTEnabled`, seen on copycat slabs). A copycat removed when its chunk unloads or is resent emptied its materials while Sodium was still building a mesh with it; it now keeps them. Kill switch `[safety] copycatsKeepMaterialsOnRemove`.
+- Client: no more `ConcurrentModificationException` in `LevelChunk.updateBlockEntityTicker` or `ArrayIndexOutOfBoundsException` in `Object2ObjectOpenHashMap.rehash` while chunks render. A block entity read or write on a client chunk from another thread than the render thread changed the chunk's block entity maps under it; such reads now only read and such writes run on the render thread. The first five calls are written to `latest.log` with the calling mod's stack trace. Kill switch `[safety] clientBlockEntityThreadGuard` in each player's own config.
+
 ## 0.2.1
 
 ### Fixes
@@ -90,7 +108,7 @@ Every file uses the display name `ArcadiaTweaks <version>` (for example `Arcadia
 - The admin command is now `/arcadia_tweaks gui` (was `/arcadiatweaks gui`).
 - The admin GUI is now a paged 9x6 menu: one row per module with its switch first, a safety guards row, the default value in every tooltip and a two-click "Recommended defaults" reset.
 - Every optimization proven identical by the tests is on by default. BotanyPots A2 stays off.
-- One published file, `arcadiatweaks-0.2.1.jar`, with every module.
+- One published file, `arcadiatweaks-0.3.0.jar`, with every module.
 
 ### Admin GUI
 
@@ -140,7 +158,7 @@ safety_revalidate_period_ticks = 200
 
 ### Refined Storage
 
-Targets repeated network node/transmitter activeness checks. Importer/exporter work cadence is not slowed; the patch focuses on the repeated active-state checks visible in Spark.
+Targets repeated network node/transmitter activeness checks, autosaves, autocrafting requests that cannot be crafted, and idle nodes. Importers and exporters that keep moving items keep their work cadence; idle ones try less often.
 
 Recommended balanced settings:
 
@@ -152,9 +170,16 @@ single_component_lookup_enabled = true
 storage_save_cache_enabled = true
 storage_save_cache_verify_interval = 20
 quiet_hot_debug_logs_enabled = true
+autocrafting_live_storage_view_enabled = true
+importer_idle_backoff_enabled = true
+exporter_idle_backoff_enabled = true
+autocrafting_sink_backoff_enabled = true
+idle_backoff_max_ticks = 10
 ```
 
 A change of activeness lands at most `interval - 1` ticks earlier or later than in plain Refined Storage. Autosaves reuse the encoded form of unchanged storage disks (the saved data is identical, and a periodic check turns the cache off on any difference), network component lookups use one hash lookup, and two debug log lines written from the tick loop are dropped.
+
+Autocrafting calculations on the server thread read the network directly instead of copying its whole content first (same results). An idle importer, exporter or crafting step refused by its machine tries again after 2, 4, 8... up to `idle_backoff_max_ticks` ticks, and works on every cycle again as soon as something moves; the first item after an idle period moves at most that many ticks later than in plain Refined Storage.
 
 ### Mekanism
 
@@ -212,6 +237,8 @@ entityMoveGuard = true
 entityMoveGuardLimit = 100.0
 runicForgeImplicitLevelLock = true
 gloamStainPurgeDeferredDiscard = true
+copycatsKeepMaterialsOnRemove = true
+clientBlockEntityThreadGuard = true
 ```
 
 `entityMoveGuard` stops an entity whose movement for one tick is NaN, infinite or above the limit, instead of letting the collision search freeze the server. An elytra with rockets moves about 3 blocks per tick, so nothing legitimate comes close to the limit.

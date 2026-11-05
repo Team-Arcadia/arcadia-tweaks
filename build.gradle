@@ -73,6 +73,8 @@ dependencies {
     compileOnly  files("libs/owo-lib-neoforge-${owolib_version}.jar")
     compileOnly  files("libs/fabric-api-base-${fabricapibase_version}.jar")
     compileOnly  files("libs/endec-${endec_version}.jar")
+    // Copycats+ module: the material storage fix targets MultiStateCopycatBlockEntity.
+    compileOnly  files("libs/copycats-${copycats_version}-neoforge.jar")
 
     runtimeOnly  files("libs/botanypots-neoforge-1.21.1-${botanypots_version}.jar")
     runtimeOnly  files("libs/bookshelf-neoforge-1.21.1-${bookshelf_version}.jar")
@@ -100,6 +102,9 @@ dependencies {
     runtimeOnly  files("libs/geckolib-neoforge-1.21.1-${geckolib_version}.jar")
     runtimeOnly  files("libs/recipeessentials-1.21.1-${recipeessentials_version}.jar")
     runtimeOnly  files("libs/cupboard-1.21.1-${cupboard_version}.jar")
+
+    // Copycats+ needs Create at runtime, so it stays out of the dev runs; the tests only read its bytecode.
+    testRuntimeOnly files("libs/copycats-${copycats_version}-neoforge.jar")
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.3'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -144,7 +149,7 @@ neoForge {
         }
         // In-server A/B benchmark: ./gradlew runBenchServer
         // Optional: -PbenchCopyTo=<file> (copy of the results JSON), -PbenchScenarios=a,b,
-        // -PbenchRounds=, -PbenchWarmup=, -PbenchSettle=, -PbenchMeasure= (ticks).
+        // -PbenchRounds=, -PbenchWarmup=, -PbenchSettle=, -PbenchMeasure= (ticks), -PbenchJfr=<file.jfr>.
         benchServer {
             server()
             // Own directory: the bench deletes its world before every run (see prepareBenchServerRun).
@@ -164,6 +169,10 @@ neoForge {
                 }
             }
             jvmArguments.addAll '-Xms4G', '-Xmx4G'
+            // -PbenchJfr=<file.jfr> records a Java Flight Recorder profile of the whole run.
+            if (project.hasProperty('benchJfr')) {
+                jvmArguments.add "-XX:StartFlightRecording=filename=${project.property('benchJfr')},settings=profile"
+            }
             programArgument '--nogui'
         }
         data {
@@ -208,7 +217,8 @@ def patchMixinConfigs = [
     waystones     : "${mod_id}.waystones.mixins.json",
     simplyswords  : "${mod_id}.simplyswords.mixins.json",
     cosmetic      : "${mod_id}.cosmetic.mixins.json",
-    accessories   : "${mod_id}.accessories.mixins.json"
+    accessories   : "${mod_id}.accessories.mixins.json",
+    copycats      : "${mod_id}.copycats.mixins.json"
 ]
 
 def patchJarVariants = [
@@ -216,8 +226,8 @@ def patchJarVariants = [
         taskName      : 'jarAllPatches',
         classifier    : 'all',
         displayName   : 'all patches',
-        mixinConfigs  : [baseMixinConfig, patchMixinConfigs.botany, patchMixinConfigs.refinedstorage, patchMixinConfigs.mekanism, patchMixinConfigs.waystones, patchMixinConfigs.simplyswords, patchMixinConfigs.cosmetic, patchMixinConfigs.accessories],
-        optionalDeps  : ['botanypots', 'refinedstorage', 'mekanism', 'waystones', 'ftbteams', 'simplyswords', 'cosmeticweaponsmod', 'cosmeticarmoursmod', 'accessories'],
+        mixinConfigs  : [baseMixinConfig, patchMixinConfigs.botany, patchMixinConfigs.refinedstorage, patchMixinConfigs.mekanism, patchMixinConfigs.waystones, patchMixinConfigs.simplyswords, patchMixinConfigs.cosmetic, patchMixinConfigs.accessories, patchMixinConfigs.copycats],
+        optionalDeps  : ['botanypots', 'refinedstorage', 'mekanism', 'waystones', 'ftbteams', 'simplyswords', 'cosmeticweaponsmod', 'cosmeticarmoursmod', 'accessories', 'copycats'],
         excludedClasses: []
     ],
     botany        : [
@@ -238,7 +248,8 @@ def patchJarVariants = [
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/cosmetic/**',
             'com/teamarcadia/arcadiatweaks/neoforge/cosmetic/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/accessories/**',
-            'com/teamarcadia/arcadiatweaks/neoforge/accessories/**'
+            'com/teamarcadia/arcadiatweaks/neoforge/accessories/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/copycats/**'
         ]
     ],
     refinedstorage: [
@@ -259,7 +270,8 @@ def patchJarVariants = [
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/cosmetic/**',
             'com/teamarcadia/arcadiatweaks/neoforge/cosmetic/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/accessories/**',
-            'com/teamarcadia/arcadiatweaks/neoforge/accessories/**'
+            'com/teamarcadia/arcadiatweaks/neoforge/accessories/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/copycats/**'
         ]
     ],
     mekanism      : [
@@ -280,7 +292,8 @@ def patchJarVariants = [
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/cosmetic/**',
             'com/teamarcadia/arcadiatweaks/neoforge/cosmetic/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/accessories/**',
-            'com/teamarcadia/arcadiatweaks/neoforge/accessories/**'
+            'com/teamarcadia/arcadiatweaks/neoforge/accessories/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/copycats/**'
         ]
     ],
     waystones     : [
@@ -301,7 +314,8 @@ def patchJarVariants = [
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/cosmetic/**',
             'com/teamarcadia/arcadiatweaks/neoforge/cosmetic/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/accessories/**',
-            'com/teamarcadia/arcadiatweaks/neoforge/accessories/**'
+            'com/teamarcadia/arcadiatweaks/neoforge/accessories/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/copycats/**'
         ]
     ]
 ]
@@ -406,6 +420,18 @@ side = "BOTH"
 # Accessories is optional at load time. Its optimizations only apply to the verified build.
 [[dependencies.${mod_id}]]
 modId = "accessories"
+type = "optional"
+versionRange = "[0.0.0,)"
+ordering = "AFTER"
+side = "BOTH"
+"""
+    }
+    if (variant.optionalDeps.contains('copycats')) {
+        optionalDependencyBlocks += """
+
+# Copycats+ is optional at load time. Its crash fix only applies when it is present.
+[[dependencies.${mod_id}]]
+modId = "copycats"
 type = "optional"
 versionRange = "[0.0.0,)"
 ordering = "AFTER"
@@ -573,7 +599,7 @@ jar {
             'Implementation-Title'    : mod_name,
             'Implementation-Version'  : mod_version,
             'Implementation-Vendor'   : mod_authors,
-            'MixinConfigs'            : "${mod_id}.mixins.json,${mod_id}.botany.mixins.json,${mod_id}.refinedstorage.mixins.json,${mod_id}.mekanism.mixins.json,${mod_id}.waystones.mixins.json,${mod_id}.simplyswords.mixins.json,${mod_id}.cosmetic.mixins.json,${mod_id}.accessories.mixins.json"
+            'MixinConfigs'            : "${mod_id}.mixins.json,${mod_id}.botany.mixins.json,${mod_id}.refinedstorage.mixins.json,${mod_id}.mekanism.mixins.json,${mod_id}.waystones.mixins.json,${mod_id}.simplyswords.mixins.json,${mod_id}.cosmetic.mixins.json,${mod_id}.accessories.mixins.json,${mod_id}.copycats.mixins.json"
         ])
     }
 }
