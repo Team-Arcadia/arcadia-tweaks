@@ -104,6 +104,27 @@ final class MixinPluginCompatibilityTest {
                 "com.refinedmods.refinedstorage.common.networking.NetworkTransmitterBlockEntity",
                 "com.teamarcadia.arcadiatweaks.neoforge.mixin.refinedstorage.NetworkTransmitterDebugLogMixin"
         ));
+        assertTrue(plugin.shouldApplyMixin(
+                "com.refinedmods.refinedstorage.api.autocrafting.calculation.CraftingState",
+                "com.teamarcadia.arcadiatweaks.neoforge.mixin.refinedstorage.CraftingStateLiveViewMixin"
+        ));
+        assertFalse(plugin.shouldApplyMixin(
+                "missing.refinedstorage.CraftingState",
+                "com.teamarcadia.arcadiatweaks.neoforge.mixin.refinedstorage.CraftingStateLiveViewMixin"
+        ));
+        for (String[] backoff : new String[][] {
+                {"com.refinedmods.refinedstorage.api.network.impl.node.importer.ImporterNetworkNode", "ImporterIdleBackoffMixin"},
+                {"com.refinedmods.refinedstorage.api.network.impl.node.exporter.ExporterNetworkNode", "ExporterIdleBackoffMixin"},
+                {"com.refinedmods.refinedstorage.api.network.impl.node.exporter.ExporterNetworkNode$ExporterTask", "ExporterTaskActivityMixin"},
+                {"com.refinedmods.refinedstorage.api.autocrafting.task.ExternalTaskPattern", "ExternalTaskPatternSinkBackoffMixin"}
+        }) {
+            assertTrue(plugin.shouldApplyMixin(backoff[0],
+                    "com.teamarcadia.arcadiatweaks.neoforge.mixin.refinedstorage." + backoff[1]), backoff[1]);
+        }
+        assertFalse(plugin.shouldApplyMixin(
+                "missing.refinedstorage.ImporterNetworkNode",
+                "com.teamarcadia.arcadiatweaks.neoforge.mixin.refinedstorage.ImporterIdleBackoffMixin"
+        ));
     }
 
     @Test

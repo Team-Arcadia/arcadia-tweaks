@@ -149,7 +149,7 @@ neoForge {
         }
         // In-server A/B benchmark: ./gradlew runBenchServer
         // Optional: -PbenchCopyTo=<file> (copy of the results JSON), -PbenchScenarios=a,b,
-        // -PbenchRounds=, -PbenchWarmup=, -PbenchSettle=, -PbenchMeasure= (ticks).
+        // -PbenchRounds=, -PbenchWarmup=, -PbenchSettle=, -PbenchMeasure= (ticks), -PbenchJfr=<file.jfr>.
         benchServer {
             server()
             // Own directory: the bench deletes its world before every run (see prepareBenchServerRun).
@@ -169,6 +169,10 @@ neoForge {
                 }
             }
             jvmArguments.addAll '-Xms4G', '-Xmx4G'
+            // -PbenchJfr=<file.jfr> records a Java Flight Recorder profile of the whole run.
+            if (project.hasProperty('benchJfr')) {
+                jvmArguments.add "-XX:StartFlightRecording=filename=${project.property('benchJfr')},settings=profile"
+            }
             programArgument '--nogui'
         }
         data {

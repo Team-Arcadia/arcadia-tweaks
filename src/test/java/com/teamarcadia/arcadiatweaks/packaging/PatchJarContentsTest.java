@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 final class PatchJarContentsTest {
 
     private static final String MOD_ID = System.getProperty("arcadia.modId", "arcadiatweaks");
-    private static final String MOD_VERSION = System.getProperty("arcadia.modVersion", "0.2.2");
+    private static final String MOD_VERSION = System.getProperty("arcadia.modVersion", "0.3.0");
     private static final Path PATCH_JAR_DIR = Path.of(System.getProperty("arcadia.patchJarDir", "build/libs"));
 
     @Test
