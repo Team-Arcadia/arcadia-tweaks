@@ -10,6 +10,7 @@ public final class RefinedStorageConfig {
     public final ModConfigSpec.BooleanValue storageSaveCache;
     public final ModConfigSpec.IntValue storageSaveCacheVerifyInterval;
     public final ModConfigSpec.BooleanValue quietHotDebugLogs;
+    public final ModConfigSpec.BooleanValue autocraftingLiveView;
 
     public RefinedStorageConfig(ModConfigSpec.Builder b) {
         b.comment(
@@ -68,6 +69,18 @@ public final class RefinedStorageConfig {
                         "Only logs/debug.log changes; nothing in the world does."
                 )
                 .define("quiet_hot_debug_logs_enabled", true);
+
+        autocraftingLiveView = b
+                .comment(
+                        "A1 - Autocrafting calculations read the network instead of copying it.",
+                        "RS2 starts every autocrafting calculation by copying the whole network content, and",
+                        "runs at least two calculations each time an exporter, interface or constructor with an",
+                        "autocrafting upgrade asks for an item it cannot find. On a network of thousands of",
+                        "resources that copy is most of the cost. Calculations on the server thread read the",
+                        "network directly instead: nothing can change it while they run, so the results are the",
+                        "same. Crafting previews, which run on RS2's own threads, keep the copy."
+                )
+                .define("autocrafting_live_storage_view_enabled", true);
 
         b.pop();
     }

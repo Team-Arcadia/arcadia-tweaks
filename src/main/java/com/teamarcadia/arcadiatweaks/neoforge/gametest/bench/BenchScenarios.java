@@ -8,6 +8,7 @@ import com.teamarcadia.arcadiatweaks.neoforge.gametest.bench.scenario.BotanyPots
 import com.teamarcadia.arcadiatweaks.neoforge.gametest.bench.scenario.CosmeticScenario;
 import com.teamarcadia.arcadiatweaks.neoforge.gametest.bench.scenario.EntityMoveGuardScenario;
 import com.teamarcadia.arcadiatweaks.neoforge.gametest.bench.scenario.MekanismScenario;
+import com.teamarcadia.arcadiatweaks.neoforge.gametest.bench.scenario.RefinedStorageAutocraftScenario;
 import com.teamarcadia.arcadiatweaks.neoforge.gametest.bench.scenario.RefinedStorageSaveScenario;
 import com.teamarcadia.arcadiatweaks.neoforge.gametest.bench.scenario.RefinedStorageScenario;
 import net.neoforged.fml.ModList;
@@ -39,6 +40,7 @@ public final class BenchScenarios {
             new Entry("botanypots", List.of("botanypots"), () -> new BotanyPotsScenario()),
             new Entry("refinedstorage", List.of("refinedstorage"), () -> new RefinedStorageScenario()),
             new Entry("refinedstorage_save", List.of("refinedstorage"), () -> new RefinedStorageSaveScenario()),
+            new Entry("refinedstorage_autocraft", List.of("refinedstorage"), () -> new RefinedStorageAutocraftScenario()),
             new Entry("mekanism", List.of("mekanism"), () -> new MekanismScenario()),
             new Entry("entity_move_guard", List.of(), () -> new EntityMoveGuardScenario()),
             new Entry("cosmetic", List.of("cosmeticweaponsmod", "cosmeticarmoursmod", "curios", "accessories"), () -> new CosmeticScenario()),

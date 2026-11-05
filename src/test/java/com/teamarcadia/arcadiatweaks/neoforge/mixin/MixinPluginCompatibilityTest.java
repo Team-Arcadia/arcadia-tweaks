@@ -104,6 +104,14 @@ final class MixinPluginCompatibilityTest {
                 "com.refinedmods.refinedstorage.common.networking.NetworkTransmitterBlockEntity",
                 "com.teamarcadia.arcadiatweaks.neoforge.mixin.refinedstorage.NetworkTransmitterDebugLogMixin"
         ));
+        assertTrue(plugin.shouldApplyMixin(
+                "com.refinedmods.refinedstorage.api.autocrafting.calculation.CraftingState",
+                "com.teamarcadia.arcadiatweaks.neoforge.mixin.refinedstorage.CraftingStateLiveViewMixin"
+        ));
+        assertFalse(plugin.shouldApplyMixin(
+                "missing.refinedstorage.CraftingState",
+                "com.teamarcadia.arcadiatweaks.neoforge.mixin.refinedstorage.CraftingStateLiveViewMixin"
+        ));
     }
 
     @Test

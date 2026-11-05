@@ -22,6 +22,19 @@ public final class RefinedStorageMixinPlugin implements IMixinConfigPlugin {
     private static final String PROXY_STORAGE = "com.refinedmods.refinedstorage.api.storage.AbstractProxyStorage";
     private static final String STORAGE_REPOSITORY = "com.refinedmods.refinedstorage.common.storage.StorageRepositoryImpl";
     private static final String SAME_TYPE_STORAGE_TYPE = "com.refinedmods.refinedstorage.common.storage.SameTypeStorageType";
+    private static final String CRAFTING_STATE = "com.refinedmods.refinedstorage.api.autocrafting.calculation.CraftingState";
+    private static final String CRAFTING_STATE_OF_DESC =
+            "(Lcom/refinedmods/refinedstorage/api/storage/root/RootStorage;)Lcom/refinedmods/refinedstorage/api/autocrafting/calculation/CraftingState;";
+    /** A1 relies on {@code CraftingState.of} being exactly: new list, copy of the network into it, lazy copy-on-write wrapper. */
+    static final List<String> CRAFTING_STATE_OF_CALLS = List.of(
+            "com/refinedmods/refinedstorage/api/resource/list/MutableResourceListImpl.create ()Lcom/refinedmods/refinedstorage/api/resource/list/MutableResourceListImpl;",
+            "com/refinedmods/refinedstorage/api/storage/root/RootStorage.getAll ()Ljava/util/Collection;",
+            "java/util/Objects.requireNonNull (Ljava/lang/Object;)Ljava/lang/Object;",
+            "java/util/Collection.forEach (Ljava/util/function/Consumer;)V",
+            "com/refinedmods/refinedstorage/api/resource/list/LazyCopyMutableResourceList.create (Lcom/refinedmods/refinedstorage/api/resource/list/MutableResourceList;)Lcom/refinedmods/refinedstorage/api/resource/list/LazyCopyMutableResourceList;",
+            "com/refinedmods/refinedstorage/api/resource/list/MutableResourceListImpl.create ()Lcom/refinedmods/refinedstorage/api/resource/list/MutableResourceListImpl;",
+            "com/refinedmods/refinedstorage/api/autocrafting/calculation/CraftingState.<init> (Lcom/refinedmods/refinedstorage/api/resource/list/MutableResourceList;Lcom/refinedmods/refinedstorage/api/resource/list/MutableResourceList;)V"
+    );
 
     private static final String UPDATE_ACTIVENESS_DESC =
             "(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/state/properties/BooleanProperty;)V";
@@ -91,6 +104,9 @@ public final class RefinedStorageMixinPlugin implements IMixinConfigPlugin {
             case "PlatformStorageMixin", "StorageRepositoryImplMixin" -> storageSaveCacheCompatible();
             case "ExternalStorageDebugLogMixin" -> ArcadiaMixinTargetInspector.hasMethodCall(
                     targetClassName, "doWork", "()V", "org.slf4j.Logger", "debug", DEBUG_ONE_ARG);
+            case "CraftingStateLiveViewMixin" -> CRAFTING_STATE.equals(targetClassName)
+                    && CRAFTING_STATE_OF_CALLS.equals(ArcadiaMixinTargetInspector.methodCallsInMethod(
+                            CRAFTING_STATE, "of", CRAFTING_STATE_OF_DESC));
             case "NetworkTransmitterDebugLogMixin" -> ArcadiaMixinTargetInspector.hasMethodCall(
                     targetClassName, "tryReconnectingWithReceiver", "()V", "org.slf4j.Logger", "debug", DEBUG_TWO_ARGS);
             default -> true;

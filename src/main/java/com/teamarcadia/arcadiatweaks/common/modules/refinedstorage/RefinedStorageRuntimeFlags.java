@@ -19,9 +19,14 @@ public final class RefinedStorageRuntimeFlags {
 
     private static volatile boolean singleComponentLookup;
     private static volatile boolean quietHotDebugLogs;
+    private static volatile boolean autocraftingLiveView;
+    private static volatile Thread serverThread;
 
     static {
-        NeoForge.EVENT_BUS.addListener((ServerTickEvent.Pre event) -> refresh());
+        NeoForge.EVENT_BUS.addListener((ServerTickEvent.Pre event) -> {
+            serverThread = Thread.currentThread();
+            refresh();
+        });
         refresh();
     }
 
@@ -35,15 +40,26 @@ public final class RefinedStorageRuntimeFlags {
         return quietHotDebugLogs;
     }
 
+    public static boolean autocraftingLiveView() {
+        return autocraftingLiveView;
+    }
+
+    /** True on the thread that runs the server ticks, known from the first tick on. */
+    public static boolean onServerThread() {
+        return Thread.currentThread() == serverThread;
+    }
+
     /** Copies the current config values. Safe to call before the config is loaded. */
     public static void refresh() {
         try {
             final boolean module = ArcadiaConfig.MODULE_REFINED_STORAGE_ENABLED.get();
             singleComponentLookup = module && ArcadiaConfig.REFINED_STORAGE.singleComponentLookup.get();
             quietHotDebugLogs = module && ArcadiaConfig.REFINED_STORAGE.quietHotDebugLogs.get();
+            autocraftingLiveView = module && ArcadiaConfig.REFINED_STORAGE.autocraftingLiveView.get();
         } catch (IllegalStateException | NullPointerException configNotLoaded) {
             singleComponentLookup = false;
             quietHotDebugLogs = false;
+            autocraftingLiveView = false;
         }
     }
 }

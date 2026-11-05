@@ -228,7 +228,8 @@ public final class ArcadiaAdminMenu extends ChestMenu {
                     Entry.bool("S2 single component lookup", ArcadiaConfig.REFINED_STORAGE.singleComponentLookup),
                     Entry.bool("S3 disk save cache", ArcadiaConfig.REFINED_STORAGE.storageSaveCache),
                     Entry.integer("S3 verify every N saves", ArcadiaConfig.REFINED_STORAGE.storageSaveCacheVerifyInterval, 5),
-                    Entry.bool("S4 quiet debug logs", ArcadiaConfig.REFINED_STORAGE.quietHotDebugLogs))));
+                    Entry.bool("S4 quiet debug logs", ArcadiaConfig.REFINED_STORAGE.quietHotDebugLogs),
+                    Entry.bool("A1 autocrafting live view", ArcadiaConfig.REFINED_STORAGE.autocraftingLiveView))));
         }
         if (ArcadiaPatchVariant.hasMekanism()) {
             result.add(new Section("Mekanism", "Patchs cables et reseaux Mekanism", ArcadiaConfig.MODULE_MEKANISM_ENABLED, List.of(
