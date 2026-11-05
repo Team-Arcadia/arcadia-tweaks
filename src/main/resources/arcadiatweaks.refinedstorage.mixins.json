@@ -14,7 +14,11 @@
     "StorageRepositoryImplMixin",
     "ExternalStorageDebugLogMixin",
     "NetworkTransmitterDebugLogMixin",
-    "CraftingStateLiveViewMixin"
+    "CraftingStateLiveViewMixin",
+    "ImporterIdleBackoffMixin",
+    "ExporterIdleBackoffMixin",
+    "ExporterTaskActivityMixin",
+    "ExternalTaskPatternSinkBackoffMixin"
   ],
   "client": [],
   "injectors": {

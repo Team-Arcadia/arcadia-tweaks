@@ -101,14 +101,7 @@ public final class RefinedStorageAutocraftScenario implements BenchScenario {
 
     @Override
     public List<BenchSwitches.Switch> switches() {
-        return List.of(
-                BenchSwitches.Switch.of("modules.refinedstorage", ArcadiaConfig.MODULE_REFINED_STORAGE_ENABLED),
-                BenchSwitches.Switch.of("refinedstorage.activeness_check_coalescing_enabled", ArcadiaConfig.REFINED_STORAGE.activenessCheckCoalescing),
-                BenchSwitches.Switch.of("refinedstorage.activeness_check_interval_ticks", ArcadiaConfig.REFINED_STORAGE.activenessCheckInterval),
-                BenchSwitches.Switch.of("refinedstorage.single_component_lookup_enabled", ArcadiaConfig.REFINED_STORAGE.singleComponentLookup),
-                BenchSwitches.Switch.of("refinedstorage.quiet_hot_debug_logs_enabled", ArcadiaConfig.REFINED_STORAGE.quietHotDebugLogs),
-                BenchSwitches.Switch.of("refinedstorage.autocrafting_live_storage_view_enabled", ArcadiaConfig.REFINED_STORAGE.autocraftingLiveView)
-        );
+        return RefinedStorageScenario.allSwitches();
     }
 
     @Override

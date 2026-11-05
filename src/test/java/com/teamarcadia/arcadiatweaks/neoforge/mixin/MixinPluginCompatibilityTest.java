@@ -112,6 +112,19 @@ final class MixinPluginCompatibilityTest {
                 "missing.refinedstorage.CraftingState",
                 "com.teamarcadia.arcadiatweaks.neoforge.mixin.refinedstorage.CraftingStateLiveViewMixin"
         ));
+        for (String[] backoff : new String[][] {
+                {"com.refinedmods.refinedstorage.api.network.impl.node.importer.ImporterNetworkNode", "ImporterIdleBackoffMixin"},
+                {"com.refinedmods.refinedstorage.api.network.impl.node.exporter.ExporterNetworkNode", "ExporterIdleBackoffMixin"},
+                {"com.refinedmods.refinedstorage.api.network.impl.node.exporter.ExporterNetworkNode$ExporterTask", "ExporterTaskActivityMixin"},
+                {"com.refinedmods.refinedstorage.api.autocrafting.task.ExternalTaskPattern", "ExternalTaskPatternSinkBackoffMixin"}
+        }) {
+            assertTrue(plugin.shouldApplyMixin(backoff[0],
+                    "com.teamarcadia.arcadiatweaks.neoforge.mixin.refinedstorage." + backoff[1]), backoff[1]);
+        }
+        assertFalse(plugin.shouldApplyMixin(
+                "missing.refinedstorage.ImporterNetworkNode",
+                "com.teamarcadia.arcadiatweaks.neoforge.mixin.refinedstorage.ImporterIdleBackoffMixin"
+        ));
     }
 
     @Test

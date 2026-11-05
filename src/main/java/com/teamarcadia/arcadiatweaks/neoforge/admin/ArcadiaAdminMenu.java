@@ -230,6 +230,11 @@ public final class ArcadiaAdminMenu extends ChestMenu {
                     Entry.integer("S3 verify every N saves", ArcadiaConfig.REFINED_STORAGE.storageSaveCacheVerifyInterval, 5),
                     Entry.bool("S4 quiet debug logs", ArcadiaConfig.REFINED_STORAGE.quietHotDebugLogs),
                     Entry.bool("A1 autocrafting live view", ArcadiaConfig.REFINED_STORAGE.autocraftingLiveView))));
+            result.add(new Section("Refined Storage IO", "Importers, exporters et machines inactifs", (ModConfigSpec.BooleanValue) null, List.of(
+                    Entry.bool("B1 idle importer backoff", ArcadiaConfig.REFINED_STORAGE.importerIdleBackoff),
+                    Entry.bool("B2 idle exporter backoff", ArcadiaConfig.REFINED_STORAGE.exporterIdleBackoff),
+                    Entry.bool("B3 refusing machine backoff", ArcadiaConfig.REFINED_STORAGE.autocraftingSinkBackoff),
+                    Entry.integer("B max ticks between tries", ArcadiaConfig.REFINED_STORAGE.idleBackoffMaxTicks, 2))));
         }
         if (ArcadiaPatchVariant.hasMekanism()) {
             result.add(new Section("Mekanism", "Patchs cables et reseaux Mekanism", ArcadiaConfig.MODULE_MEKANISM_ENABLED, List.of(

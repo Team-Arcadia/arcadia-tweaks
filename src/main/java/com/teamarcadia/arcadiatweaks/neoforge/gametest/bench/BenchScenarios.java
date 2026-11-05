@@ -9,6 +9,7 @@ import com.teamarcadia.arcadiatweaks.neoforge.gametest.bench.scenario.CosmeticSc
 import com.teamarcadia.arcadiatweaks.neoforge.gametest.bench.scenario.EntityMoveGuardScenario;
 import com.teamarcadia.arcadiatweaks.neoforge.gametest.bench.scenario.MekanismScenario;
 import com.teamarcadia.arcadiatweaks.neoforge.gametest.bench.scenario.RefinedStorageAutocraftScenario;
+import com.teamarcadia.arcadiatweaks.neoforge.gametest.bench.scenario.RefinedStorageIdleIoScenario;
 import com.teamarcadia.arcadiatweaks.neoforge.gametest.bench.scenario.RefinedStorageSaveScenario;
 import com.teamarcadia.arcadiatweaks.neoforge.gametest.bench.scenario.RefinedStorageScenario;
 import net.neoforged.fml.ModList;
@@ -41,6 +42,7 @@ public final class BenchScenarios {
             new Entry("refinedstorage", List.of("refinedstorage"), () -> new RefinedStorageScenario()),
             new Entry("refinedstorage_save", List.of("refinedstorage"), () -> new RefinedStorageSaveScenario()),
             new Entry("refinedstorage_autocraft", List.of("refinedstorage"), () -> new RefinedStorageAutocraftScenario()),
+            new Entry("refinedstorage_idle_io", List.of("refinedstorage"), () -> new RefinedStorageIdleIoScenario()),
             new Entry("mekanism", List.of("mekanism"), () -> new MekanismScenario()),
             new Entry("entity_move_guard", List.of(), () -> new EntityMoveGuardScenario()),
             new Entry("cosmetic", List.of("cosmeticweaponsmod", "cosmeticarmoursmod", "curios", "accessories"), () -> new CosmeticScenario()),

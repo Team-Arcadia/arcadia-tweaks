@@ -25,6 +25,13 @@ public final class RefinedStorageMixinPlugin implements IMixinConfigPlugin {
     private static final String CRAFTING_STATE = "com.refinedmods.refinedstorage.api.autocrafting.calculation.CraftingState";
     private static final String CRAFTING_STATE_OF_DESC =
             "(Lcom/refinedmods/refinedstorage/api/storage/root/RootStorage;)Lcom/refinedmods/refinedstorage/api/autocrafting/calculation/CraftingState;";
+    private static final String EXPORTER_NODE = "com.refinedmods.refinedstorage.api.network.impl.node.exporter.ExporterNetworkNode";
+    private static final String EXPORTER_TASK = EXPORTER_NODE + "$ExporterTask";
+    private static final String EXTERNAL_TASK_PATTERN = "com.refinedmods.refinedstorage.api.autocrafting.task.ExternalTaskPattern";
+    private static final String EXTERNAL_TASK_PATTERN_STEP_DESC =
+            "(Lcom/refinedmods/refinedstorage/api/resource/list/MutableResourceList;Lcom/refinedmods/refinedstorage/api/storage/root/RootStorage;Lcom/refinedmods/refinedstorage/api/autocrafting/task/ExternalPatternSinkProvider;Lcom/refinedmods/refinedstorage/api/autocrafting/task/TaskListener;)Lcom/refinedmods/refinedstorage/api/autocrafting/task/PatternStepResult;";
+    private static final String ACCEPTS_ITERATION_INPUTS_DESC =
+            "(Lcom/refinedmods/refinedstorage/api/resource/list/MutableResourceList;Lcom/refinedmods/refinedstorage/api/autocrafting/task/ExternalPatternSinkProvider;)Z";
     /** A1 relies on {@code CraftingState.of} being exactly: new list, copy of the network into it, lazy copy-on-write wrapper. */
     static final List<String> CRAFTING_STATE_OF_CALLS = List.of(
             "com/refinedmods/refinedstorage/api/resource/list/MutableResourceListImpl.create ()Lcom/refinedmods/refinedstorage/api/resource/list/MutableResourceListImpl;",
@@ -107,6 +114,14 @@ public final class RefinedStorageMixinPlugin implements IMixinConfigPlugin {
             case "CraftingStateLiveViewMixin" -> CRAFTING_STATE.equals(targetClassName)
                     && CRAFTING_STATE_OF_CALLS.equals(ArcadiaMixinTargetInspector.methodCallsInMethod(
                             CRAFTING_STATE, "of", CRAFTING_STATE_OF_DESC));
+            case "ImporterIdleBackoffMixin" -> ArcadiaMixinTargetInspector.hasMethodCall(targetClassName, "doWork", "()V",
+                    "com.refinedmods.refinedstorage.api.network.node.importer.ImporterTransferStrategy", "transfer",
+                    "(Lcom/refinedmods/refinedstorage/api/resource/filter/Filter;Lcom/refinedmods/refinedstorage/api/storage/Actor;Lcom/refinedmods/refinedstorage/api/network/Network;)Z")
+                    && ArcadiaMixinTargetInspector.hasMethodCall(targetClassName, "doWork", "()V",
+                    "com.refinedmods.refinedstorage.api.network.impl.node.AbstractNetworkNode", "doWork", "()V");
+            case "ExporterIdleBackoffMixin", "ExporterTaskActivityMixin" -> exporterBackoffCompatible();
+            case "ExternalTaskPatternSinkBackoffMixin" -> ArcadiaMixinTargetInspector.hasMethodCall(EXTERNAL_TASK_PATTERN, "step",
+                    EXTERNAL_TASK_PATTERN_STEP_DESC, EXTERNAL_TASK_PATTERN, "acceptsIterationInputs", ACCEPTS_ITERATION_INPUTS_DESC);
             case "NetworkTransmitterDebugLogMixin" -> ArcadiaMixinTargetInspector.hasMethodCall(
                     targetClassName, "tryReconnectingWithReceiver", "()V", "org.slf4j.Logger", "debug", DEBUG_TWO_ARGS);
             default -> true;
@@ -132,6 +147,18 @@ public final class RefinedStorageMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public void postApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
+    }
+
+    /**
+     * B2 needs both halves: the exporter cycle calls its scheduling mode, and a filter keeps its result
+     * in {@code lastResult} when it runs. Without the second, every cycle would look idle.
+     */
+    static boolean exporterBackoffCompatible() {
+        return ArcadiaMixinTargetInspector.hasMethodCall(EXPORTER_NODE, "doWork", "()V",
+                "com.refinedmods.refinedstorage.api.network.node.SchedulingMode", "execute", "(Ljava/util/List;)V")
+                && ArcadiaMixinTargetInspector.hasField(EXPORTER_TASK, "lastResult",
+                "Lcom/refinedmods/refinedstorage/api/network/node/exporter/ExporterTransferStrategy$Result;")
+                && ArcadiaMixinTargetInspector.hasMethod(EXPORTER_TASK, "run", "()Z");
     }
 
     /**

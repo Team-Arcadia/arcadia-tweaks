@@ -21,10 +21,16 @@ public final class RefinedStorageRuntimeFlags {
     private static volatile boolean quietHotDebugLogs;
     private static volatile boolean autocraftingLiveView;
     private static volatile Thread serverThread;
+    private static volatile boolean importerIdleBackoff;
+    private static volatile boolean exporterIdleBackoff;
+    private static volatile boolean autocraftingSinkBackoff;
+    private static volatile int idleBackoffMaxTicks;
+    private static long serverTicks;
 
     static {
         NeoForge.EVENT_BUS.addListener((ServerTickEvent.Pre event) -> {
             serverThread = Thread.currentThread();
+            serverTicks++;
             refresh();
         });
         refresh();
@@ -44,6 +50,27 @@ public final class RefinedStorageRuntimeFlags {
         return autocraftingLiveView;
     }
 
+    public static boolean importerIdleBackoff() {
+        return importerIdleBackoff;
+    }
+
+    public static boolean exporterIdleBackoff() {
+        return exporterIdleBackoff;
+    }
+
+    public static boolean autocraftingSinkBackoff() {
+        return autocraftingSinkBackoff;
+    }
+
+    public static int idleBackoffMaxTicks() {
+        return idleBackoffMaxTicks;
+    }
+
+    /** Server ticks counted since the mod loaded (server thread). */
+    public static long serverTicks() {
+        return serverTicks;
+    }
+
     /** True on the thread that runs the server ticks, known from the first tick on. */
     public static boolean onServerThread() {
         return Thread.currentThread() == serverThread;
@@ -56,10 +83,17 @@ public final class RefinedStorageRuntimeFlags {
             singleComponentLookup = module && ArcadiaConfig.REFINED_STORAGE.singleComponentLookup.get();
             quietHotDebugLogs = module && ArcadiaConfig.REFINED_STORAGE.quietHotDebugLogs.get();
             autocraftingLiveView = module && ArcadiaConfig.REFINED_STORAGE.autocraftingLiveView.get();
+            importerIdleBackoff = module && ArcadiaConfig.REFINED_STORAGE.importerIdleBackoff.get();
+            exporterIdleBackoff = module && ArcadiaConfig.REFINED_STORAGE.exporterIdleBackoff.get();
+            autocraftingSinkBackoff = module && ArcadiaConfig.REFINED_STORAGE.autocraftingSinkBackoff.get();
+            idleBackoffMaxTicks = ArcadiaConfig.REFINED_STORAGE.idleBackoffMaxTicks.get();
         } catch (IllegalStateException | NullPointerException configNotLoaded) {
             singleComponentLookup = false;
             quietHotDebugLogs = false;
             autocraftingLiveView = false;
+            importerIdleBackoff = false;
+            exporterIdleBackoff = false;
+            autocraftingSinkBackoff = false;
         }
     }
 }
