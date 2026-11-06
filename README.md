@@ -2,7 +2,7 @@
 
 Umbrella mod-patch for the **Arcadia** modpack. Mostly server-side, non-invasive, Mixin-based optimizations and tweaks for NeoForge **1.21.1** (build 21.1.221+). The Mekanism module also contains one optional client-side rendering safety patch, and two crash fixes apply on the client (Copycats+ chunk meshes, block entity maps of client chunks).
 
-Current version: **0.3.0** (see [CHANGELOG.md](CHANGELOG.md)).
+Current version: **0.3.1** (see [CHANGELOG.md](CHANGELOG.md)).
 
 | Module | Target | Kind |
 |--------|--------|------|
@@ -14,6 +14,7 @@ Current version: **0.3.0** (see [CHANGELOG.md](CHANGELOG.md)).
 | `cosmetic` | CosmeticWeapons + CosmeticArmours | Item presence gate for the advancement tick procedures (fewer inventory scans per player tick) |
 | `accessories` | Accessories | `contains` fast path and a lighter per-entity tick |
 | `copycats` | Create: Copycats+ | Client crash fix: a removed copycat no longer empties its materials while Sodium still meshes it |
+| `sparework` | FastSuite, Simply Swords, Crabber's Delight, vanilla structure lookups | Work repeated for nothing, skipped with the same results (dedicated server only) |
 | `[safety]` | Vanilla | Entity movement guard against runaway velocities that freeze the server, and a client guard that keeps the block entity maps of client chunks on the render thread |
 
 Every target mod is optional: a module whose mod is absent stays dormant.
@@ -42,7 +43,7 @@ ArcadiaTweaks/
 │   │   │   └── modules/                         # one folder per module: Module + Config (kill switches)
 │   │   │       ├── botany/  mekanism/  refinedstorage/
 │   │   │       ├── waystones/  simplyswords/
-│   │   │       └── cosmetic/  accessories/
+│   │   │       └── cosmetic/  accessories/  sparework/
 │   │   └── neoforge/
 │   │       ├── ArcadiaTweaksNeoForge.java       # @Mod entry point
 │   │       ├── admin/                           # /arcadia_tweaks gui (server-side inventory menu)
@@ -162,8 +163,8 @@ Required jars (and the version each must match in `gradle.properties`):
 | `SimplyTooltips-neoforge-<ver>.jar` (dev runtime) | `simplytooltips_version` |
 | `fzzy_config-<ver>+1.21+neoforge.jar` (dev runtime) | `fzzyconfig_version` |
 | `kotlinforforge-<ver>-all.jar` (dev runtime)   | `kotlinforforge_version` |
-| `CosmeticWeapons - <ver> - 1.21.1 - NeoForge.jar` | `cosmeticweapons_version` |
-| `CosmeticArmours - <ver> - 1.21.1 - NeoForge.jar` | `cosmeticarmours_version` |
+| `CosmeticWeapons-<ver>-1.21.1-NeoForge.jar`    | `cosmeticweapons_version` |
+| `CosmeticArmours-<ver>-1.21.1-NeoForge.jar`    | `cosmeticarmours_version` |
 | `curios-neoforge-<ver>.jar`                    | `curios_version`       |
 | `accessories-neoforge-<ver>.jar`               | `accessories_version`  |
 | `owo-lib-neoforge-<ver>.jar`                   | `owolib_version`       |
@@ -174,6 +175,10 @@ Required jars (and the version each must match in `gradle.properties`):
 | `recipeessentials-1.21.1-<ver>.jar` (dev runtime) | `recipeessentials_version` |
 | `cupboard-1.21.1-<ver>.jar` (dev runtime)      | `cupboard_version`     |
 | `copycats-<ver>-neoforge.jar` (compile and tests only) | `copycats_version` |
+| `FastSuite-1.21.1-<ver>.jar` (dev runtime)     | `fastsuite_version`    |
+| `Placebo-1.21.1-<ver>.jar` (dev runtime)       | `placebo_version`      |
+| `crabbersdelight-1.21.1-<ver>.jar`             | `crabbersdelight_version` |
+| `FarmersDelight-1.21.1-<ver>.jar` (dev runtime) | `farmersdelight_version` |
 
 `libs/*.jar` is gitignored - each developer copies their own from the production pack. When the pack updates a targeted mod, refresh `libs/` and bump the corresponding `gradle.properties` values to match the new filenames.
 
@@ -194,9 +199,11 @@ Required jars (and the version each must match in `gradle.properties`):
 ./gradlew runGameTestServer
 ```
 
-The suite is 83 JUnit tests and 39 GameTests. `./gradlew runGameTestServer -ParcadiaBench` also runs the microbenchmarks.
+The suite is 95 JUnit tests and 64 GameTests. `./gradlew runGameTestServer -ParcadiaBench` also runs the microbenchmarks.
 
 The GameTests cover the entity movement guard, the Waystones team visibility (with real FTB Teams parties) and the Runic Forge (a FakePlayer driving the real Simply Swords menu). Simply Swords needs SimplyTooltips, fzzy_config and Kotlin for Forge at runtime, hence the three dev runtime jars above.
+
+The spare work patches also run on a copy of the server pack, because their proof depends on the real mods. A production launch starts the GameTest server with `-Dneoforge.gameTestServer=true` but does not register the tests: add `-Darcadia.packTests=true` and use a jar that adds the `neoforge/gametest` classes and an `empty` template at `data/arcadiatweaks/structure/empty.nbt` (`gameteststructures/` is only read in a dev run). That run also logs what each patch saves (`[sparework-bench]`).
 
 The dev runs are pre-configured with `mixin.debug=true` and `mixin.debug.export=true`, so the bytecode of every Mixin-applied class is dumped to `run/.mixin.out/class/` for inspection.
 
@@ -235,6 +242,7 @@ neighbour updates.
 | `modules.waystones` | `true` | Enable the Waystones team visibility fix when Waystones and FTB Teams are present. |
 | `modules.cosmetic` | `true` | Enable the CosmeticWeapons / CosmeticArmours presence gate when those mods are present. |
 | `modules.accessories` | `true` | Enable the Accessories fast paths when Accessories 1.1.0-beta.54 is present. |
+| `modules.sparework` | `true` | Enable the spare work patches (FastSuite, Simply Swords, Crabber's Delight, structure lookups). |
 
 ### BotanyPots
 
@@ -388,16 +396,16 @@ contains_presence_gate = true
 
 | Setting | Best value | What it does |
 |---------|------------|--------------|
-| `contains_presence_gate` | `true` | Item-presence gate for the 15 advancement tick procedures of the two mods: once a call has scanned the inventory, items that are not in it are answered without a new scan. |
+| `contains_presence_gate` | `true` | Item-presence gate for the 17 advancement tick procedures of the two mods: once a call has scanned the inventory, items that are not in it are answered without a new scan. |
 
 Every player tick, these procedures test up to 22 items each with
 `Inventory.contains`, and every call scans the inventory, Curios and Accessories.
 With the gate on, the first test of a call runs normally; if it finds nothing,
 the items present are listed once and the later tests skip the scan for any item
 that is not in that list, since it cannot match. The answers and the advancements
-are identical (the differential GameTests compare 822 placements, near misses and
-500 random inventories with the gate on and off), and the bench goes from 434 to
-100 microseconds per player tick for the 26 procedures. A startup audit turns the
+are identical (the differential GameTests compare every placement, near misses and
+500 random inventories with the gate on and off), and the bench goes from 319 to
+81 microseconds per player tick for the 25 procedures. A startup audit turns the
 gate off, with a warning, if another mod hooks `Inventory.contains` or the
 ItemStack comparison it relies on.
 
@@ -423,6 +431,58 @@ call). The tick copy makes the same calls in the same order and only creates
 slot references, dirty maps and attribute builders when a slot needs them. Both
 are matched to the Accessories bytecode by fingerprints: on any other build they
 switch themselves off with one warning and Accessories keeps its own behaviour.
+
+### Spare work
+
+This module skips work that other mods and the game repeat for nothing. Every entry gives the same
+results at the same moments as without it. Dedicated server only, so a client or a singleplayer world
+never runs it.
+
+```toml
+[sparework]
+fastsuite_skip_empty_parallel_lookup = true
+simplyswords_reuse_pity_stack = true
+structure_lookup_uses_loaded_chunk = true
+crabbersdelight_skip_empty_tackle_box_search = true
+```
+
+| Setting | Best value | What it does |
+|---------|------------|--------------|
+| `fastsuite_skip_empty_parallel_lookup` | `true` | FastSuite: a recipe type with no parallel recipe no longer goes through the thread pool to stream an empty list. |
+| `simplyswords_reuse_pity_stack` | `true` | Simply Swords: a read of a chest slot no longer creates a stack and a thread local entry for the pity loot. |
+| `structure_lookup_uses_loaded_chunk` | `true` | A structure lookup on a fully loaded chunk reads that chunk directly instead of asking the chunk system for an older status of it. |
+| `crabbersdelight_skip_empty_tackle_box_search` | `true` | Crabber's Delight: the search of the 343 positions around each player, every tick, is skipped when the loaded chunks prove it finds nothing and changes nothing. |
+
+These came out of Spark profiles of the live servers. What each one saves per call, measured on a
+copy of the server pack:
+
+| Work | Without | With |
+|------|---------|------|
+| Recipe lookup without a match, `create:milling` | 30 µs | 3 µs |
+| Read of a chest slot | 80 ns | 10 ns |
+| Structure lookup on a loaded chunk | 350 ns | 200 ns |
+| Tackle box search, nothing around | 15 µs | 300 ns |
+| Tackle box search, 2 chests around | 20 µs | 2 µs |
+
+Each shortcut only runs when the original would give the same answer and change nothing:
+
+- FastSuite: the parallel list only changes in the constructor, and an empty one can only answer "nothing".
+- Simply Swords: the stack stays on the server thread. It is only removed when it is empty, so keeping it
+  empty is the same as creating it again. Calls still pair up, because a nested read during a chest fill must
+  not take the outer table: that would lose the pity roll.
+- Structure lookups: for a fully loaded chunk the original returns a wrapper whose structure methods all read
+  that chunk, and adds a one tick ticket weaker than the tickets keeping the chunk loaded. A chunk that loses
+  those tickets in that very tick can start unloading one tick sooner, which changes no answer. Any chunk that is
+  not fully loaded, any other thread and world generation go through the original.
+- Crabber's Delight: a read of a block entity can also load the chunk, create a pending block entity, drop a
+  removed one, or create one that a block is missing. The search is only skipped when none of that can happen
+  in the chunks it reads, and when they hold no tackle box. Anything else runs the original.
+
+The differential GameTests run each patch off then on from the same state, on the dev runs and on a copy of
+the server pack (every recipe type of the pack, Twilight Forest's spawn lists, real chest fills with fixed
+seeds, 300 random worlds around a player). FastSuite, Simply Swords and Crabber's Delight are pinned to their
+bytecode: on any other build the patch switches itself off with one warning and the mod keeps its behaviour.
+At startup the log says whether each patch is applied (`[sparework] ... patches applied: fastsuite=true ...`).
 
 ### Safety guards
 
@@ -526,7 +586,7 @@ Authors: Curveo, Team Arcadia, vyrriox
 
 Mod-patch parapluie pour le modpack **Arcadia**. Optimisations et ajustements en grande partie côté serveur, non invasifs, basés sur Mixin, pour NeoForge **1.21.1** (build 21.1.221+). Le module Mekanism contient aussi un correctif optionnel de sécurité du rendu côté client, et deux correctifs de crash s'appliquent sur le client (meshes de chunks avec Copycats+, tables de block entities des chunks client).
 
-Version actuelle : **0.3.0** (voir [CHANGELOG.md](CHANGELOG.md)).
+Version actuelle : **0.3.1** (voir [CHANGELOG.md](CHANGELOG.md)).
 
 | Module | Cible | Type |
 |--------|-------|------|
@@ -538,6 +598,7 @@ Version actuelle : **0.3.0** (voir [CHANGELOG.md](CHANGELOG.md)).
 | `cosmetic` | CosmeticWeapons + CosmeticArmours | Filtre de présence des objets pour les procédures de progrès exécutées à chaque tick (moins de parcours d'inventaire par tick joueur) |
 | `accessories` | Accessories | Raccourci de `contains` et tick d'entité allégé |
 | `copycats` | Create: Copycats+ | Correctif de crash client : un copycat retiré ne vide plus ses matériaux pendant que Sodium construit encore son mesh |
+| `sparework` | FastSuite, Simply Swords, Crabber's Delight, recherches de structures vanilla | Travail répété pour rien, sauté avec les mêmes résultats (serveur dédié uniquement) |
 | `[safety]` | Vanilla | Garde-fou de mouvement des entités contre les vitesses incontrôlées qui figent le serveur, et garde client qui laisse les tables de block entities des chunks client au thread de rendu |
 
 Chaque mod cible est optionnel : un module dont le mod est absent reste dormant.
@@ -566,7 +627,7 @@ ArcadiaTweaks/
 │   │   │   └── modules/                         # one folder per module: Module + Config (kill switches)
 │   │   │       ├── botany/  mekanism/  refinedstorage/
 │   │   │       ├── waystones/  simplyswords/
-│   │   │       └── cosmetic/  accessories/
+│   │   │       └── cosmetic/  accessories/  sparework/
 │   │   └── neoforge/
 │   │       ├── ArcadiaTweaksNeoForge.java       # @Mod entry point
 │   │       ├── admin/                           # /arcadia_tweaks gui (server-side inventory menu)
@@ -686,8 +747,8 @@ Jars requis (et la version à faire correspondre dans `gradle.properties`) :
 | `SimplyTooltips-neoforge-<ver>.jar` (exécution de dev) | `simplytooltips_version` |
 | `fzzy_config-<ver>+1.21+neoforge.jar` (exécution de dev) | `fzzyconfig_version` |
 | `kotlinforforge-<ver>-all.jar` (exécution de dev) | `kotlinforforge_version` |
-| `CosmeticWeapons - <ver> - 1.21.1 - NeoForge.jar` | `cosmeticweapons_version` |
-| `CosmeticArmours - <ver> - 1.21.1 - NeoForge.jar` | `cosmeticarmours_version` |
+| `CosmeticWeapons-<ver>-1.21.1-NeoForge.jar`    | `cosmeticweapons_version` |
+| `CosmeticArmours-<ver>-1.21.1-NeoForge.jar`    | `cosmeticarmours_version` |
 | `curios-neoforge-<ver>.jar`                    | `curios_version`       |
 | `accessories-neoforge-<ver>.jar`               | `accessories_version`  |
 | `owo-lib-neoforge-<ver>.jar`                   | `owolib_version`       |
@@ -698,6 +759,10 @@ Jars requis (et la version à faire correspondre dans `gradle.properties`) :
 | `recipeessentials-1.21.1-<ver>.jar` (exécution de dev) | `recipeessentials_version` |
 | `cupboard-1.21.1-<ver>.jar` (exécution de dev) | `cupboard_version`     |
 | `copycats-<ver>-neoforge.jar` (compilation et tests seulement) | `copycats_version` |
+| `FastSuite-1.21.1-<ver>.jar` (exécution de dev) | `fastsuite_version`    |
+| `Placebo-1.21.1-<ver>.jar` (exécution de dev)  | `placebo_version`      |
+| `crabbersdelight-1.21.1-<ver>.jar`             | `crabbersdelight_version` |
+| `FarmersDelight-1.21.1-<ver>.jar` (exécution de dev) | `farmersdelight_version` |
 
 `libs/*.jar` est ignoré par git : chaque développeur copie les siens depuis le pack de production. Lorsque le pack met à jour un mod ciblé, rafraîchir `libs/` et mettre à jour les valeurs correspondantes de `gradle.properties` selon les nouveaux noms de fichiers.
 
@@ -718,9 +783,11 @@ Jars requis (et la version à faire correspondre dans `gradle.properties`) :
 ./gradlew runGameTestServer
 ```
 
-La suite compte 83 tests JUnit et 39 GameTests. `./gradlew runGameTestServer -ParcadiaBench` lance aussi les microbenchmarks.
+La suite compte 95 tests JUnit et 64 GameTests. `./gradlew runGameTestServer -ParcadiaBench` lance aussi les microbenchmarks.
 
 Les GameTests couvrent le garde-fou de mouvement des entités, la visibilité d'équipe de Waystones (avec de vraies parties FTB Teams) et la Runic Forge (un FakePlayer qui manipule le vrai menu de Simply Swords). Simply Swords a besoin de SimplyTooltips, fzzy_config et Kotlin for Forge à l'exécution, d'où les trois jars d'exécution de dev ci-dessus.
+
+Les patchs de travail inutile tournent aussi sur une copie du pack serveur, car leur preuve dépend des vrais mods. Un lancement de production démarre le serveur de GameTests avec `-Dneoforge.gameTestServer=true` mais n'enregistre pas les tests : ajouter `-Darcadia.packTests=true` et utiliser un jar qui ajoute les classes de `neoforge/gametest` et un modèle `empty` dans `data/arcadiatweaks/structure/empty.nbt` (`gameteststructures/` n'est lu qu'en dev). Cette exécution journalise aussi ce que chaque patch économise (`[sparework-bench]`).
 
 Les exécutions de développement sont préconfigurées avec `mixin.debug=true` et `mixin.debug.export=true`, de sorte que le bytecode de chaque classe modifiée par Mixin est exporté dans `run/.mixin.out/class/` pour inspection.
 
@@ -759,6 +826,7 @@ désactivée, car elle change les mises à jour de voisinage.
 | `modules.waystones` | `true` | Active le correctif de visibilité d'équipe des Waystones lorsque Waystones et FTB Teams sont présents. |
 | `modules.cosmetic` | `true` | Active le filtre de présence de CosmeticWeapons / CosmeticArmours lorsque ces mods sont présents. |
 | `modules.accessories` | `true` | Active les raccourcis d'Accessories lorsque Accessories 1.1.0-beta.54 est présent. |
+| `modules.sparework` | `true` | Active les patchs de travail inutile (FastSuite, Simply Swords, Crabber's Delight, recherches de structures). |
 
 ### BotanyPots
 
@@ -913,16 +981,16 @@ contains_presence_gate = true
 
 | Réglage | Meilleure valeur | Effet |
 |---------|------------------|-------|
-| `contains_presence_gate` | `true` | Filtre de présence des objets pour les 15 procédures de progrès exécutées à chaque tick par les deux mods : une fois l'inventaire parcouru par un appel, les objets qui n'y sont pas obtiennent leur réponse sans nouveau parcours. |
+| `contains_presence_gate` | `true` | Filtre de présence des objets pour les 17 procédures de progrès exécutées à chaque tick par les deux mods : une fois l'inventaire parcouru par un appel, les objets qui n'y sont pas obtiennent leur réponse sans nouveau parcours. |
 
 À chaque tick joueur, ces procédures testent jusqu'à 22 objets chacune avec
 `Inventory.contains`, et chaque appel parcourt l'inventaire, Curios et Accessories.
 Avec le filtre, le premier test d'un appel s'exécute normalement ; s'il ne trouve rien,
 les objets présents sont listés une fois et les tests suivants sautent le parcours pour
 tout objet absent de cette liste, puisqu'il ne peut pas correspondre. Les réponses et les
-progrès sont identiques (les GameTests différentiels comparent 822 placements,
+progrès sont identiques (les GameTests différentiels comparent chaque placement,
 quasi-correspondances et 500 inventaires aléatoires filtre activé et désactivé), et le banc
-passe de 434 à 100 microsecondes par tick joueur pour les 26 procédures. Un audit au
+passe de 319 à 81 microsecondes par tick joueur pour les 25 procédures. Un audit au
 démarrage coupe le filtre, avec un avertissement, si un autre mod modifie
 `Inventory.contains` ou la comparaison d'ItemStack dont il dépend.
 
@@ -948,6 +1016,60 @@ appel). La copie du tick fait les mêmes appels dans le même ordre et ne crée 
 d'emplacement, tables de modifications et constructeurs d'attributs que lorsqu'un emplacement
 en a besoin. Les deux sont liés au bytecode d'Accessories par des empreintes : sur toute autre
 version, ils se coupent seuls avec un avertissement et Accessories garde son comportement.
+
+### Travail inutile
+
+Ce module saute du travail que d'autres mods et le jeu répètent pour rien. Chaque réglage donne les mêmes
+résultats aux mêmes moments que sans lui. Serveur dédié uniquement : un client ou un monde solo ne l'exécute
+jamais.
+
+```toml
+[sparework]
+fastsuite_skip_empty_parallel_lookup = true
+simplyswords_reuse_pity_stack = true
+structure_lookup_uses_loaded_chunk = true
+crabbersdelight_skip_empty_tackle_box_search = true
+```
+
+| Réglage | Meilleure valeur | Effet |
+|---------|------------------|-------|
+| `fastsuite_skip_empty_parallel_lookup` | `true` | FastSuite : un type de recette sans recette parallèle ne passe plus par le pool de threads pour parcourir une liste vide. |
+| `simplyswords_reuse_pity_stack` | `true` | Simply Swords : la lecture d'un emplacement de coffre ne crée plus de pile ni d'entrée de thread local pour le butin de pitié. |
+| `structure_lookup_uses_loaded_chunk` | `true` | Une recherche de structure sur un chunk entièrement chargé lit directement ce chunk au lieu de demander au système de chunks un statut plus ancien. |
+| `crabbersdelight_skip_empty_tackle_box_search` | `true` | Crabber's Delight : la recherche des 343 positions autour de chaque joueur, à chaque tick, est sautée quand les chunks chargés prouvent qu'elle ne trouve rien et ne change rien. |
+
+Ces réglages viennent de profils Spark des serveurs en production. Ce que chacun économise par appel, mesuré
+sur une copie du pack serveur :
+
+| Travail | Sans | Avec |
+|---------|------|------|
+| Recherche de recette sans résultat, `create:milling` | 30 µs | 3 µs |
+| Lecture d'un emplacement de coffre | 80 ns | 10 ns |
+| Recherche de structure sur un chunk chargé | 350 ns | 200 ns |
+| Recherche de boîte à pêche, rien autour | 15 µs | 300 ns |
+| Recherche de boîte à pêche, 2 coffres autour | 20 µs | 2 µs |
+
+Chaque raccourci ne s'applique que lorsque l'original donnerait la même réponse sans rien changer :
+
+- FastSuite : la liste parallèle ne change que dans le constructeur, et une liste vide ne peut répondre que « rien ».
+- Simply Swords : la pile reste sur le thread du serveur. Elle n'est retirée que lorsqu'elle est vide, donc la
+  garder vide revient à la recréer. Les appels restent appariés, car une lecture imbriquée pendant le remplissage
+  d'un coffre ne doit pas prendre la table extérieure : le tirage de pitié serait perdu.
+- Recherches de structure : pour un chunk entièrement chargé, l'original renvoie une enveloppe dont toutes les
+  méthodes de structure lisent ce chunk, et ajoute un ticket d'un tick plus faible que ceux qui gardent le chunk
+  chargé. Un chunk qui perd ces tickets à ce même tick peut commencer à se décharger un tick plus tôt, ce qui ne
+  change aucune réponse. Tout chunk qui n'est pas entièrement chargé, tout autre thread et la génération du monde
+  passent par l'original.
+- Crabber's Delight : lire une entité de bloc peut aussi charger le chunk, créer une entité de bloc en attente,
+  en retirer une supprimée ou créer celle qui manque à un bloc. La recherche n'est sautée que si rien de tout cela
+  ne peut arriver dans les chunks lus et s'ils ne contiennent aucune boîte à pêche. Tout le reste exécute l'original.
+
+Les GameTests différentiels exécutent chaque patch désactivé puis activé depuis le même état, en dev et sur une
+copie du pack serveur (chaque type de recette du pack, les listes d'apparition de Twilight Forest, de vrais
+remplissages de coffres à graines fixes, 300 mondes aléatoires autour d'un joueur). FastSuite, Simply Swords et
+Crabber's Delight sont liés à leur bytecode : sur toute autre version, le patch se coupe seul avec un
+avertissement et le mod garde son comportement. Au démarrage, le log indique si chaque patch est appliqué
+(`[sparework] ... patches applied: fastsuite=true ...`).
 
 ### Gardes-fous
 

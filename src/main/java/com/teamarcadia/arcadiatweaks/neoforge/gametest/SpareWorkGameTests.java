@@ -761,7 +761,20 @@ public final class SpareWorkGameTests {
                 helper.assertTrue(chunk.getBlockEntityNbt(pos) == null, "The pending block entity should be gone, patch " + patched);
             }
 
-            // Outside the cube, in a chunk that is read: a pending block entity stays pending in both cases.
+            // A pending entry over a block without a block entity: the read consumes it all the same.
+            final BlockPos plain = center.offset(-1, 0, 0);
+            for (boolean patched : new boolean[]{false, true}) {
+                final CompoundTag tag = new CompoundTag();
+                tag.putInt("x", plain.getX());
+                tag.putInt("y", plain.getY());
+                tag.putInt("z", plain.getZ());
+                tag.putString("id", "DUMMY");
+                chunk.setBlockEntityNbt(tag);
+                scene.search(center, patched, "none", false);
+                helper.assertTrue(chunk.getBlockEntityNbt(plain) == null, "The read should consume the pending entry, patch " + patched);
+            }
+
+            // Outside the cube, in a chunk that is read: a block without its block entity stays so in both cases.
             final BlockPos outside = scene.place(center.offset(0, 60, 0), Blocks.CHEST);
             for (boolean patched : new boolean[]{false, true}) {
                 chunk.removeBlockEntity(outside);
