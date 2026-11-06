@@ -77,6 +77,8 @@ dependencies {
     compileOnly  files("libs/copycats-${copycats_version}-neoforge.jar")
     // Spare work module: the tackle box search fast path checks for TackleBoxBlockEntity.
     compileOnly  files("libs/crabbersdelight-1.21.1-${crabbersdelight_version}.jar")
+    // Macaw's Doors: the garage door guard targets GarageDoor.
+    compileOnly  files("libs/mcw-doors-${mcwdoors_version}-mc1.21.1neoforge.jar")
 
     runtimeOnly  files("libs/botanypots-neoforge-1.21.1-${botanypots_version}.jar")
     runtimeOnly  files("libs/bookshelf-neoforge-1.21.1-${bookshelf_version}.jar")
@@ -109,6 +111,7 @@ dependencies {
     runtimeOnly  files("libs/Placebo-1.21.1-${placebo_version}.jar")
     runtimeOnly  files("libs/crabbersdelight-1.21.1-${crabbersdelight_version}.jar")
     runtimeOnly  files("libs/FarmersDelight-1.21.1-${farmersdelight_version}.jar")
+    runtimeOnly  files("libs/mcw-doors-${mcwdoors_version}-mc1.21.1neoforge.jar")
 
     // Copycats+ needs Create at runtime, so it stays out of the dev runs; the tests only read its bytecode.
     testRuntimeOnly files("libs/copycats-${copycats_version}-neoforge.jar")
@@ -226,7 +229,8 @@ def patchMixinConfigs = [
     cosmetic      : "${mod_id}.cosmetic.mixins.json",
     accessories   : "${mod_id}.accessories.mixins.json",
     copycats      : "${mod_id}.copycats.mixins.json",
-    sparework     : "${mod_id}.sparework.mixins.json"
+    sparework     : "${mod_id}.sparework.mixins.json",
+    macawsdoors   : "${mod_id}.macawsdoors.mixins.json"
 ]
 
 def patchJarVariants = [
@@ -234,8 +238,8 @@ def patchJarVariants = [
         taskName      : 'jarAllPatches',
         classifier    : 'all',
         displayName   : 'all patches',
-        mixinConfigs  : [baseMixinConfig, patchMixinConfigs.botany, patchMixinConfigs.refinedstorage, patchMixinConfigs.mekanism, patchMixinConfigs.waystones, patchMixinConfigs.simplyswords, patchMixinConfigs.cosmetic, patchMixinConfigs.accessories, patchMixinConfigs.copycats, patchMixinConfigs.sparework],
-        optionalDeps  : ['botanypots', 'refinedstorage', 'mekanism', 'waystones', 'ftbteams', 'simplyswords', 'cosmeticweaponsmod', 'cosmeticarmoursmod', 'accessories', 'copycats', 'fastsuite', 'crabbersdelight'],
+        mixinConfigs  : [baseMixinConfig, patchMixinConfigs.botany, patchMixinConfigs.refinedstorage, patchMixinConfigs.mekanism, patchMixinConfigs.waystones, patchMixinConfigs.simplyswords, patchMixinConfigs.cosmetic, patchMixinConfigs.accessories, patchMixinConfigs.copycats, patchMixinConfigs.sparework, patchMixinConfigs.macawsdoors],
+        optionalDeps  : ['botanypots', 'refinedstorage', 'mekanism', 'waystones', 'ftbteams', 'simplyswords', 'cosmeticweaponsmod', 'cosmeticarmoursmod', 'accessories', 'copycats', 'fastsuite', 'crabbersdelight', 'mcwdoors'],
         excludedClasses: []
     ],
     botany        : [
@@ -259,6 +263,7 @@ def patchJarVariants = [
             'com/teamarcadia/arcadiatweaks/neoforge/accessories/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/copycats/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/sparework/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/macawsdoors/**',
             'com/teamarcadia/arcadiatweaks/neoforge/sparework/**'
         ]
     ],
@@ -283,6 +288,7 @@ def patchJarVariants = [
             'com/teamarcadia/arcadiatweaks/neoforge/accessories/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/copycats/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/sparework/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/macawsdoors/**',
             'com/teamarcadia/arcadiatweaks/neoforge/sparework/**'
         ]
     ],
@@ -307,6 +313,7 @@ def patchJarVariants = [
             'com/teamarcadia/arcadiatweaks/neoforge/accessories/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/copycats/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/sparework/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/macawsdoors/**',
             'com/teamarcadia/arcadiatweaks/neoforge/sparework/**'
         ]
     ],
@@ -331,6 +338,7 @@ def patchJarVariants = [
             'com/teamarcadia/arcadiatweaks/neoforge/accessories/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/copycats/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/sparework/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/macawsdoors/**',
             'com/teamarcadia/arcadiatweaks/neoforge/sparework/**'
         ]
     ]
@@ -472,6 +480,18 @@ side = "BOTH"
 # Crabber's Delight is optional at load time. Its spare work patch only applies to the verified build.
 [[dependencies.${mod_id}]]
 modId = "crabbersdelight"
+type = "optional"
+versionRange = "[0.0.0,)"
+ordering = "AFTER"
+side = "BOTH"
+"""
+    }
+    if (variant.optionalDeps.contains('mcwdoors')) {
+        optionalDependencyBlocks += """
+
+# Macaw's Doors is optional at load time. Its crash fix only applies to the verified build.
+[[dependencies.${mod_id}]]
+modId = "mcwdoors"
 type = "optional"
 versionRange = "[0.0.0,)"
 ordering = "AFTER"
@@ -639,7 +659,7 @@ jar {
             'Implementation-Title'    : mod_name,
             'Implementation-Version'  : mod_version,
             'Implementation-Vendor'   : mod_authors,
-            'MixinConfigs'            : "${mod_id}.mixins.json,${mod_id}.botany.mixins.json,${mod_id}.refinedstorage.mixins.json,${mod_id}.mekanism.mixins.json,${mod_id}.waystones.mixins.json,${mod_id}.simplyswords.mixins.json,${mod_id}.cosmetic.mixins.json,${mod_id}.accessories.mixins.json,${mod_id}.copycats.mixins.json,${mod_id}.sparework.mixins.json"
+            'MixinConfigs'            : "${mod_id}.mixins.json,${mod_id}.botany.mixins.json,${mod_id}.refinedstorage.mixins.json,${mod_id}.mekanism.mixins.json,${mod_id}.waystones.mixins.json,${mod_id}.simplyswords.mixins.json,${mod_id}.cosmetic.mixins.json,${mod_id}.accessories.mixins.json,${mod_id}.copycats.mixins.json,${mod_id}.sparework.mixins.json,${mod_id}.macawsdoors.mixins.json"
         ])
     }
 }

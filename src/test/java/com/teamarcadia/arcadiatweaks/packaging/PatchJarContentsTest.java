@@ -42,6 +42,8 @@ final class PatchJarContentsTest {
             assertEntryPresent(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/client/LevelChunkThreadGuardMixin.class");
             assertEntryPresent(jar, "com/teamarcadia/arcadiatweaks/neoforge/client/ClientBlockEntityThreadGuard.class");
             assertEntryPresent(jar, "arcadiatweaks.sparework.mixins.json");
+            assertEntryPresent(jar, "arcadiatweaks.macawsdoors.mixins.json");
+            assertEntryPresent(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/macawsdoors/GarageDoorRefusedWriteMixin.class");
             assertEntryPresent(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/sparework/SpareWorkMixinPlugin.class");
             assertEntryPresent(jar, "com/teamarcadia/arcadiatweaks/neoforge/sparework/ArcadiaTackleBoxSearch.class");
             assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/gametest/");
@@ -63,6 +65,8 @@ final class PatchJarContentsTest {
             assertTrue(modsToml.contains("config = \"arcadiatweaks.sparework.mixins.json\""));
             assertTrue(modsToml.contains("modId = \"fastsuite\""));
             assertTrue(modsToml.contains("modId = \"crabbersdelight\""));
+            assertTrue(modsToml.contains("config = \"arcadiatweaks.macawsdoors.mixins.json\""));
+            assertTrue(modsToml.contains("modId = \"mcwdoors\""));
         }
     }
 
@@ -89,6 +93,7 @@ final class PatchJarContentsTest {
             assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/waystones/");
             assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/copycats/");
             assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/sparework/");
+            assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/macawsdoors/");
             assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/sparework/");
             assertEntryPresent(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/client/LevelChunkThreadGuardMixin.class");
             assertEntryPresent(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/ArcadiaMixinTargetInspector.class");
@@ -106,6 +111,7 @@ final class PatchJarContentsTest {
             assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/waystones/");
             assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/copycats/");
             assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/sparework/");
+            assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/macawsdoors/");
             assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/sparework/");
             assertEntryPresent(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/client/LevelChunkThreadGuardMixin.class");
             assertEntryPresent(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/ArcadiaMixinTargetInspector.class");
@@ -124,6 +130,7 @@ final class PatchJarContentsTest {
             assertEntryPresent(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/mekanism/TransmitterBakedModelMixin.class");
             assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/copycats/");
             assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/sparework/");
+            assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/macawsdoors/");
             assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/sparework/");
             assertEntryPresent(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/client/LevelChunkThreadGuardMixin.class");
             assertEntryPresent(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/ArcadiaMixinTargetInspector.class");
@@ -142,6 +149,7 @@ final class PatchJarContentsTest {
             assertEntryPresent(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/waystones/WaystoneIndexManagerMixin.class");
             assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/copycats/");
             assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/sparework/");
+            assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/macawsdoors/");
             assertNoEntryStartsWith(jar, "com/teamarcadia/arcadiatweaks/neoforge/sparework/");
             assertEntryPresent(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/client/LevelChunkThreadGuardMixin.class");
             assertEntryPresent(jar, "com/teamarcadia/arcadiatweaks/neoforge/mixin/ArcadiaMixinTargetInspector.class");
@@ -160,7 +168,8 @@ final class PatchJarContentsTest {
                     "arcadiatweaks.cosmetic.mixins.json",
                     "arcadiatweaks.accessories.mixins.json",
                     "arcadiatweaks.copycats.mixins.json",
-                    "arcadiatweaks.sparework.mixins.json"
+                    "arcadiatweaks.sparework.mixins.json",
+                    "arcadiatweaks.macawsdoors.mixins.json"
             )) {
                 if (expectedPatchConfigs.contains(config)) {
                     assertEntryPresent(jar, config);

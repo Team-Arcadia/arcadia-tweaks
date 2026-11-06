@@ -1,0 +1,15 @@
+{
+  "required": false,
+  "minVersion": "0.8.5",
+  "plugin": "com.teamarcadia.arcadiatweaks.neoforge.mixin.macawsdoors.MacawsDoorsMixinPlugin",
+  "package": "com.teamarcadia.arcadiatweaks.neoforge.mixin.macawsdoors",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "GarageDoorRefusedWriteMixin"
+  ],
+  "server": [],
+  "client": [],
+  "injectors": {
+    "defaultRequire": 0
+  }
+}
