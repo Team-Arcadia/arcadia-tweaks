@@ -39,6 +39,12 @@ config = "${mod_id}.accessories.mixins.json"
 [[mixins]]
 config = "${mod_id}.copycats.mixins.json"
 
+[[mixins]]
+config = "${mod_id}.sparework.mixins.json"
+
+[[mixins]]
+config = "${mod_id}.macawsdoors.mixins.json"
+
 [[dependencies.${mod_id}]]
 modId = "neoforge"
 type = "required"
@@ -129,6 +135,30 @@ side = "BOTH"
 # Copycats+ is optional at load time. Its crash fix only applies when it is present.
 [[dependencies.${mod_id}]]
 modId = "copycats"
+type = "optional"
+versionRange = "[0.0.0,)"
+ordering = "AFTER"
+side = "BOTH"
+
+# FastSuite is optional at load time. Its spare work patch only applies to the verified build.
+[[dependencies.${mod_id}]]
+modId = "fastsuite"
+type = "optional"
+versionRange = "[0.0.0,)"
+ordering = "AFTER"
+side = "BOTH"
+
+# Crabber's Delight is optional at load time. Its spare work patch only applies to the verified build.
+[[dependencies.${mod_id}]]
+modId = "crabbersdelight"
+type = "optional"
+versionRange = "[0.0.0,)"
+ordering = "AFTER"
+side = "BOTH"
+
+# Macaw's Doors is optional at load time. Its crash fix only applies to the verified build.
+[[dependencies.${mod_id}]]
+modId = "mcwdoors"
 type = "optional"
 versionRange = "[0.0.0,)"
 ordering = "AFTER"

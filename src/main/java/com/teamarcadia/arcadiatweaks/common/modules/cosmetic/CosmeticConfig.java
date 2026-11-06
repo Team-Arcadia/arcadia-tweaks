@@ -20,7 +20,7 @@ public final class CosmeticConfig {
         containsPresenceGate = b
                 .comment(
                         "Item-presence gate for the advancement tick procedures.",
-                        "Every player tick, 15 procedures of the two mods test up to 22 items each with",
+                        "Every player tick, 17 procedures of the two mods test up to 22 items each with",
                         "Inventory.contains (a full scan of the inventory, Curios and Accessories per item).",
                         "When enabled, the first test of each procedure runs normally; if it finds nothing, the",
                         "items present in the inventory and Curios slots are listed once, and the later tests of",

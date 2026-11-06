@@ -10,6 +10,7 @@ public final class ArcadiaPatchVariant {
     private static final String WAYSTONES_MIXIN_CONFIG = ArcadiaTweaks.MOD_ID + ".waystones.mixins.json";
     private static final String COSMETIC_MIXIN_CONFIG = ArcadiaTweaks.MOD_ID + ".cosmetic.mixins.json";
     private static final String ACCESSORIES_MIXIN_CONFIG = ArcadiaTweaks.MOD_ID + ".accessories.mixins.json";
+    private static final String SPARE_WORK_MIXIN_CONFIG = ArcadiaTweaks.MOD_ID + ".sparework.mixins.json";
 
     private static final boolean BOTANY_PRESENT = hasResource(BOTANY_MIXIN_CONFIG);
     private static final boolean REFINED_STORAGE_PRESENT = hasResource(REFINED_STORAGE_MIXIN_CONFIG);
@@ -17,6 +18,7 @@ public final class ArcadiaPatchVariant {
     private static final boolean WAYSTONES_PRESENT = hasResource(WAYSTONES_MIXIN_CONFIG);
     private static final boolean COSMETIC_PRESENT = hasResource(COSMETIC_MIXIN_CONFIG);
     private static final boolean ACCESSORIES_PRESENT = hasResource(ACCESSORIES_MIXIN_CONFIG);
+    private static final boolean SPARE_WORK_PRESENT = hasResource(SPARE_WORK_MIXIN_CONFIG);
     private static final int PATCH_COUNT = (BOTANY_PRESENT ? 1 : 0)
             + (REFINED_STORAGE_PRESENT ? 1 : 0)
             + (MEKANISM_PRESENT ? 1 : 0)
@@ -49,6 +51,11 @@ public final class ArcadiaPatchVariant {
     /** The Accessories module only ships in the all-patches jar. */
     public static boolean hasAccessories() {
         return ACCESSORIES_PRESENT;
+    }
+
+    /** The spare work module only ships in the all-patches jar. */
+    public static boolean hasSpareWork() {
+        return SPARE_WORK_PRESENT;
     }
 
     public static String commandRoot() {

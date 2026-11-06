@@ -24,9 +24,11 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(targets = {
         "cosmeticarmoursmod.procedures.AngelHaloAchivementProcedureProcedure",
         "cosmeticarmoursmod.procedures.AwokenHaloAdvProdProcedure",
+        "cosmeticarmoursmod.procedures.ClothAdvProdProcedure",
         "cosmeticarmoursmod.procedures.FallenAngelHaloAchievementProcedureProcedure",
         "cosmeticarmoursmod.procedures.GloriousCoronationProdProcedure",
         "cosmeticarmoursmod.procedures.GoldenHaloAchievementProcedureProcedure",
+        "cosmeticarmoursmod.procedures.ThreadAdvProdProcedure",
         "cosmeticarmoursmod.procedures.WingedHaloAchievementProcedureProcedure"
 })
 public abstract class CosmeticArmoursProcedureMixin {

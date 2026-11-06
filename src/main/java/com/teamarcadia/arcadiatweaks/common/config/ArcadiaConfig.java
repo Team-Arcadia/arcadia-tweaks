@@ -5,6 +5,7 @@ import com.teamarcadia.arcadiatweaks.common.modules.botany.BotanyConfig;
 import com.teamarcadia.arcadiatweaks.common.modules.cosmetic.CosmeticConfig;
 import com.teamarcadia.arcadiatweaks.common.modules.mekanism.MekanismConfig;
 import com.teamarcadia.arcadiatweaks.common.modules.refinedstorage.RefinedStorageConfig;
+import com.teamarcadia.arcadiatweaks.common.modules.sparework.SpareWorkConfig;
 import com.teamarcadia.arcadiatweaks.common.modules.waystones.WaystonesConfig;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
@@ -18,6 +19,7 @@ public final class ArcadiaConfig {
     public static final ModConfigSpec.BooleanValue MODULE_WAYSTONES_ENABLED;
     public static final ModConfigSpec.BooleanValue MODULE_COSMETIC_ENABLED;
     public static final ModConfigSpec.BooleanValue MODULE_ACCESSORIES_ENABLED;
+    public static final ModConfigSpec.BooleanValue MODULE_SPARE_WORK_ENABLED;
 
     public static final ModConfigSpec.BooleanValue ENTITY_MOVE_GUARD_ENABLED;
     public static final ModConfigSpec.DoubleValue ENTITY_MOVE_GUARD_LIMIT;
@@ -25,6 +27,7 @@ public final class ArcadiaConfig {
     public static final ModConfigSpec.BooleanValue GLOAM_PURGE_DEFERRED_DISCARD;
     public static final ModConfigSpec.BooleanValue COPYCATS_KEEP_MATERIALS_ON_REMOVE;
     public static final ModConfigSpec.BooleanValue CLIENT_BLOCK_ENTITY_THREAD_GUARD;
+    public static final ModConfigSpec.BooleanValue MACAWS_GARAGE_DOOR_GUARD;
 
     public static final BotanyConfig BOTANY;
     public static final RefinedStorageConfig REFINED_STORAGE;
@@ -32,6 +35,7 @@ public final class ArcadiaConfig {
     public static final WaystonesConfig WAYSTONES;
     public static final CosmeticConfig COSMETIC;
     public static final AccessoriesConfig ACCESSORIES;
+    public static final SpareWorkConfig SPARE_WORK;
 
     public static final ModConfigSpec SPEC;
 
@@ -55,6 +59,10 @@ public final class ArcadiaConfig {
         MODULE_ACCESSORIES_ENABLED = BUILDER
                 .comment("Enable the Accessories (wisp-forest) optimization module.")
                 .define("accessories", true);
+        MODULE_SPARE_WORK_ENABLED = BUILDER
+                .comment("Enable the spare work module: work other mods and the game repeat for nothing, skipped",
+                        "with the same results (FastSuite, Simply Swords, Crabber's Delight, structure lookups).")
+                .define("sparework", true);
         BUILDER.pop();
 
         BUILDER.comment("Server safety guards").push("safety");
@@ -93,6 +101,14 @@ public final class ArcadiaConfig {
                         "Object2ObjectOpenHashMap.rehash, 2026-11-03). Such reads now only read and such writes run",
                         "on the render thread. The first five are logged with the calling mod's stack trace.")
                 .define("clientBlockEntityThreadGuard", true);
+        MACAWS_GARAGE_DOOR_GUARD = BUILDER
+                .comment("Macaw's Doors: a garage door toggles the doors next to it, which toggle the doors next to them,",
+                        "until they all have the new state. A write the level refuses never gets there, so two doors side",
+                        "by side called each other until a StackOverflowError crashed the game (2026-11-06, a client clicking",
+                        "a double garage door in a Bobby cached chunk, which refuses every write). A door whose write was",
+                        "refused no longer toggles its neighbours. Read from each side's own config. Without a refused",
+                        "write nothing changes. Turns itself off, with a warning, on a Macaw's Doors build other than 1.1.5.")
+                .define("macawsGarageDoorGuard", true);
         BUILDER.pop();
 
         BOTANY = new BotanyConfig(BUILDER);
@@ -101,6 +117,7 @@ public final class ArcadiaConfig {
         WAYSTONES = new WaystonesConfig(BUILDER);
         COSMETIC = new CosmeticConfig(BUILDER);
         ACCESSORIES = new AccessoriesConfig(BUILDER);
+        SPARE_WORK = new SpareWorkConfig(BUILDER);
 
         SPEC = BUILDER.build();
     }

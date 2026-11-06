@@ -4,6 +4,52 @@ All notable changes to ArcadiaTweaks are documented here.
 
 ---
 
+## [0.3.1] - 2026-11-06
+
+### Fixed
+
+- **Macaw's Doors: a double garage door no longer crashes the client** — clicking a garage door next to another one, in a chunk Bobby shows from its cache before the server has sent it, crashed the client with a `StackOverflowError` in `GarageDoor.toggleDoor` (2026-11-06): Bobby's chunks refuse every block write, so the two doors called each other without end. A door whose write was refused no longer toggles its neighbours; when writes go through, every call is unchanged. Players get the fix with the client jar. Pinned to Macaw's Doors 1.1.5, switch `[safety] macawsGarageDoorGuard`.
+- **Macaw's Doors: closing a garage door above the void no longer freezes the game** — the fill below a closing door went on past the bottom of the world for about four billion positions, on the server as on the client, long enough for the watchdog to stop a server. It now stops at the bottom of the world. Found while fixing the crash above, not seen on the live servers. Same pin and switch.
+
+### Performance
+
+- **New `sparework` module: work the pack repeats for nothing, skipped with the same results** — found with Spark on the live servers. Same answers at the same moments, dedicated server only, one kill switch per patch under `[sparework]` and the whole module under `[modules] sparework`. The times below are per call, measured on a copy of the server pack.
+- **FastSuite: no thread pool for a recipe type without parallel recipes** — FastSuite only parallelizes vanilla recipe classes, so every lookup of a mod's recipe type (all of Create's) submitted a task to stream an empty list, and the server thread waited for it. The lookup now goes straight to the serial recipes (30 µs to 3 µs for a lookup without a match on `create:milling`). Pinned to FastSuite 6.0.7. Switch `fastsuite_skip_empty_parallel_lookup`.
+- **Simply Swords: a read of a chest slot no longer allocates a stack** — Simply Swords hooks `unpackLootTable`, which vanilla calls on every read of a chest slot, and each call created a deque and a thread local entry for its pity loot, then removed them. The deque stays on the server thread (80 ns to 10 ns per read). The pairing of nested calls is kept, so chests roll their pity loot as before. Pinned to Simply Swords 1.70.2. Switch `simplyswords_reuse_pity_stack`.
+- **Structure lookups read a loaded chunk directly** — Twilight Forest looks up structures for every natural spawn, in every dimension, and vanilla asks the chunk system for an older status of the chunk, which adds a ticket and returns a wrapper around the same chunk. A fully loaded chunk is now read directly (350 ns to 200 ns per lookup). Any other chunk, any other thread and world generation go through the original call. Switch `structure_lookup_uses_loaded_chunk`.
+- **Crabber's Delight: the tackle box search is skipped when it can only find nothing** — every player tick read the 343 positions around the player, which scales with the player count. The search is skipped when the loaded chunks hold no tackle box and the reads would change nothing (15 µs to 300 ns with nothing around, 2 µs with chests around). A tackle box, a pending, removed or missing block entity, or a chunk that is not loaded runs the original search. Pinned to Crabber's Delight 1.3.1. Switch `crabbersdelight_skip_empty_tackle_box_search`.
+- **CosmeticArmours: the two new chains are gated** — `ThreadAdvProdProcedure` and `ClothAdvProdProcedure` of CosmeticArmours 1.6 test 16 items each, every player tick. They now go through the item presence gate like the 15 others.
+
+### Other changes
+
+- Built and tested against the jars of the production pack: CosmeticWeapons 1.2.0.1, CosmeticArmours 1.6.0.1, and FastSuite, Crabber's Delight, Placebo and Farmer's Delight in the dev runs.
+- New admin menu row "Spare work" with the module switch and the four patches.
+- The startup log says whether each patch is applied (`[sparework] ... patches applied: fastsuite=true ...`).
+- GameTests: differential tests for each patch, and a way to run them on a copy of the server pack (`-Darcadia.packTests=true`).
+
+### Correctifs
+
+- **Macaw's Doors : une porte de garage double ne fait plus crasher le client** — cliquer sur une porte de garage à côté d'une autre, dans un chunk que Bobby affiche depuis son cache avant que le serveur l'ait envoyé, faisait crasher le client avec un `StackOverflowError` dans `GarageDoor.toggleDoor` (2026-11-06) : les chunks de Bobby refusent toute écriture de bloc, donc les deux portes s'appelaient sans fin. Une porte dont l'écriture est refusée ne bascule plus ses voisines ; quand les écritures passent, chaque appel reste identique. Les joueurs reçoivent le correctif avec le jar client. Lié à Macaw's Doors 1.1.5, interrupteur `[safety] macawsGarageDoorGuard`.
+- **Macaw's Doors : fermer une porte de garage au-dessus du vide ne gèle plus le jeu** — le remplissage sous une porte qui se ferme continuait sous le bas du monde sur environ quatre milliards de positions, côté serveur comme côté client, assez longtemps pour que le watchdog arrête un serveur. Il s'arrête maintenant en bas du monde. Trouvé en corrigeant le crash ci-dessus, pas observé sur les serveurs en production. Même liaison et même interrupteur.
+
+### Performances
+
+- **Nouveau module `sparework` : le travail que le pack répète pour rien, sauté avec les mêmes résultats** — repéré avec Spark sur les serveurs en production. Mêmes réponses aux mêmes moments, serveur dédié uniquement, un interrupteur par patch dans `[sparework]` et le module entier dans `[modules] sparework`. Les temps ci-dessous sont par appel, mesurés sur une copie du pack serveur.
+- **FastSuite : plus de pool de threads pour un type de recette sans recette parallèle** — FastSuite ne parallélise que les classes de recettes vanilla, donc chaque recherche sur un type de recette d'un mod (tous ceux de Create) soumettait une tâche pour parcourir une liste vide, et le thread du serveur l'attendait. La recherche va maintenant directement aux recettes en série (30 µs à 3 µs pour une recherche sans résultat sur `create:milling`). Lié à FastSuite 6.0.7. Interrupteur `fastsuite_skip_empty_parallel_lookup`.
+- **Simply Swords : la lecture d'un emplacement de coffre n'alloue plus de pile** — Simply Swords se branche sur `unpackLootTable`, que vanilla appelle à chaque lecture d'un emplacement de coffre, et chaque appel créait une deque et une entrée de thread local pour son butin de pitié, puis les retirait. La deque reste sur le thread du serveur (80 ns à 10 ns par lecture). L'appariement des appels imbriqués est conservé, donc les coffres tirent leur butin de pitié comme avant. Lié à Simply Swords 1.70.2. Interrupteur `simplyswords_reuse_pity_stack`.
+- **Les recherches de structures lisent directement un chunk chargé** — Twilight Forest cherche les structures à chaque apparition naturelle, dans toutes les dimensions, et vanilla demande au système de chunks un statut plus ancien du chunk, ce qui ajoute un ticket et renvoie une enveloppe autour du même chunk. Un chunk entièrement chargé est maintenant lu directement (350 ns à 200 ns par recherche). Tout autre chunk, tout autre thread et la génération du monde passent par l'appel d'origine. Interrupteur `structure_lookup_uses_loaded_chunk`.
+- **Crabber's Delight : la recherche de boîte à pêche est sautée quand elle ne peut rien trouver** — chaque tick joueur lisait les 343 positions autour du joueur, un coût proportionnel au nombre de joueurs. La recherche est sautée quand les chunks chargés ne contiennent aucune boîte à pêche et que les lectures ne changeraient rien (15 µs à 300 ns sans rien autour, 2 µs avec des coffres autour). Une boîte à pêche, une entité de bloc en attente, supprimée ou manquante, ou un chunk non chargé exécute la recherche d'origine. Lié à Crabber's Delight 1.3.1. Interrupteur `crabbersdelight_skip_empty_tackle_box_search`.
+- **CosmeticArmours : les deux nouvelles chaînes passent par le filtre** — `ThreadAdvProdProcedure` et `ClothAdvProdProcedure` de CosmeticArmours 1.6 testent 16 objets chacune, à chaque tick joueur. Elles passent maintenant par le filtre de présence, comme les 15 autres.
+
+### Autres changements
+
+- Compilé et testé avec les jars du pack de production : CosmeticWeapons 1.2.0.1, CosmeticArmours 1.6.0.1, et FastSuite, Crabber's Delight, Placebo et Farmer's Delight dans les exécutions de dev.
+- Nouvelle ligne « Spare work » dans le menu d'administration, avec l'interrupteur du module et les quatre patchs.
+- Le log de démarrage indique si chaque patch est appliqué (`[sparework] ... patches applied: fastsuite=true ...`).
+- GameTests : des tests différentiels pour chaque patch, et un moyen de les lancer sur une copie du pack serveur (`-Darcadia.packTests=true`).
+
+---
+
 ## [0.3.0] - 2026-11-05
 
 ### Performance

@@ -258,12 +258,20 @@ public final class ArcadiaAdminMenu extends ChestMenu {
                     Entry.bool("A1 contains fast path", ArcadiaConfig.ACCESSORIES.containsFastPath),
                     Entry.bool("A2 trimmed entity tick", ArcadiaConfig.ACCESSORIES.tickAllocationTrimmed))));
         }
+        if (ArcadiaPatchVariant.hasSpareWork()) {
+            result.add(new Section("Spare work", "Travail inutile evite, resultat identique", ArcadiaConfig.MODULE_SPARE_WORK_ENABLED, List.of(
+                    Entry.bool("FastSuite empty lookup", ArcadiaConfig.SPARE_WORK.fastSuiteSkipEmptyParallelLookup),
+                    Entry.bool("Simply Swords pity stack", ArcadiaConfig.SPARE_WORK.simplySwordsReusePityStack),
+                    Entry.bool("Structure lookup chunk", ArcadiaConfig.SPARE_WORK.structureLookupUsesLoadedChunk),
+                    Entry.bool("Crabber's tackle box search", ArcadiaConfig.SPARE_WORK.crabbersDelightSkipEmptyTackleBoxSearch))));
+        }
         result.add(new Section("Safety guards", "Gardes-fous du serveur", (ModConfigSpec.BooleanValue) null, List.of(
                 Entry.bool("Entity move guard", ArcadiaConfig.ENTITY_MOVE_GUARD_ENABLED),
                 Entry.decimal("Move guard limit", ArcadiaConfig.ENTITY_MOVE_GUARD_LIMIT, 10.0),
                 Entry.bool("Runic Forge level lock", ArcadiaConfig.RUNIC_FORGE_LOCK_ENABLED),
                 Entry.bool("Gloam stain purge fix", ArcadiaConfig.GLOAM_PURGE_DEFERRED_DISCARD),
-                Entry.bool("Copycats+ keep materials", ArcadiaConfig.COPYCATS_KEEP_MATERIALS_ON_REMOVE))));
+                Entry.bool("Copycats+ keep materials", ArcadiaConfig.COPYCATS_KEEP_MATERIALS_ON_REMOVE),
+                Entry.bool("Macaw's garage door guard", ArcadiaConfig.MACAWS_GARAGE_DOOR_GUARD))));
         return result;
     }
 

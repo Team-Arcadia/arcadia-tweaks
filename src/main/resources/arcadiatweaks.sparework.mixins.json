@@ -1,0 +1,19 @@
+{
+  "required": false,
+  "minVersion": "0.8.5",
+  "plugin": "com.teamarcadia.arcadiatweaks.neoforge.mixin.sparework.SpareWorkMixinPlugin",
+  "package": "com.teamarcadia.arcadiatweaks.neoforge.mixin.sparework",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [],
+  "server": [
+    "CachedRecipeListEmptyParallelMixin",
+    "ChunkAccessPendingAccessor",
+    "PityLootContextReuseMixin",
+    "StructureManagerLoadedChunkMixin",
+    "TackleBoxProximitySkipMixin"
+  ],
+  "client": [],
+  "injectors": {
+    "defaultRequire": 0
+  }
+}
