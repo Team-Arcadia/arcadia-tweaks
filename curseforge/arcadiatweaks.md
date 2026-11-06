@@ -4,7 +4,7 @@
 
 Use this as the main CurseForge page: **ArcadiaTweaks**.
 
-ArcadiaTweaks is published as a single file, `arcadiatweaks-0.3.0.jar`. It contains every module, and each module stays dormant when its target mod is absent:
+ArcadiaTweaks is published as a single file, `arcadiatweaks-0.3.1.jar`. It contains every module, and each module stays dormant when its target mod is absent:
 
 - BotanyPots
 - Refined Storage
@@ -14,14 +14,15 @@ ArcadiaTweaks is published as a single file, `arcadiatweaks-0.3.0.jar`. It conta
 - CosmeticWeapons and CosmeticArmours (item presence gate)
 - Accessories (`contains` fast path and lighter entity tick)
 - Create: Copycats+ (client crash fix for copycat chunk meshes)
+- FastSuite, Simply Swords, Crabber's Delight and vanilla structure lookups (work repeated for nothing, skipped with the same results)
 - Safety guards (entity movement guard, client block entity thread guard)
 
 ## File metadata
 
 | Field | Value |
 |---|---|
-| File | `arcadiatweaks-0.3.0.jar` |
-| Version | `0.3.0` |
+| File | `arcadiatweaks-0.3.1.jar` |
+| Version | `0.3.1` |
 | Release type | Release |
 | Minecraft | `1.21.1` |
 | Loader | NeoForge |
@@ -46,24 +47,38 @@ ArcadiaTweaks is published as a single file, `arcadiatweaks-0.3.0.jar`. It conta
 | Curios API | Optional | Read by the cosmetic presence gate when Curios is installed. |
 | Accessories | Optional | Accessories module only applies on Accessories 1.1.0-beta.54. |
 | Create: Copycats+ | Optional | Copycats+ crash fix only applies when Copycats+ is installed. |
+| FastSuite | Optional | Spare work patch only applies on FastSuite 6.0.7. |
+| Crabber's Delight | Optional | Spare work patch only applies on Crabber's Delight 1.3.1. |
 
 ## Project summary
 
 ```text
-Optimization patches for BotanyPots, Refined Storage, Mekanism, CosmeticWeapons, CosmeticArmours and Accessories, fixes for Waystones and Simply Swords, a Copycats+ client crash fix, a server freeze guard and a client guard for block entity maps. Mostly server-side; the client gets two crash fixes and one optional Mekanism rendering safety patch. Mixin-based, configurable, with per-patch kill switches and runtime safety checks.
+Optimization patches for BotanyPots, Refined Storage, Mekanism, CosmeticWeapons, CosmeticArmours, Accessories, FastSuite and Crabber's Delight, fixes for Waystones and Simply Swords, a Copycats+ client crash fix, a server freeze guard and a client guard for block entity maps. Mostly server-side; the client gets two crash fixes and one optional Mekanism rendering safety patch. Mixin-based, configurable, with per-patch kill switches and runtime safety checks.
 ```
 
 ## Release title
 
 ```text
-ArcadiaTweaks 0.3.0
+ArcadiaTweaks 0.3.1
 ```
 
-Every file uses the display name `ArcadiaTweaks <version>` (for example `ArcadiaTweaks 0.3.0`), never the jar file name.
+Every file uses the display name `ArcadiaTweaks <version>` (for example `ArcadiaTweaks 0.3.1`), never the jar file name.
 
 ## Changelog
 
 ```markdown
+## 0.3.1
+
+### Performance
+
+Work the pack repeats for nothing, found with Spark on our live servers and skipped with the same results. Dedicated server only, new module `sparework` with one switch per patch.
+
+- FastSuite: a recipe type with no parallel recipe (all of Create's) no longer goes through the thread pool to stream an empty list. Pinned to FastSuite 6.0.7.
+- Simply Swords: a read of a chest slot no longer allocates a stack for the pity loot, and chests roll their pity loot as before. Pinned to Simply Swords 1.70.2.
+- Structure lookups, which Twilight Forest makes for every natural spawn: a fully loaded chunk is read directly instead of asking the chunk system for an older status of it.
+- Crabber's Delight: the search of the 343 positions around each player, every tick, is skipped when the loaded chunks prove it finds nothing and changes nothing. Pinned to Crabber's Delight 1.3.1.
+- CosmeticArmours 1.6: the two new item chains go through the item presence gate.
+
 ## 0.3.0
 
 ### Performance
@@ -212,7 +227,7 @@ The Runic Forge turned the implicit awakening level of a unique weapon without a
 
 ### CosmeticWeapons / CosmeticArmours
 
-Every player tick, 15 advancement procedures of the two mods test several items with `Inventory.contains`, and each call scans the inventory, Curios and Accessories. With the gate on, items that are not in the inventory are answered without a new scan. The answers and advancements are identical, and the module turns itself off at startup if another mod hooks `Inventory.contains` or the ItemStack comparison.
+Every player tick, 17 advancement procedures of the two mods test several items with `Inventory.contains`, and each call scans the inventory, Curios and Accessories. With the gate on, items that are not in the inventory are answered without a new scan. The answers and advancements are identical, and the module turns itself off at startup if another mod hooks `Inventory.contains` or the ItemStack comparison.
 
 ```toml
 [cosmetic]
@@ -227,6 +242,18 @@ Skips a scan in `Inventory.contains(ItemStack)` that can never match (Accessorie
 [accessories]
 contains_fast_path = true
 tick_allocation_trimmed = true
+```
+
+### Spare work
+
+Work other mods and the game repeat for nothing: FastSuite's thread pool for recipe types without parallel recipes, a stack per read of a chest slot in Simply Swords, chunk system calls for the structure data of loaded chunks, and Crabber's Delight's search around every player. Same results at the same moments, on dedicated servers only. The patches on FastSuite, Simply Swords and Crabber's Delight switch themselves off on any other build of those mods.
+
+```toml
+[sparework]
+fastsuite_skip_empty_parallel_lookup = true
+simplyswords_reuse_pity_stack = true
+structure_lookup_uses_loaded_chunk = true
+crabbersdelight_skip_empty_tackle_box_search = true
 ```
 
 ### Safety guards

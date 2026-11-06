@@ -65,8 +65,8 @@ dependencies {
     compileOnly  files("libs/simplyswords-neoforge-${simplyswords_version}.jar")
     // Cosmetic module: the presence gate targets the CosmeticWeapons / CosmeticArmours procedures and reads
     // Curios slots through the Curios API (soft class, only loaded when Curios is installed).
-    compileOnly  files("libs/CosmeticWeapons - ${cosmeticweapons_version} - 1.21.1 - NeoForge.jar")
-    compileOnly  files("libs/CosmeticArmours - ${cosmeticarmours_version} - 1.21.1 - NeoForge.jar")
+    compileOnly  files("libs/CosmeticWeapons-${cosmeticweapons_version}-1.21.1-NeoForge.jar")
+    compileOnly  files("libs/CosmeticArmours-${cosmeticarmours_version}-1.21.1-NeoForge.jar")
     compileOnly  files("libs/curios-neoforge-${curios_version}.jar")
     compileOnly  files("libs/accessories-neoforge-${accessories_version}.jar")
     // Accessories module: C1 and T-A target Accessories internals (owo-lib API types in signatures).
@@ -75,6 +75,8 @@ dependencies {
     compileOnly  files("libs/endec-${endec_version}.jar")
     // Copycats+ module: the material storage fix targets MultiStateCopycatBlockEntity.
     compileOnly  files("libs/copycats-${copycats_version}-neoforge.jar")
+    // Spare work module: the tackle box search fast path checks for TackleBoxBlockEntity.
+    compileOnly  files("libs/crabbersdelight-1.21.1-${crabbersdelight_version}.jar")
 
     runtimeOnly  files("libs/botanypots-neoforge-1.21.1-${botanypots_version}.jar")
     runtimeOnly  files("libs/bookshelf-neoforge-1.21.1-${bookshelf_version}.jar")
@@ -93,8 +95,8 @@ dependencies {
     runtimeOnly  files("libs/kotlinforforge-${kotlinforforge_version}-all.jar")
     // CosmeticWeapons / CosmeticArmours, the mods that hook Inventory.contains (Curios, Accessories) and the
     // ItemStack comparison (GeckoLib, RecipeEssentials), so the cosmetic GameTests run in the modpack shape.
-    runtimeOnly  files("libs/CosmeticWeapons - ${cosmeticweapons_version} - 1.21.1 - NeoForge.jar")
-    runtimeOnly  files("libs/CosmeticArmours - ${cosmeticarmours_version} - 1.21.1 - NeoForge.jar")
+    runtimeOnly  files("libs/CosmeticWeapons-${cosmeticweapons_version}-1.21.1-NeoForge.jar")
+    runtimeOnly  files("libs/CosmeticArmours-${cosmeticarmours_version}-1.21.1-NeoForge.jar")
     runtimeOnly  files("libs/Patchouli-1.21.1-${patchouli_version}-NEOFORGE.jar")
     runtimeOnly  files("libs/curios-neoforge-${curios_version}.jar")
     runtimeOnly  files("libs/accessories-neoforge-${accessories_version}.jar")
@@ -102,6 +104,11 @@ dependencies {
     runtimeOnly  files("libs/geckolib-neoforge-1.21.1-${geckolib_version}.jar")
     runtimeOnly  files("libs/recipeessentials-1.21.1-${recipeessentials_version}.jar")
     runtimeOnly  files("libs/cupboard-1.21.1-${cupboard_version}.jar")
+    // Spare work module targets and their dependencies, so its GameTests run against the production jars.
+    runtimeOnly  files("libs/FastSuite-1.21.1-${fastsuite_version}.jar")
+    runtimeOnly  files("libs/Placebo-1.21.1-${placebo_version}.jar")
+    runtimeOnly  files("libs/crabbersdelight-1.21.1-${crabbersdelight_version}.jar")
+    runtimeOnly  files("libs/FarmersDelight-1.21.1-${farmersdelight_version}.jar")
 
     // Copycats+ needs Create at runtime, so it stays out of the dev runs; the tests only read its bytecode.
     testRuntimeOnly files("libs/copycats-${copycats_version}-neoforge.jar")
@@ -218,7 +225,8 @@ def patchMixinConfigs = [
     simplyswords  : "${mod_id}.simplyswords.mixins.json",
     cosmetic      : "${mod_id}.cosmetic.mixins.json",
     accessories   : "${mod_id}.accessories.mixins.json",
-    copycats      : "${mod_id}.copycats.mixins.json"
+    copycats      : "${mod_id}.copycats.mixins.json",
+    sparework     : "${mod_id}.sparework.mixins.json"
 ]
 
 def patchJarVariants = [
@@ -226,8 +234,8 @@ def patchJarVariants = [
         taskName      : 'jarAllPatches',
         classifier    : 'all',
         displayName   : 'all patches',
-        mixinConfigs  : [baseMixinConfig, patchMixinConfigs.botany, patchMixinConfigs.refinedstorage, patchMixinConfigs.mekanism, patchMixinConfigs.waystones, patchMixinConfigs.simplyswords, patchMixinConfigs.cosmetic, patchMixinConfigs.accessories, patchMixinConfigs.copycats],
-        optionalDeps  : ['botanypots', 'refinedstorage', 'mekanism', 'waystones', 'ftbteams', 'simplyswords', 'cosmeticweaponsmod', 'cosmeticarmoursmod', 'accessories', 'copycats'],
+        mixinConfigs  : [baseMixinConfig, patchMixinConfigs.botany, patchMixinConfigs.refinedstorage, patchMixinConfigs.mekanism, patchMixinConfigs.waystones, patchMixinConfigs.simplyswords, patchMixinConfigs.cosmetic, patchMixinConfigs.accessories, patchMixinConfigs.copycats, patchMixinConfigs.sparework],
+        optionalDeps  : ['botanypots', 'refinedstorage', 'mekanism', 'waystones', 'ftbteams', 'simplyswords', 'cosmeticweaponsmod', 'cosmeticarmoursmod', 'accessories', 'copycats', 'fastsuite', 'crabbersdelight'],
         excludedClasses: []
     ],
     botany        : [
@@ -249,7 +257,9 @@ def patchJarVariants = [
             'com/teamarcadia/arcadiatweaks/neoforge/cosmetic/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/accessories/**',
             'com/teamarcadia/arcadiatweaks/neoforge/accessories/**',
-            'com/teamarcadia/arcadiatweaks/neoforge/mixin/copycats/**'
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/copycats/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/sparework/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/sparework/**'
         ]
     ],
     refinedstorage: [
@@ -271,7 +281,9 @@ def patchJarVariants = [
             'com/teamarcadia/arcadiatweaks/neoforge/cosmetic/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/accessories/**',
             'com/teamarcadia/arcadiatweaks/neoforge/accessories/**',
-            'com/teamarcadia/arcadiatweaks/neoforge/mixin/copycats/**'
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/copycats/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/sparework/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/sparework/**'
         ]
     ],
     mekanism      : [
@@ -293,7 +305,9 @@ def patchJarVariants = [
             'com/teamarcadia/arcadiatweaks/neoforge/cosmetic/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/accessories/**',
             'com/teamarcadia/arcadiatweaks/neoforge/accessories/**',
-            'com/teamarcadia/arcadiatweaks/neoforge/mixin/copycats/**'
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/copycats/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/sparework/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/sparework/**'
         ]
     ],
     waystones     : [
@@ -315,7 +329,9 @@ def patchJarVariants = [
             'com/teamarcadia/arcadiatweaks/neoforge/cosmetic/**',
             'com/teamarcadia/arcadiatweaks/neoforge/mixin/accessories/**',
             'com/teamarcadia/arcadiatweaks/neoforge/accessories/**',
-            'com/teamarcadia/arcadiatweaks/neoforge/mixin/copycats/**'
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/copycats/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/mixin/sparework/**',
+            'com/teamarcadia/arcadiatweaks/neoforge/sparework/**'
         ]
     ]
 ]
@@ -432,6 +448,30 @@ side = "BOTH"
 # Copycats+ is optional at load time. Its crash fix only applies when it is present.
 [[dependencies.${mod_id}]]
 modId = "copycats"
+type = "optional"
+versionRange = "[0.0.0,)"
+ordering = "AFTER"
+side = "BOTH"
+"""
+    }
+    if (variant.optionalDeps.contains('fastsuite')) {
+        optionalDependencyBlocks += """
+
+# FastSuite is optional at load time. Its spare work patch only applies to the verified build.
+[[dependencies.${mod_id}]]
+modId = "fastsuite"
+type = "optional"
+versionRange = "[0.0.0,)"
+ordering = "AFTER"
+side = "BOTH"
+"""
+    }
+    if (variant.optionalDeps.contains('crabbersdelight')) {
+        optionalDependencyBlocks += """
+
+# Crabber's Delight is optional at load time. Its spare work patch only applies to the verified build.
+[[dependencies.${mod_id}]]
+modId = "crabbersdelight"
 type = "optional"
 versionRange = "[0.0.0,)"
 ordering = "AFTER"
@@ -599,7 +639,7 @@ jar {
             'Implementation-Title'    : mod_name,
             'Implementation-Version'  : mod_version,
             'Implementation-Vendor'   : mod_authors,
-            'MixinConfigs'            : "${mod_id}.mixins.json,${mod_id}.botany.mixins.json,${mod_id}.refinedstorage.mixins.json,${mod_id}.mekanism.mixins.json,${mod_id}.waystones.mixins.json,${mod_id}.simplyswords.mixins.json,${mod_id}.cosmetic.mixins.json,${mod_id}.accessories.mixins.json,${mod_id}.copycats.mixins.json"
+            'MixinConfigs'            : "${mod_id}.mixins.json,${mod_id}.botany.mixins.json,${mod_id}.refinedstorage.mixins.json,${mod_id}.mekanism.mixins.json,${mod_id}.waystones.mixins.json,${mod_id}.simplyswords.mixins.json,${mod_id}.cosmetic.mixins.json,${mod_id}.accessories.mixins.json,${mod_id}.copycats.mixins.json,${mod_id}.sparework.mixins.json"
         ])
     }
 }

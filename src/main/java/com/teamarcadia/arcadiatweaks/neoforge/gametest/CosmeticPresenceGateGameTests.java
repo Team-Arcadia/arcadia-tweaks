@@ -67,7 +67,7 @@ import java.util.function.UnaryOperator;
 /**
  * Differential checks of the CosmeticWeapons / CosmeticArmours item-presence gate ({@link CosmeticGate}).
  *
- * Every scenario runs all 26 {@code contains}-based procedures of both mods through their public
+ * Every scenario runs all 25 {@code contains}-based item procedures of both mods through their public
  * {@code execute(Entity)} on a real {@code ServerPlayer} twice, gate off then gate on, from the same starting
  * state, and compares the outcome: done flag and completed criteria of every advancement, plus every
  * vanilla, Curios and Accessories stack with its components. Item lists and advancement ids are read from
@@ -86,24 +86,26 @@ public final class CosmeticPresenceGateGameTests {
     private static final String BATCH = ArcadiaTweaks.MOD_ID;
     private static final String EXECUTE_DESC = "(Lnet/neoforged/bus/api/Event;Lnet/minecraft/world/entity/Entity;)V";
 
-    /** Every tick procedure of both mods that calls Inventory.contains (design table, N >= 1). */
+    /**
+     * Every tick procedure of both mods that calls Inventory.contains (design table, N >= 1). The two Chef
+     * procedures of CosmeticArmours are not listed: one contains call, then they read the equipment.
+     */
     private static final List<String> CONTAINS_PROCEDURES = List.of(
             "cosmeticarmoursmod.procedures.AngelHaloAchivementProcedureProcedure",
             "cosmeticarmoursmod.procedures.AwokenHaloAdvProdProcedure",
-            "cosmeticarmoursmod.procedures.BlankArmourStyleAdvProdProcedure",
+            "cosmeticarmoursmod.procedures.ClothAdvProdProcedure",
             "cosmeticarmoursmod.procedures.FallenAngelHaloAchievementProcedureProcedure",
             "cosmeticarmoursmod.procedures.GloriousCoronationProdProcedure",
             "cosmeticarmoursmod.procedures.GoldenHaloAchievementProcedureProcedure",
-            "cosmeticarmoursmod.procedures.ReclaimedArmourStyleAdvProdProcedure",
-            "cosmeticarmoursmod.procedures.SculkedArmourStyleAdvProdProcedure",
+            "cosmeticarmoursmod.procedures.ThreadAdvProdProcedure",
             "cosmeticarmoursmod.procedures.WingedHaloAchievementProcedureProcedure",
             "cosmeticweaponsmod.procedures.AmethystSwordAdvProdProcedure",
             "cosmeticweaponsmod.procedures.BlankWeaponStyleAdvProdProcedure",
-            "cosmeticweaponsmod.procedures.BloomingWeaponStyleTemplateAdvProdProcedure",
+            "cosmeticweaponsmod.procedures.BloomingWeaponStyleAdvProdProcedure",
             "cosmeticweaponsmod.procedures.DiamondTierWeaponAdvProdProcedure",
             "cosmeticweaponsmod.procedures.EmeraldSwordAdvProdProcedure",
+            "cosmeticweaponsmod.procedures.FungalWeaponStyleAdvProdProcedure",
             "cosmeticweaponsmod.procedures.GildedNetheriteTierWeaponAdvProdProcedure",
-            "cosmeticweaponsmod.procedures.GlassSwordAdvProdProcedure",
             "cosmeticweaponsmod.procedures.GoldTierWeaponAdvProdProcedure",
             "cosmeticweaponsmod.procedures.IronTierWeaponAdvProdProcedure",
             "cosmeticweaponsmod.procedures.NetheriteTierWeaponAdvProdProcedure",
@@ -387,7 +389,7 @@ public final class CosmeticPresenceGateGameTests {
             CosmeticGate.setBrokenForTesting(false);
             remove(player);
         }
-        helper.assertValueEqual(caught, 15, "every gated procedure should expose the wrong gate");
+        helper.assertValueEqual(caught, CosmeticGate.GATED_PROCEDURES.size(), "every gated procedure should expose the wrong gate");
         helper.succeed();
     }
 
@@ -505,7 +507,7 @@ public final class CosmeticPresenceGateGameTests {
 
     /**
      * Microbenchmark, only with {@code -ParcadiaCosmeticBench=true}: one player with a full, realistic
-     * inventory and none of the advancements done, all 26 procedures per "player tick", gate off vs on.
+     * inventory and none of the advancements done, all 25 procedures per "player tick", gate off vs on.
      */
     @GameTest(template = TEMPLATE, batch = BATCH, timeoutTicks = 100)
     public static void cosmeticPresenceGateBenchmark(GameTestHelper helper) {
@@ -535,19 +537,19 @@ public final class CosmeticPresenceGateGameTests {
             final double onAll = results[1][0] / (2.0 * timed);
             final double offGated = results[0][1] / (2.0 * timed);
             final double onGated = results[1][1] / (2.0 * timed);
-            ArcadiaTweaks.LOGGER.info("[cosmetic-bench] all 26 procedures: off={} ns/tick on={} ns/tick ratio={}",
+            ArcadiaTweaks.LOGGER.info("[cosmetic-bench] all 25 procedures: off={} ns/tick on={} ns/tick ratio={}",
                     Math.round(offAll), Math.round(onAll), String.format("%.3f", onAll / offAll));
-            ArcadiaTweaks.LOGGER.info("[cosmetic-bench] 15 gated procedures: off={} ns/tick on={} ns/tick ratio={}",
+            ArcadiaTweaks.LOGGER.info("[cosmetic-bench] 17 gated procedures: off={} ns/tick on={} ns/tick ratio={}",
                     Math.round(offGated), Math.round(onGated), String.format("%.3f", onGated / offGated));
             final String method = " GameTest-hosted bench (-ParcadiaCosmeticBench=true), same JVM, 2 rounds x (20k warm-up + " + timed
                     + " timed iterations) per mode, alternating off/on. Unplaced ServerPlayer: 36 filler main stacks, 4 iron armour,"
                     + " offhand torches, up to 5 Curios and 5 Accessories items (as many as the slots take), no advancement done. 'before' = gate off through the kill-switch path"
                     + " (Mixin present, every call passed to the original).";
-            MicroBenchResults.record("cosmetic", "cosmetic: all 26 contains procedures (CosmeticWeapons + CosmeticArmours) per player tick",
-                    "ns/player tick", offAll, onAll, "All 26 procedures' execute per iteration." + method
+            MicroBenchResults.record("cosmetic", "cosmetic: all 25 contains procedures (CosmeticWeapons + CosmeticArmours) per player tick",
+                    "ns/player tick", offAll, onAll, "All 25 procedures' execute per iteration." + method
                             + String.format(java.util.Locale.ROOT, " Ratio %.3f.", onAll / offAll));
-            MicroBenchResults.record("cosmetic", "cosmetic: 15 gated procedures (N >= 2) per player tick",
-                    "ns/player tick", offGated, onGated, "Only the 15 gated procedures; the 11 single-item ones are not targeted." + method
+            MicroBenchResults.record("cosmetic", "cosmetic: 17 gated procedures (N >= 2) per player tick",
+                    "ns/player tick", offGated, onGated, "Only the 17 gated procedures; the 8 single-item ones are not targeted." + method
                             + String.format(java.util.Locale.ROOT, " Ratio %.3f.", onGated / offGated));
             helper.assertTrue(countDone(player) == 0, "bench inventory must not grant anything");
         } finally {
