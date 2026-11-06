@@ -14,6 +14,7 @@ Current version: **0.3.1** (see [CHANGELOG.md](CHANGELOG.md)).
 | `cosmetic` | CosmeticWeapons + CosmeticArmours | Item presence gate for the advancement tick procedures (fewer inventory scans per player tick) |
 | `accessories` | Accessories | `contains` fast path and a lighter per-entity tick |
 | `copycats` | Create: Copycats+ | Client crash fix: a removed copycat no longer empties its materials while Sodium still meshes it |
+| `macawsdoors` | Macaw's Doors | Crash and freeze fixes for the garage door: refused writes in a Bobby cached chunk, closing above the void |
 | `sparework` | FastSuite, Simply Swords, Crabber's Delight, vanilla structure lookups | Work repeated for nothing, skipped with the same results (dedicated server only) |
 | `[safety]` | Vanilla | Entity movement guard against runaway velocities that freeze the server, and a client guard that keeps the block entity maps of client chunks on the render thread |
 
@@ -179,6 +180,7 @@ Required jars (and the version each must match in `gradle.properties`):
 | `Placebo-1.21.1-<ver>.jar` (dev runtime)       | `placebo_version`      |
 | `crabbersdelight-1.21.1-<ver>.jar`             | `crabbersdelight_version` |
 | `FarmersDelight-1.21.1-<ver>.jar` (dev runtime) | `farmersdelight_version` |
+| `mcw-doors-<ver>-mc1.21.1neoforge.jar`         | `mcwdoors_version`     |
 
 `libs/*.jar` is gitignored - each developer copies their own from the production pack. When the pack updates a targeted mod, refresh `libs/` and bump the corresponding `gradle.properties` values to match the new filenames.
 
@@ -199,7 +201,7 @@ Required jars (and the version each must match in `gradle.properties`):
 ./gradlew runGameTestServer
 ```
 
-The suite is 95 JUnit tests and 64 GameTests. `./gradlew runGameTestServer -ParcadiaBench` also runs the microbenchmarks.
+The suite is 98 JUnit tests and 70 GameTests. `./gradlew runGameTestServer -ParcadiaBench` also runs the microbenchmarks.
 
 The GameTests cover the entity movement guard, the Waystones team visibility (with real FTB Teams parties) and the Runic Forge (a FakePlayer driving the real Simply Swords menu). Simply Swords needs SimplyTooltips, fzzy_config and Kotlin for Forge at runtime, hence the three dev runtime jars above.
 
@@ -494,6 +496,7 @@ runicForgeImplicitLevelLock = true
 gloamStainPurgeDeferredDiscard = true
 copycatsKeepMaterialsOnRemove = true
 clientBlockEntityThreadGuard = true
+macawsGarageDoorGuard = true
 ```
 
 | Setting | Best value | What it does |
@@ -503,6 +506,7 @@ clientBlockEntityThreadGuard = true
 | `gloamStainPurgeDeferredDiscard` | `true` | Simply Swords: the gloam stain purge no longer crashes the server by removing entities while it walks the level's entity index (bug #328). |
 | `copycatsKeepMaterialsOnRemove` | `true` | Copycats+: a removed multi-state copycat keeps its materials, so a Sodium mesh task still using it no longer crashes the client with a NullPointerException in `isCTEnabled`. |
 | `clientBlockEntityThreadGuard` | `true` | Client only, read from each player's own config file. A block entity read or write on a client chunk from another thread than the render thread no longer changes the chunk's maps under it (`ConcurrentModificationException` in `LevelChunk.updateBlockEntityTicker`, `ArrayIndexOutOfBoundsException` in `rehash`). The first five such calls are logged with a stack trace that names the calling mod. |
+| `macawsGarageDoorGuard` | `true` | Macaw's Doors 1.1.5, on both sides. A garage door whose write was refused (a Bobby cached chunk refuses them all) no longer toggles its neighbours, which overflowed the stack, and the fill below a closing door stops at the bottom of the world instead of running on for about four billion positions. Without either case nothing changes. Any other Macaw's Doors build keeps its own behaviour, with one warning. |
 
 Simply Swords reads a unique weapon without its `simplyswords:awakening` component as fully
 awakened (level 8): weapons from before the awakening system and every unique handed out as a
@@ -598,6 +602,7 @@ Version actuelle : **0.3.1** (voir [CHANGELOG.md](CHANGELOG.md)).
 | `cosmetic` | CosmeticWeapons + CosmeticArmours | Filtre de présence des objets pour les procédures de progrès exécutées à chaque tick (moins de parcours d'inventaire par tick joueur) |
 | `accessories` | Accessories | Raccourci de `contains` et tick d'entité allégé |
 | `copycats` | Create: Copycats+ | Correctif de crash client : un copycat retiré ne vide plus ses matériaux pendant que Sodium construit encore son mesh |
+| `macawsdoors` | Macaw's Doors | Correctifs de crash et de gel de la porte de garage : écritures refusées dans un chunk en cache de Bobby, fermeture au-dessus du vide |
 | `sparework` | FastSuite, Simply Swords, Crabber's Delight, recherches de structures vanilla | Travail répété pour rien, sauté avec les mêmes résultats (serveur dédié uniquement) |
 | `[safety]` | Vanilla | Garde-fou de mouvement des entités contre les vitesses incontrôlées qui figent le serveur, et garde client qui laisse les tables de block entities des chunks client au thread de rendu |
 
@@ -763,6 +768,7 @@ Jars requis (et la version à faire correspondre dans `gradle.properties`) :
 | `Placebo-1.21.1-<ver>.jar` (exécution de dev)  | `placebo_version`      |
 | `crabbersdelight-1.21.1-<ver>.jar`             | `crabbersdelight_version` |
 | `FarmersDelight-1.21.1-<ver>.jar` (exécution de dev) | `farmersdelight_version` |
+| `mcw-doors-<ver>-mc1.21.1neoforge.jar`         | `mcwdoors_version`     |
 
 `libs/*.jar` est ignoré par git : chaque développeur copie les siens depuis le pack de production. Lorsque le pack met à jour un mod ciblé, rafraîchir `libs/` et mettre à jour les valeurs correspondantes de `gradle.properties` selon les nouveaux noms de fichiers.
 
@@ -783,7 +789,7 @@ Jars requis (et la version à faire correspondre dans `gradle.properties`) :
 ./gradlew runGameTestServer
 ```
 
-La suite compte 95 tests JUnit et 64 GameTests. `./gradlew runGameTestServer -ParcadiaBench` lance aussi les microbenchmarks.
+La suite compte 98 tests JUnit et 70 GameTests. `./gradlew runGameTestServer -ParcadiaBench` lance aussi les microbenchmarks.
 
 Les GameTests couvrent le garde-fou de mouvement des entités, la visibilité d'équipe de Waystones (avec de vraies parties FTB Teams) et la Runic Forge (un FakePlayer qui manipule le vrai menu de Simply Swords). Simply Swords a besoin de SimplyTooltips, fzzy_config et Kotlin for Forge à l'exécution, d'où les trois jars d'exécution de dev ci-dessus.
 
@@ -1081,6 +1087,7 @@ runicForgeImplicitLevelLock = true
 gloamStainPurgeDeferredDiscard = true
 copycatsKeepMaterialsOnRemove = true
 clientBlockEntityThreadGuard = true
+macawsGarageDoorGuard = true
 ```
 
 | Réglage | Meilleure valeur | Effet |
@@ -1090,6 +1097,7 @@ clientBlockEntityThreadGuard = true
 | `gloamStainPurgeDeferredDiscard` | `true` | Simply Swords : la purge des taches de Gloam ne fait plus crasher le serveur en retirant des entités pendant qu'elle parcourt l'index des entités du monde (bug #328). |
 | `copycatsKeepMaterialsOnRemove` | `true` | Copycats+ : un copycat multi-état retiré garde ses matériaux ; une tâche de mesh Sodium qui l'utilise encore ne fait plus crasher le client (NullPointerException dans `isCTEnabled`). |
 | `clientBlockEntityThreadGuard` | `true` | Client uniquement, lu dans le fichier de config de chaque joueur. Une lecture ou écriture de block entity sur un chunk client depuis un autre thread que celui du rendu ne modifie plus les tables du chunk sous ses pieds (`ConcurrentModificationException` dans `LevelChunk.updateBlockEntityTicker`, `ArrayIndexOutOfBoundsException` dans `rehash`). Les cinq premiers appels de ce type sont journalisés avec une pile d'appels qui nomme le mod appelant. |
+| `macawsGarageDoorGuard` | `true` | Macaw's Doors 1.1.5, des deux côtés. Une porte de garage dont l'écriture est refusée (un chunk en cache de Bobby les refuse toutes) ne bascule plus ses voisines, ce qui faisait déborder la pile, et le remplissage sous une porte qui se ferme s'arrête en bas du monde au lieu de continuer sur environ quatre milliards de positions. Hors de ces deux cas, rien ne change. Toute autre version de Macaw's Doors garde son comportement, avec un avertissement. |
 
 Simply Swords lit une arme unique sans son composant `simplyswords:awakening` comme entièrement
 éveillée (niveau 8) : les armes antérieures au système d'éveil et toutes les armes uniques
