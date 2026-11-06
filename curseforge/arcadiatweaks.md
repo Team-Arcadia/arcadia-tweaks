@@ -61,10 +61,10 @@ Optimization patches for BotanyPots, Refined Storage, Mekanism, CosmeticWeapons,
 ## Release title
 
 ```text
-ArcadiaTweaks 0.3.1
+ArcadiaTweaks 0.3.1 (NeoForge 1.21.1)
 ```
 
-Every file uses the display name `ArcadiaTweaks <version>` (for example `ArcadiaTweaks 0.3.1`), never the jar file name.
+Every file uses the display name `ArcadiaTweaks <version> (<Loader> <Minecraft version>)` (for example `ArcadiaTweaks 0.3.1 (NeoForge 1.21.1)`), never the jar file name. On Modrinth, the version number is `<version>+<loader>-<Minecraft version>` (for example `0.3.1+neoforge-1.21.1`) with the same title.
 
 ## Changelog
 

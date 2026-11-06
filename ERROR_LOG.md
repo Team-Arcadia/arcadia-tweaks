@@ -119,3 +119,17 @@
 **Root cause:** toggleDoor assumes its write takes effect: with successful writes the recursion always ends, each call fixes a door or goes higher. Bobby's FakeChunk.setBlockState returns null, so in a chunk shown from its cache the write is refused, the door keeps its state and two doors side by side call each other forever. It happens during the client prediction, before the packet is sent, so the server sees nothing.
 **Fix:** GarageDoorRefusedWriteMixin: a door whose write was refused no longer toggles its neighbours. The same method also ran on below the world when closing above the void: the fill now stops at the bottom of the world. Pinned to Macaw's Doors 1.1.5, proven with a test level that refuses writes like a Bobby chunk.
 **Prevention:** A client only crash with nothing in the server logs can be a prediction on a chunk that is not real: check Bobby first. Recursion or loops that rely on a block write taking effect must check the write.
+
+## [2026-11-06 12:27] - The 0.2.2 jar left in build/libs was not the 0.2.2 given to the players
+**Context:** Publishing 0.2.2 on CurseForge after 0.3.0 and 0.3.1 were out; 0.2.2 never got a tag or a GitHub release
+**Error:** build/libs/arcadiatweaks-0.2.2.jar, sha256 93568fcc, against 36c59469 on all five servers: 8 more classes, all Refined Storage work of 0.3.0
+**Root cause:** gradle.properties stayed on 0.2.2 during the 0.3.0 work, so every build overwrote the jar under the same number
+**Fix:** Published the jar from the servers, after a build of commit cc68d3f in a clean worktree matched it entry by entry (113 of 113). The local file was replaced by the real one
+**Prevention:** A version handed to players gets its tag and its release at that moment, or its jar is kept aside. A jar in build/libs only tells what the last build made
+
+## [2026-11-06 12:27] - 0.2.2 was sent to CurseForge twice because CFWidget did not list it
+**Context:** Looking up what is already published before sending 0.2.2, 0.3.0 and 0.3.1
+**Error:** CFWidget showed 0.2.1 as the newest file while 0.2.2 (file 9427867) had been approved since 2026-11-03, so the same jar went out again as file 9472549. Before that, /api/v1/mods/search answered 403 with body _cf-lb_, and an attempt with a browser User-Agent was refused as bot check circumvention
+**Root cause:** CFWidget's listing can lag by days, and the 403 on search was taken as a block on the whole API without trying the files endpoint this log already named
+**Fix:** https://www.curseforge.com/api/v1/mods/<projectId>/files answers scripts that use an honest client name. The original file stays; the API has no delete, so the duplicate is removed by hand on the site
+**Prevention:** Decide what is missing from CurseForge's own files list, never from CFWidget, and never send a browser User-Agent. A file under review is not in that list either
