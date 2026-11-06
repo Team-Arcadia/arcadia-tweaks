@@ -6,6 +6,11 @@ All notable changes to ArcadiaTweaks are documented here.
 
 ## [0.3.1] - 2026-11-06
 
+### Fixed
+
+- **Macaw's Doors: a double garage door no longer crashes the client** — clicking a garage door next to another one, in a chunk Bobby shows from its cache before the server has sent it, crashed the client with a `StackOverflowError` in `GarageDoor.toggleDoor` (2026-11-06): Bobby's chunks refuse every block write, so the two doors called each other without end. A door whose write was refused no longer toggles its neighbours; when writes go through, every call is unchanged. Players get the fix with the client jar. Pinned to Macaw's Doors 1.1.5, switch `[safety] macawsGarageDoorGuard`.
+- **Macaw's Doors: closing a garage door above the void no longer freezes the game** — the fill below a closing door went on past the bottom of the world for about four billion positions, on the server as on the client, long enough for the watchdog to stop a server. It now stops at the bottom of the world. Found while fixing the crash above, not seen on the live servers. Same pin and switch.
+
 ### Performance
 
 - **New `sparework` module: work the pack repeats for nothing, skipped with the same results** — found with Spark on the live servers. Same answers at the same moments, dedicated server only, one kill switch per patch under `[sparework]` and the whole module under `[modules] sparework`. The times below are per call, measured on a copy of the server pack.
@@ -21,6 +26,11 @@ All notable changes to ArcadiaTweaks are documented here.
 - New admin menu row "Spare work" with the module switch and the four patches.
 - The startup log says whether each patch is applied (`[sparework] ... patches applied: fastsuite=true ...`).
 - GameTests: differential tests for each patch, and a way to run them on a copy of the server pack (`-Darcadia.packTests=true`).
+
+### Correctifs
+
+- **Macaw's Doors : une porte de garage double ne fait plus crasher le client** — cliquer sur une porte de garage à côté d'une autre, dans un chunk que Bobby affiche depuis son cache avant que le serveur l'ait envoyé, faisait crasher le client avec un `StackOverflowError` dans `GarageDoor.toggleDoor` (2026-11-06) : les chunks de Bobby refusent toute écriture de bloc, donc les deux portes s'appelaient sans fin. Une porte dont l'écriture est refusée ne bascule plus ses voisines ; quand les écritures passent, chaque appel reste identique. Les joueurs reçoivent le correctif avec le jar client. Lié à Macaw's Doors 1.1.5, interrupteur `[safety] macawsGarageDoorGuard`.
+- **Macaw's Doors : fermer une porte de garage au-dessus du vide ne gèle plus le jeu** — le remplissage sous une porte qui se ferme continuait sous le bas du monde sur environ quatre milliards de positions, côté serveur comme côté client, assez longtemps pour que le watchdog arrête un serveur. Il s'arrête maintenant en bas du monde. Trouvé en corrigeant le crash ci-dessus, pas observé sur les serveurs en production. Même liaison et même interrupteur.
 
 ### Performances
 

@@ -112,3 +112,10 @@
 **Root cause:** Lootr cancels RandomizableContainer.unpackLootTable for a chest it is about to convert, after the HEAD inject of Simply Swords captured the table and before its RETURN inject, so a table stays at the bottom of the pity stack for the life of the JVM. Global loot modifiers of the pack also use a random that the loot seed does not control.
 **Fix:** Tests start from an empty stack and cover a stack with a leftover table. The real fill test uses a dropper, which Lootr leaves alone. In the pack the pity state is compared, the items only on the dev runs.
 **Prevention:** A test that only ever ran in the dev environment proves nothing about the pack: run it on a copy of the server pack. Baseline a differential test against itself before blaming the patch when seeds do not reproduce.
+
+## [2026-11-06 03:43] - StackOverflowError in Macaw's Doors GarageDoor.toggleDoor when clicking a double garage door
+**Context:** A player crash report on the live client pack, toggling a garage door; nothing in the server logs
+**Error:** java.lang.StackOverflowError: Unexpected error, at com.mcwdoors.kikoz.objects.GarageDoor.toggleDoor(GarageDoor.java:117) repeated, on the Render thread
+**Root cause:** toggleDoor assumes its write takes effect: with successful writes the recursion always ends, each call fixes a door or goes higher. Bobby's FakeChunk.setBlockState returns null, so in a chunk shown from its cache the write is refused, the door keeps its state and two doors side by side call each other forever. It happens during the client prediction, before the packet is sent, so the server sees nothing.
+**Fix:** GarageDoorRefusedWriteMixin: a door whose write was refused no longer toggles its neighbours. The same method also ran on below the world when closing above the void: the fill now stops at the bottom of the world. Pinned to Macaw's Doors 1.1.5, proven with a test level that refuses writes like a Bobby chunk.
+**Prevention:** A client only crash with nothing in the server logs can be a prediction on a chunk that is not real: check Bobby first. Recursion or loops that rely on a block write taking effect must check the write.

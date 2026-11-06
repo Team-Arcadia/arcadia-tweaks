@@ -38,7 +38,7 @@ public final class SpareWorkPackRun {
             return;
         }
         final Set<String> namespaces = Set.of(ArcadiaTweaks.MOD_ID);
-        for (Class<?> tests : List.of(SpareWorkGameTests.class, SpareWorkPackGameTests.class, CosmeticPresenceGateGameTests.class)) {
+        for (Class<?> tests : List.of(SpareWorkGameTests.class, SpareWorkPackGameTests.class, CosmeticPresenceGateGameTests.class, GarageDoorGameTests.class)) {
             for (Method method : tests.getDeclaredMethods()) {
                 GameTestRegistry.register(method, namespaces);
             }

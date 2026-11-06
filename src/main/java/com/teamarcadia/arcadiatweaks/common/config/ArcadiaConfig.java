@@ -27,6 +27,7 @@ public final class ArcadiaConfig {
     public static final ModConfigSpec.BooleanValue GLOAM_PURGE_DEFERRED_DISCARD;
     public static final ModConfigSpec.BooleanValue COPYCATS_KEEP_MATERIALS_ON_REMOVE;
     public static final ModConfigSpec.BooleanValue CLIENT_BLOCK_ENTITY_THREAD_GUARD;
+    public static final ModConfigSpec.BooleanValue MACAWS_GARAGE_DOOR_GUARD;
 
     public static final BotanyConfig BOTANY;
     public static final RefinedStorageConfig REFINED_STORAGE;
@@ -100,6 +101,14 @@ public final class ArcadiaConfig {
                         "Object2ObjectOpenHashMap.rehash, 2026-11-03). Such reads now only read and such writes run",
                         "on the render thread. The first five are logged with the calling mod's stack trace.")
                 .define("clientBlockEntityThreadGuard", true);
+        MACAWS_GARAGE_DOOR_GUARD = BUILDER
+                .comment("Macaw's Doors: a garage door toggles the doors next to it, which toggle the doors next to them,",
+                        "until they all have the new state. A write the level refuses never gets there, so two doors side",
+                        "by side called each other until a StackOverflowError crashed the game (2026-11-06, a client clicking",
+                        "a double garage door in a Bobby cached chunk, which refuses every write). A door whose write was",
+                        "refused no longer toggles its neighbours. Read from each side's own config. Without a refused",
+                        "write nothing changes. Turns itself off, with a warning, on a Macaw's Doors build other than 1.1.5.")
+                .define("macawsGarageDoorGuard", true);
         BUILDER.pop();
 
         BOTANY = new BotanyConfig(BUILDER);

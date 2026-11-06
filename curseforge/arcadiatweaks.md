@@ -14,6 +14,7 @@ ArcadiaTweaks is published as a single file, `arcadiatweaks-0.3.1.jar`. It conta
 - CosmeticWeapons and CosmeticArmours (item presence gate)
 - Accessories (`contains` fast path and lighter entity tick)
 - Create: Copycats+ (client crash fix for copycat chunk meshes)
+- Macaw's Doors (crash and freeze fixes for the garage door)
 - FastSuite, Simply Swords, Crabber's Delight and vanilla structure lookups (work repeated for nothing, skipped with the same results)
 - Safety guards (entity movement guard, client block entity thread guard)
 
@@ -47,13 +48,14 @@ ArcadiaTweaks is published as a single file, `arcadiatweaks-0.3.1.jar`. It conta
 | Curios API | Optional | Read by the cosmetic presence gate when Curios is installed. |
 | Accessories | Optional | Accessories module only applies on Accessories 1.1.0-beta.54. |
 | Create: Copycats+ | Optional | Copycats+ crash fix only applies when Copycats+ is installed. |
+| Macaw's Doors | Optional | Garage door fixes only apply on Macaw's Doors 1.1.5. |
 | FastSuite | Optional | Spare work patch only applies on FastSuite 6.0.7. |
 | Crabber's Delight | Optional | Spare work patch only applies on Crabber's Delight 1.3.1. |
 
 ## Project summary
 
 ```text
-Optimization patches for BotanyPots, Refined Storage, Mekanism, CosmeticWeapons, CosmeticArmours, Accessories, FastSuite and Crabber's Delight, fixes for Waystones and Simply Swords, a Copycats+ client crash fix, a server freeze guard and a client guard for block entity maps. Mostly server-side; the client gets two crash fixes and one optional Mekanism rendering safety patch. Mixin-based, configurable, with per-patch kill switches and runtime safety checks.
+Optimization patches for BotanyPots, Refined Storage, Mekanism, CosmeticWeapons, CosmeticArmours, Accessories, FastSuite and Crabber's Delight, fixes for Waystones and Simply Swords, a Copycats+ client crash fix, Macaw's Doors crash and freeze fixes, a server freeze guard and a client guard for block entity maps. Mostly server-side; the client gets two crash fixes and one optional Mekanism rendering safety patch. Mixin-based, configurable, with per-patch kill switches and runtime safety checks.
 ```
 
 ## Release title
@@ -68,6 +70,11 @@ Every file uses the display name `ArcadiaTweaks <version>` (for example `Arcadia
 
 ```markdown
 ## 0.3.1
+
+### Fixes
+
+- Macaw's Doors: clicking a garage door next to another one no longer crashes the client with a `StackOverflowError` in `GarageDoor.toggleDoor`. It happened in a chunk Bobby shows from its cache before the server has sent it: those chunks refuse block writes, and the two doors called each other without end. Players get the fix with the client jar. Pinned to Macaw's Doors 1.1.5, switch `[safety] macawsGarageDoorGuard`.
+- Macaw's Doors: closing a garage door above the void no longer freezes the game: the fill below the door now stops at the bottom of the world.
 
 ### Performance
 
@@ -266,6 +273,7 @@ runicForgeImplicitLevelLock = true
 gloamStainPurgeDeferredDiscard = true
 copycatsKeepMaterialsOnRemove = true
 clientBlockEntityThreadGuard = true
+macawsGarageDoorGuard = true
 ```
 
 `entityMoveGuard` stops an entity whose movement for one tick is NaN, infinite or above the limit, instead of letting the collision search freeze the server. An elytra with rockets moves about 3 blocks per tick, so nothing legitimate comes close to the limit.
