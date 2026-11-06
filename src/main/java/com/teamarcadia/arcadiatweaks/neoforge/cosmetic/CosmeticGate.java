@@ -60,9 +60,11 @@ public final class CosmeticGate {
             "cosmeticweaponsmod.procedures.WoodTierWeaponAdvProdProcedure",
             "cosmeticarmoursmod.procedures.AngelHaloAchivementProcedureProcedure",
             "cosmeticarmoursmod.procedures.AwokenHaloAdvProdProcedure",
+            "cosmeticarmoursmod.procedures.ClothAdvProdProcedure",
             "cosmeticarmoursmod.procedures.FallenAngelHaloAchievementProcedureProcedure",
             "cosmeticarmoursmod.procedures.GloriousCoronationProdProcedure",
             "cosmeticarmoursmod.procedures.GoldenHaloAchievementProcedureProcedure",
+            "cosmeticarmoursmod.procedures.ThreadAdvProdProcedure",
             "cosmeticarmoursmod.procedures.WingedHaloAchievementProcedureProcedure"
     );
 

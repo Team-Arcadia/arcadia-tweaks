@@ -6,6 +6,7 @@ import com.teamarcadia.arcadiatweaks.common.modules.botany.BotanyModule;
 import com.teamarcadia.arcadiatweaks.common.modules.cosmetic.CosmeticModule;
 import com.teamarcadia.arcadiatweaks.common.modules.mekanism.MekanismModule;
 import com.teamarcadia.arcadiatweaks.common.modules.refinedstorage.RefinedStorageModule;
+import com.teamarcadia.arcadiatweaks.common.modules.sparework.SpareWorkModule;
 import com.teamarcadia.arcadiatweaks.common.modules.waystones.WaystonesModule;
 
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ public final class ModuleRegistry {
         ALL.add(new WaystonesModule());
         ALL.add(new CosmeticModule());
         ALL.add(new AccessoriesModule());
+        ALL.add(new SpareWorkModule());
 
         for (ArcadiaModule m : ALL) {
             if (m.enabledByConfig()) {

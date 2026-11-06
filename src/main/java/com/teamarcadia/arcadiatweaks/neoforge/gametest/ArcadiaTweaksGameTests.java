@@ -38,6 +38,10 @@ public final class ArcadiaTweaksGameTests {
         }
         event.register(CosmeticPresenceGateGameTests.class);
         event.register(AccessoriesGameTests.class);
+        if (ArcadiaPatchVariant.hasSpareWork()) {
+            event.register(SpareWorkGameTests.class);
+            event.register(SpareWorkPackGameTests.class);
+        }
     }
 
     @GameTest(template = TEMPLATE, batch = BATCH, timeoutTicks = 20)

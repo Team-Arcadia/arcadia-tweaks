@@ -221,10 +221,10 @@ final class MixinPluginCompatibilityTest {
     private static final String EXECUTE_DESC = "(Lnet/neoforged/bus/api/Event;Lnet/minecraft/world/entity/Entity;)V";
 
     @Test
-    void cosmeticPluginAcceptsAllFifteenBundledProcedures() {
+    void cosmeticPluginAcceptsAllSeventeenBundledProcedures() {
         final CosmeticMixinPlugin plugin = new CosmeticMixinPlugin();
         assertNull(CosmeticMixinPlugin.environmentProblem(), "Curios and Accessories hooks should match the bundled jars");
-        assertEquals(15, CosmeticGate.GATED_PROCEDURES.size());
+        assertEquals(17, CosmeticGate.GATED_PROCEDURES.size());
         for (String procedure : CosmeticGate.GATED_PROCEDURES) {
             final String mixin = procedure.startsWith("cosmeticweaponsmod.") ? COSMETIC_WEAPONS_MIXIN : COSMETIC_ARMOURS_MIXIN;
             assertTrue(plugin.shouldApplyMixin(procedure, mixin), procedure + " should match the presence gate template");
@@ -237,7 +237,7 @@ final class MixinPluginCompatibilityTest {
     void cosmeticPluginRejectsProceduresWithoutAChainOrWithoutContains() {
         // One contains call only: nothing to skip.
         assertFalse(CosmeticMixinPlugin.procedureCompatible("cosmeticweaponsmod.procedures.AmethystSwordAdvProdProcedure"));
-        assertFalse(CosmeticMixinPlugin.procedureCompatible("cosmeticarmoursmod.procedures.BlankArmourStyleAdvProdProcedure"));
+        assertFalse(CosmeticMixinPlugin.procedureCompatible("cosmeticarmoursmod.procedures.ChefCakeAdvProdProcedure"));
         // Armour-slot / dimension procedures: no contains at all.
         assertFalse(CosmeticMixinPlugin.procedureCompatible("cosmeticarmoursmod.procedures.FashionFauxPasProdProcedure"));
         assertFalse(CosmeticMixinPlugin.procedureCompatible("missing.cosmetic.Procedure"));
